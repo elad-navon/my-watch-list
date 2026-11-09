@@ -159,6 +159,12 @@ function updatePagerUiForTrack(track) {
   if (rangeEl && stop && stop.range) rangeEl.textContent = stop.range;
   if (prevBtn) prevBtn.classList.toggle("off", m.idx === 0);
   if (nextBtn) nextBtn.classList.toggle("off", m.idx === m.maxIdx);
+  // The thin bar under the counter: one piece per page, at the page shown.
+  const bar = panel.querySelector(".list-pager-bar > i");
+  if (bar) {
+    bar.style.width = `${100 / (m.maxIdx + 1)}%`;
+    bar.style.transform = `translateX(${m.idx * 100}%)`;
+  }
 }
 
 // Every bottom-panel row gets up to 6 lines: each other line takes 1, and

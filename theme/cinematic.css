@@ -213,6 +213,21 @@ body.phone-portrait:not(.light-theme) .topbar .navbar-logo::before { inset: -5px
 body.phone-portrait:not(.light-theme) .topbar .logo-icon svg { width: 28px; height: 28px; }
 body.phone-portrait:not(.light-theme) .topbar .logo-text .logo-tv,
 body.phone-portrait:not(.light-theme) .topbar .logo-accent { font-size: 1.55rem; }
+/* The bottom panels' pager: bigger arrows on rounded gold-edged squares,
+   the counter in the titles' face, the page bar in gold. */
+body:not(.light-theme) .list-panel .list-pager { gap: 10px; }
+body:not(.light-theme) .list-pager-arrow {
+  width: 32px; height: 32px; border-radius: 8px;
+  border: 1.5px solid rgba(251, 191, 36, 0.6); background: rgba(251, 191, 36, 0.07); color: var(--gold);
+}
+body:not(.light-theme) .list-pager-arrow:hover:not(.off) { border-color: var(--gold); color: var(--gold); background: rgba(251, 191, 36, 0.18); }
+body:not(.light-theme) .list-pager-arrow svg { width: 18px; height: 18px; stroke-width: 3; }
+body:not(.light-theme) .list-pager-range {
+  font-family: "Barlow Condensed", "Segoe UI", Arial, sans-serif; font-style: italic; font-weight: 800;
+  font-size: 1rem; line-height: 1; min-width: 64px;
+}
+body:not(.light-theme) .list-pager-bar { background: rgba(255, 255, 255, 0.15); }
+body:not(.light-theme) .list-pager-bar > i { background: var(--gold); }
 /* The swipe arrows in gold, like the box titles. */
 body.phone-portrait:not(.light-theme) .swipe-arrow { color: var(--gold); border-color: rgba(251, 191, 36, 0.6); }
 body:not(.light-theme) .topbar .logo-icon polygon { fill: var(--cine-ink); }

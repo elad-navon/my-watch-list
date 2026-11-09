@@ -157,9 +157,9 @@ function pagedRangeLabel(start, end, total) {
 function pagerControlsHtml(firstLabel, hasMore) {
   return `
     <div class="list-pager">
-      <button type="button" class="list-pager-arrow prev off" title="Previous"${onClick("pager", -1)}>&lsaquo;</button>
-      <span class="list-pager-range">${firstLabel}</span>
-      <button type="button" class="list-pager-arrow next${hasMore ? "" : " off"}" title="Next"${onClick("pager", 1)}>&rsaquo;</button>
+      <button type="button" class="list-pager-arrow prev off" title="Previous"${onClick("pager", -1)}>${CAROUSEL_ARROW_LEFT_ICON_SVG}</button>
+      <span class="list-pager-mid"><span class="list-pager-range">${firstLabel}</span><span class="list-pager-bar"><i></i></span></span>
+      <button type="button" class="list-pager-arrow next${hasMore ? "" : " off"}" title="Next"${onClick("pager", 1)}>${CAROUSEL_ARROW_ICON_SVG}</button>
     </div>`;
 }
 
