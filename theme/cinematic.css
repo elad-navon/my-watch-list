@@ -265,3 +265,11 @@ body:not(.light-theme).equal-panels:not(.panels-scroll) .topbar-left::after {
 @media (max-height: 860px) {
   body:not(.light-theme).equal-panels:not(.panels-scroll) .topbar-left::after { bottom: -5px; }
 }
+/* In a narrow bottom panel the bigger pager crowded the title's brush:
+   there it gets a clear gap from the title and a tighter build. */
+@container (max-width: 479px) {
+  body:not(.light-theme) .list-panel .list-pager { gap: 6px; padding-left: 14px; }
+  body:not(.light-theme) .list-pager-arrow { width: 28px; height: 28px; }
+  body:not(.light-theme) .list-pager-arrow svg { width: 16px; height: 16px; }
+  body:not(.light-theme) .list-pager-range { font-size: 0.9rem; min-width: 50px; }
+}
