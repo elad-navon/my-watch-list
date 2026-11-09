@@ -2310,6 +2310,20 @@
      across the card (Plan to Watch). */
   body.phone-portrait .title-with-year { flex-direction: column; align-items: flex-start; }
   body.phone-portrait .title-with-year .premiere-badge.year-badge { flex-basis: auto; }
+  /* The swipe arrows (render.js: addPhoneSwipeArrows): round, half see-through
+     so the banner shows behind them, just inside its edges. */
+  body.phone-portrait .swipe-host { position: relative; }
+  body.phone-portrait .swipe-arrow {
+    position: absolute; z-index: 20; transform: translateY(-50%);
+    width: 36px; height: 36px; padding: 0; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(8, 12, 18, 0.62); color: #ffffff; border: 1px solid rgba(255, 255, 255, 0.35);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5); -webkit-tap-highlight-color: transparent;
+  }
+  body.phone-portrait .swipe-arrow svg { width: 20px; height: 20px; }
+  body.phone-portrait .swipe-arrow.prev { left: 6px; }
+  body.phone-portrait .swipe-arrow.next { right: 6px; }
+  body.phone-portrait .swipe-arrow.is-hidden { display: none; }
 
   /* Sideways: one slim header row - the logo, the panels as tabs, Search and
      Settings - and under it only the chosen tab's panel (app.js: showPhoneTab),

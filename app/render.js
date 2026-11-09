@@ -430,6 +430,54 @@ function wirePanelPagerTracks() {
     });
     updatePagerUiForTrack(track);
   });
+  addPhoneSwipeArrows();
+}
+
+// Upright on a phone every panel is one row of banners swiped sideways, with
+// nothing saying so: a round arrow on each side, over the middle of the
+// banner, turns one banner at a time and hides at either end. Phones only -
+// the desktop keeps its own arrows (.carousel-arrow, .list-pager).
+function addPhoneSwipeArrows() {
+  if (!document.body.classList.contains("phone-portrait")) return;
+  const tracks = document.querySelectorAll("#myListCarouselTrack, .list-rows-paged, .list-rows-scroll");
+  tracks.forEach(track => {
+    const host = track.parentElement;
+    if (!host || host.querySelector(":scope > .swipe-arrow")) return;
+    host.classList.add("swipe-host");
+    const make = dir => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "swipe-arrow " + (dir < 0 ? "prev" : "next");
+      btn.title = dir < 0 ? "Previous" : "Next";
+      btn.innerHTML = dir < 0 ? CAROUSEL_ARROW_LEFT_ICON_SVG : CAROUSEL_ARROW_ICON_SVG;
+      btn.addEventListener("click", () => track.scrollBy({ left: dir * track.clientWidth, behavior: "smooth" }));
+      host.appendChild(btn);
+      return btn;
+    };
+    const prev = make(-1), next = make(1);
+    // Over the middle of the first banner (16:9 across the item's width).
+    const place = () => {
+      const item = track.firstElementChild;
+      if (!item) return;
+      const h = host.getBoundingClientRect();
+      const img = item.querySelector("img");
+      const r = img && img.getBoundingClientRect().height > 20 ? img.getBoundingClientRect() : null;
+      const box = r || item.getBoundingClientRect();
+      const mid = r ? r.top - h.top + r.height / 2 : box.top - h.top + box.width * 9 / 32;
+      prev.style.top = next.style.top = `${Math.round(mid)}px`;
+      // Just inside the banner's own edges, not the panel's.
+      prev.style.left = `${Math.round(Math.max(0, box.left - h.left) + 6)}px`;
+      next.style.right = `${Math.round(Math.max(0, h.right - box.right) + 6)}px`;
+    };
+    const refresh = () => {
+      const max = track.scrollWidth - track.clientWidth;
+      prev.classList.toggle("is-hidden", max <= 1 || track.scrollLeft <= 1);
+      next.classList.toggle("is-hidden", max <= 1 || track.scrollLeft >= max - 1);
+    };
+    place(); refresh();
+    track.addEventListener("scroll", refresh, { passive: true });
+    track.querySelectorAll("img").forEach(img => { if (!img.complete) img.addEventListener("load", place, { once: true }); });
+  });
 }
 
 // Every panel whose scroll position needs to survive a full re-render -
