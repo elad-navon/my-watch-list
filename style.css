@@ -439,7 +439,7 @@
      so the title stays whole; on a wider one it's there. */
   body:not(.panels-scroll) .list-panel { container-type: inline-size; }
   @container (max-width: 389px) {
-    .list-pager-range { display: none; }
+    .list-pager-mid { display: none; }
   }
 
   body:not(.panels-scroll) .list-panel .list-panel-header { padding: 7px 10px; gap: 7px; }
@@ -848,6 +848,12 @@
   .list-pager-arrow:hover:not(.off) { border-color: var(--accent2); color: var(--accent2); }
   .list-pager-arrow.off { opacity: 0.35; cursor: default; pointer-events: none; }
   .list-pager-range { font-size: 0.65rem; font-weight: 700; color: #ffffff; min-width: 52px; text-align: center; }
+  .list-pager-arrow svg { width: 12px; height: 12px; }
+  /* Under the counter, a thin bar: one piece per page, at the page shown
+     (render.js: updatePagerUiForTrack). */
+  .list-pager-mid { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .list-pager-bar { position: relative; align-self: stretch; height: 3px; border-radius: 2px; overflow: hidden; background: rgba(127, 127, 127, 0.28); }
+  .list-pager-bar > i { position: absolute; left: 0; top: 0; bottom: 0; width: 100%; border-radius: 2px; background: var(--accent2); transition: transform 0.25s ease; }
   /* Paged carousel, replacing the old vertical scroll list - each panel
      shows one page's width at a time (2 rows, or Airing Next's two 2-row
      columns, see .list-page--half) with no vertical scrolling at all. It

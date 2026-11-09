@@ -159,6 +159,12 @@ function updatePagerUiForTrack(track) {
   if (rangeEl && stop && stop.range) rangeEl.textContent = stop.range;
   if (prevBtn) prevBtn.classList.toggle("off", m.idx === 0);
   if (nextBtn) nextBtn.classList.toggle("off", m.idx === m.maxIdx);
+  // The thin bar under the counter: one piece per page, at the page shown.
+  const bar = panel.querySelector(".list-pager-bar > i");
+  if (bar) {
+    bar.style.width = `${100 / (m.maxIdx + 1)}%`;
+    bar.style.transform = `translateX(${m.idx * 100}%)`;
+  }
 }
 
 // Every bottom-panel row gets up to 6 lines: each other line takes 1, and
@@ -456,13 +462,18 @@ function addPhoneSwipeArrows() {
     };
     const prev = make(-1), next = make(1);
     // Over the middle of the first banner (16:9 across the item's width).
+    // Measured on the banner's frame, not on "the first picture": that can
+    // be a network logo, and the first child can be a .list-page, which is
+    // display: contents here and has no box - either sent the arrows off
+    // the top of the screen once more pictures loaded while swiping.
     const place = () => {
-      const item = track.firstElementChild;
+      const item = track.querySelector(".list-row, .carousel-card");
       if (!item) return;
       const h = host.getBoundingClientRect();
-      const img = item.querySelector("img");
-      const r = img && img.getBoundingClientRect().height > 20 ? img.getBoundingClientRect() : null;
+      const pic = item.querySelector(".list-thumb-wrap, .poster-wrap");
+      const r = pic && pic.getBoundingClientRect().height > 20 ? pic.getBoundingClientRect() : null;
       const box = r || item.getBoundingClientRect();
+      if (!box.width) return;
       const mid = r ? r.top - h.top + r.height / 2 : box.top - h.top + box.width * 9 / 32;
       prev.style.top = next.style.top = `${Math.round(mid)}px`;
       // Just inside the banner's own edges, not the panel's.
@@ -476,6 +487,7 @@ function addPhoneSwipeArrows() {
     };
     place(); refresh();
     track.addEventListener("scroll", refresh, { passive: true });
+    track.addEventListener("scrollend", place);
     track.querySelectorAll("img").forEach(img => { if (!img.complete) img.addEventListener("load", place, { once: true }); });
   });
 }
