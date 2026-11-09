@@ -467,9 +467,19 @@ function addPhoneSwipeArrows() {
     // display: contents here and has no box - either sent the arrows off
     // the top of the screen once more pictures loaded while swiping.
     const place = () => {
-      const item = track.querySelector(".list-row, .carousel-card");
-      if (!item) return;
+      // The banner on screen now, not the first one: after a swipe the
+      // first is off to the left, and measuring it pushed the right arrow
+      // out of the panel.
       const h = host.getBoundingClientRect();
+      const mid0 = h.left + h.width / 2;
+      let item = null, best = Infinity;
+      track.querySelectorAll(".list-row, .carousel-card").forEach(el => {
+        const b = el.getBoundingClientRect();
+        if (!b.width) return;
+        const d = Math.abs(b.left + b.width / 2 - mid0);
+        if (d < best) { best = d; item = el; }
+      });
+      if (!item) return;
       const pic = item.querySelector(".list-thumb-wrap, .poster-wrap");
       const r = pic && pic.getBoundingClientRect().height > 20 ? pic.getBoundingClientRect() : null;
       const box = r || item.getBoundingClientRect();
