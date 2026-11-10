@@ -485,10 +485,13 @@ function addPhoneSwipeArrows() {
       const box = r || item.getBoundingClientRect();
       if (!box.width) return;
       const mid = r ? r.top - h.top + r.height / 2 : box.top - h.top + box.width * 9 / 32;
-      prev.style.top = next.style.top = `${Math.round(mid)}px`;
-      // Just inside the banner's own edges, not the panel's.
-      prev.style.left = `${Math.round(Math.max(0, box.left - h.left) + 6)}px`;
-      next.style.right = `${Math.round(Math.max(0, h.right - box.right) + 6)}px`;
+      const top = `${Math.round(mid)}px`;
+      if (prev.style.top !== top) prev.style.top = next.style.top = top;
+      // Just inside the banner's edges, from its width alone (centered in
+      // the panel): where the banner happens to sit after a swipe moved the
+      // arrows sideways on every page.
+      const inset = `${Math.round(Math.max(0, (h.width - box.width) / 2) + 6)}px`;
+      prev.style.left = next.style.right = inset;
     };
     const refresh = () => {
       const max = track.scrollWidth - track.clientWidth;
