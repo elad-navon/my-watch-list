@@ -62,6 +62,7 @@ function panelThumbSrc(row) {
 function applyStoredTheme() {
   const isLight = localStorage.getItem(LS_THEME) === "light";
   document.body.classList.toggle("light-theme", isLight);
+  document.body.classList.toggle("look-clean", localStorage.getItem(LS_LOOK) === "clean");
   updateThemeToggleButton();
 }
 
@@ -71,6 +72,8 @@ function updateThemeToggleButton() {
   const isLight = document.body.classList.contains("light-theme");
   // "on" = dark mode active, matching the toggle's cyan/knob-right state.
   btn.classList.toggle("on", !isLight);
+  const look = document.getElementById("lookToggleBtn");
+  if (look) look.classList.toggle("on", document.body.classList.contains("look-clean"));
 }
 
 function isScrollLayout() {

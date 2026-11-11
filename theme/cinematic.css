@@ -5,7 +5,7 @@
    stroke keyed off its black, shrunk to webp). Loaded after style.css; the
    light theme doesn't use any of it. */
 
-body:not(.light-theme) {
+body:not(.light-theme):not(.look-clean) {
   --cine-ink: #14100a;           /* text and icons on gold */
   --cine-box: rgba(12, 19, 28, 0.84);
   background: #05070a;
@@ -17,26 +17,26 @@ body:not(.light-theme) {
    screen - backdrop, glows and all - for every small movement on it (the
    now-watching bars, a pulsing dot), and kept the PC busy. A fixed layer
    is painted once and only moved. */
-body:not(.light-theme)::before {
+body:not(.light-theme):not(.look-clean)::before {
   content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
   background: linear-gradient(rgba(5, 7, 10, 0.5), rgba(5, 7, 10, 0.5)), url("backdrop.webp") center / cover no-repeat;
   will-change: transform;
 }
 
 /* The boxes: dark glass (no blur - it costs every frame). */
-body:not(.light-theme):not(.phone-landscape) .series-panel,
-body:not(.light-theme):not(.phone-landscape) .list-panel:not(.panel-shows-grid-wrap),
-body:not(.light-theme).equal-panels:not(.panels-scroll) .topbar {
+body:not(.light-theme):not(.look-clean):not(.phone-landscape) .series-panel,
+body:not(.light-theme):not(.look-clean):not(.phone-landscape) .list-panel:not(.panel-shows-grid-wrap),
+body:not(.light-theme):not(.look-clean).equal-panels:not(.panels-scroll) .topbar {
   background: var(--cine-box);
 }
 
 /* ---- Box titles on a brush stroke: dark italic letters on gold, the
    title's icon in the same ink (its cut-outs gold - the icons draw them in
    --card). Two strokes, so neighbouring titles don't look stamped. */
-body:not(.light-theme) .list-panel .list-panel-header,
-body:not(.light-theme) .series-panel .series-panel-title,
-body:not(.light-theme):not(.panels-scroll) .list-panel .list-panel-header,
-body:not(.light-theme):not(.panels-scroll) .series-panel .series-panel-title {
+body:not(.light-theme):not(.look-clean) .list-panel .list-panel-header,
+body:not(.light-theme):not(.look-clean) .series-panel .series-panel-title,
+body:not(.light-theme):not(.look-clean):not(.panels-scroll) .list-panel .list-panel-header,
+body:not(.light-theme):not(.look-clean):not(.panels-scroll) .series-panel .series-panel-title {
   /* (Any older title icon, drawn in --accent2 with --card cut-outs, in ink too.) */
   --accent2: var(--cine-ink); --card: #f6c21c;
   /* Exactly as tall as the plain title (35px), so the fitted layout gives
@@ -49,61 +49,61 @@ body:not(.light-theme):not(.panels-scroll) .series-panel .series-panel-title {
   font-style: italic; font-weight: 800; font-size: 1.4rem; line-height: 1; letter-spacing: 0.01em;
   -webkit-text-stroke: 0; text-shadow: none;
 }
-body:not(.light-theme) .list-panel .list-panel-header::before,
-body:not(.light-theme) .series-panel .series-panel-title::before {
+body:not(.light-theme):not(.look-clean) .list-panel .list-panel-header::before,
+body:not(.light-theme):not(.look-clean) .series-panel .series-panel-title::before {
   content: ""; position: absolute; inset: -5px -8px -5px -4px; z-index: -1; pointer-events: none;
   background: url("brush-paint.webp") center / 100% 100% no-repeat;
 }
-body:not(.light-theme):not(.panels-scroll) .series-panel .series-panel-title { font-size: 1.45rem; padding: 0 32px 0 24px; }
+body:not(.light-theme):not(.look-clean):not(.panels-scroll) .series-panel .series-panel-title { font-size: 1.45rem; padding: 0 32px 0 24px; }
 /* The solid title icons (titleIcons in app.js), in the title's ink. */
-body:not(.light-theme) .title-icon-usual { display: none; }
-body:not(.light-theme) .title-icon-cine { display: inline-flex; color: var(--cine-ink); }
-body:not(.light-theme) .title-icon-cine svg { width: 24px; height: 24px; }
+body:not(.light-theme):not(.look-clean) .title-icon-usual { display: none; }
+body:not(.light-theme):not(.look-clean) .title-icon-cine { display: inline-flex; color: var(--cine-ink); }
+body:not(.light-theme):not(.look-clean) .title-icon-cine svg { width: 24px; height: 24px; }
 
 /* ---- Ready to Watch's stats: an unframed strip, gold icons, slanted rules
    between them. */
-body:not(.light-theme) .series-panel-header-left {
+body:not(.light-theme):not(.look-clean) .series-panel-header-left {
   --accent2: var(--gold);
   border: none;
 }
-body:not(.light-theme) .series-panel-header-left svg { width: 19px; height: 19px; }
+body:not(.light-theme):not(.look-clean) .series-panel-header-left svg { width: 19px; height: 19px; }
 /* Its solid icons (titleIcons' kind) in ink on a square gold brush stroke,
    like the buttons'; the numbers and words just
    like the bottom panels' show counts ("26 Shows") - upright, the label
    not italic. */
-body:not(.light-theme) .series-panel-header-left .title-icon-cine {
+body:not(.light-theme):not(.look-clean) .series-panel-header-left .title-icon-cine {
   color: var(--cine-ink); --card: #f6c21c;
   background: url("brush-paint.webp") center / 100% 100% no-repeat; padding: 6px;
 }
-body:not(.light-theme) .series-panel-header-left .series-panel-stat-group { gap: 7px; }
-body:not(.light-theme) .series-panel-stat .label { font-style: normal; font-weight: 800; }
-body:not(.light-theme) .stats-divider { background: rgba(251, 191, 36, 0.55); transform: skewX(-22deg); }
+body:not(.light-theme):not(.look-clean) .series-panel-header-left .series-panel-stat-group { gap: 7px; }
+body:not(.light-theme):not(.look-clean) .series-panel-stat .label { font-style: normal; font-weight: 800; }
+body:not(.light-theme):not(.look-clean) .stats-divider { background: rgba(251, 191, 36, 0.55); transform: skewX(-22deg); }
 
 
 /* ---- The logo: white name. */
-body:not(.light-theme) .logo-text .logo-tv,
-body:not(.light-theme) .logo-accent { color: #ffffff; }
+body:not(.light-theme):not(.look-clean) .logo-text .logo-tv,
+body:not(.light-theme):not(.look-clean) .logo-accent { color: #ffffff; }
 
 /* ---- The buttons: each icon on a small gold brush stroke like the box
    titles, the name in white; in the box beside the top panel, thin rules
    between them instead of separate raised buttons. */
-body:not(.light-theme) .nav-item .nav-icon {
+body:not(.light-theme):not(.look-clean) .nav-item .nav-icon {
   background: url("brush-paint.webp") center / 100% 100% no-repeat; color: var(--cine-ink);
   /* (Drawn 38px tall but taking the old tile's 32px - margin -3px - so the
      rows keep their height.) */
   border-radius: 0; padding: 7px; margin: -3px 0; box-shadow: none;
 }
-body:not(.light-theme) .nav-item .nav-icon svg { width: 24px; height: 24px; }
-body:not(.light-theme) .nav-item { color: #ffffff; }
-body:not(.light-theme) .nav-item.active { color: var(--gold); border-color: rgba(251, 191, 36, 0.6); box-shadow: inset 3px 0 0 0 var(--gold), inset 0 2px 5px rgba(0, 0, 0, 0.35); }
-body:not(.light-theme) .nav-item.active .nav-icon { color: var(--cine-ink); }
-body:not(.light-theme).equal-panels:not(.panels-scroll) .nav-item,
-body:not(.light-theme).equal-panels:not(.panels-scroll) .nav-item:hover:not(.active) {
+body:not(.light-theme):not(.look-clean) .nav-item .nav-icon svg { width: 24px; height: 24px; }
+body:not(.light-theme):not(.look-clean) .nav-item { color: #ffffff; }
+body:not(.light-theme):not(.look-clean) .nav-item.active { color: var(--gold); border-color: rgba(251, 191, 36, 0.6); box-shadow: inset 3px 0 0 0 var(--gold), inset 0 2px 5px rgba(0, 0, 0, 0.35); }
+body:not(.light-theme):not(.look-clean) .nav-item.active .nav-icon { color: var(--cine-ink); }
+body:not(.light-theme):not(.look-clean).equal-panels:not(.panels-scroll) .nav-item,
+body:not(.light-theme):not(.look-clean).equal-panels:not(.panels-scroll) .nav-item:hover:not(.active) {
   background: transparent; border: none; border-bottom: 1px solid rgba(251, 191, 36, 0.22);
   border-radius: 0; box-shadow: none; transform: none;
 }
-body:not(.light-theme).equal-panels:not(.panels-scroll) .nav-item:hover:not(.active) { background: rgba(251, 191, 36, 0.08); }
-body:not(.light-theme).equal-panels:not(.panels-scroll) .nav-item.active { background: rgba(251, 191, 36, 0.12); border-radius: 6px; }
+body:not(.light-theme):not(.look-clean).equal-panels:not(.panels-scroll) .nav-item:hover:not(.active) { background: rgba(251, 191, 36, 0.08); }
+body:not(.light-theme):not(.look-clean).equal-panels:not(.panels-scroll) .nav-item.active { background: rgba(251, 191, 36, 0.12); border-radius: 6px; }
 
 /* The greeting: a signature at the box's foot, not a plate (it isn't a
    button) - a thin gold rule above, what's on today and what's ready,
@@ -113,137 +113,137 @@ body:not(.light-theme).equal-panels:not(.panels-scroll) .nav-item.active { backg
    box's edge (the box has no bottom padding here), what it holds centred
    in it - the same on every screen: the buttons above share whatever
    height the box has (below). */
-body:not(.light-theme).equal-panels:not(.panels-scroll) .topbar { padding-bottom: 0; }
-body:not(.light-theme).equal-panels:not(.panels-scroll) .profile-greeting-inline {
+body:not(.light-theme):not(.look-clean).equal-panels:not(.panels-scroll) .topbar { padding-bottom: 0; }
+body:not(.light-theme):not(.look-clean).equal-panels:not(.panels-scroll) .profile-greeting-inline {
   border-top: none; padding: 0; margin: 0; flex: 0 0 76px; min-height: 0; align-items: center;
 }
 @media (max-height: 860px) {
-  body:not(.light-theme).equal-panels:not(.panels-scroll) .profile-greeting-inline { flex-basis: 66px; }
+  body:not(.light-theme):not(.look-clean).equal-panels:not(.panels-scroll) .profile-greeting-inline { flex-basis: 66px; }
 }
-body:not(.light-theme) .gs-open { text-decoration-color: rgba(251, 191, 36, 0.6); }
-body:not(.light-theme) .gs-open:hover, body:not(.light-theme) .gs-open[aria-expanded="true"] { color: var(--gold); }
-body:not(.light-theme) .today-pop { background: #101822; border-color: rgba(251, 191, 36, 0.55); box-shadow: 0 10px 26px rgba(0, 0, 0, 0.7); }
-body:not(.light-theme) .today-pop-h { border-bottom-color: rgba(251, 191, 36, 0.22); }
-body:not(.light-theme) .today-pop-ep em { color: var(--gold); }
-body:not(.light-theme) .topbar .today-pop-ep, body:not(.light-theme) .topbar .today-pop-h {
+body:not(.light-theme):not(.look-clean) .gs-open { text-decoration-color: rgba(251, 191, 36, 0.6); }
+body:not(.light-theme):not(.look-clean) .gs-open:hover, body:not(.light-theme):not(.look-clean) .gs-open[aria-expanded="true"] { color: var(--gold); }
+body:not(.light-theme):not(.look-clean) .today-pop { background: #101822; border-color: rgba(251, 191, 36, 0.55); box-shadow: 0 10px 26px rgba(0, 0, 0, 0.7); }
+body:not(.light-theme):not(.look-clean) .today-pop-h { border-bottom-color: rgba(251, 191, 36, 0.22); }
+body:not(.light-theme):not(.look-clean) .today-pop-ep em { color: var(--gold); }
+body:not(.light-theme):not(.look-clean) .topbar .today-pop-ep, body:not(.light-theme):not(.look-clean) .topbar .today-pop-h {
   font-family: "Barlow Condensed", "Segoe UI", Arial, sans-serif; font-style: italic;
 }
-body:not(.light-theme).equal-panels:not(.panels-scroll) .profile-greeting-status { color: #9fb0c2; }
-body:not(.light-theme).equal-panels:not(.panels-scroll) .profile-greeting-status b { color: #ffffff; }
-body:not(.light-theme).equal-panels:not(.panels-scroll) .profile-pic-small { width: 42px; height: 42px; box-shadow: 0 0 0 2px var(--gold); }
-body:not(.light-theme) .profile-menu { background: #101822; border-color: rgba(251, 191, 36, 0.55); box-shadow: 0 10px 26px rgba(0, 0, 0, 0.7); }
-body:not(.light-theme) .profile-menu button:hover, body:not(.light-theme) .profile-menu button:focus-visible { background: rgba(251, 191, 36, 0.12); }
-body:not(.light-theme) .profile-menu-who { border-bottom-color: rgba(251, 191, 36, 0.22); }
+body:not(.light-theme):not(.look-clean).equal-panels:not(.panels-scroll) .profile-greeting-status { color: #9fb0c2; }
+body:not(.light-theme):not(.look-clean).equal-panels:not(.panels-scroll) .profile-greeting-status b { color: #ffffff; }
+body:not(.light-theme):not(.look-clean).equal-panels:not(.panels-scroll) .profile-pic-small { width: 42px; height: 42px; box-shadow: 0 0 0 2px var(--gold); }
+body:not(.light-theme):not(.look-clean) .profile-menu { background: #101822; border-color: rgba(251, 191, 36, 0.55); box-shadow: 0 10px 26px rgba(0, 0, 0, 0.7); }
+body:not(.light-theme):not(.look-clean) .profile-menu button:hover, body:not(.light-theme):not(.look-clean) .profile-menu button:focus-visible { background: rgba(251, 191, 36, 0.12); }
+body:not(.light-theme):not(.look-clean) .profile-menu-who { border-bottom-color: rgba(251, 191, 36, 0.22); }
 
 /* ---- Every frame softly lit: a gold edge that blurs into a glow, on the
    boxes and on each poster / banner frame inside them. Static (no
    animation), so the blur is painted once. Pairs and rows are drawn from
    several pieces, so they glow by their outline (drop-shadow), not their
    box. */
-body:not(.light-theme):not(.phone-landscape) .series-panel,
-body:not(.light-theme):not(.phone-landscape) .list-panel:not(.panel-shows-grid-wrap),
-body:not(.light-theme):not(.phone-landscape) .topbar {
+body:not(.light-theme):not(.look-clean):not(.phone-landscape) .series-panel,
+body:not(.light-theme):not(.look-clean):not(.phone-landscape) .list-panel:not(.panel-shows-grid-wrap),
+body:not(.light-theme):not(.look-clean):not(.phone-landscape) .topbar {
   box-shadow: 0 0 3px rgba(251, 191, 36, 0.75), 0 0 14px rgba(251, 191, 36, 0.3), 0 12px 30px rgba(0, 0, 0, 0.6);
 }
 /* (Not round a frame with something moving inside - the "now watching"
    bars, a pulsing air dot: the blur would be painted again every frame.) */
-body:not(.light-theme) .poster-pair:not(:has(.nw-overlay, .air-dot)),
-body:not(.light-theme) .panel-pair:not(:has(.nw-overlay, .air-dot)),
-body:not(.light-theme) .card.framed:not(:has(.nw-overlay, .air-dot)),
-body:not(.light-theme) .list-rows-paged .list-row:not(:has(.nw-overlay, .air-dot)) {
+body:not(.light-theme):not(.look-clean) .poster-pair:not(:has(.nw-overlay, .air-dot)),
+body:not(.light-theme):not(.look-clean) .panel-pair:not(:has(.nw-overlay, .air-dot)),
+body:not(.light-theme):not(.look-clean) .card.framed:not(:has(.nw-overlay, .air-dot)),
+body:not(.light-theme):not(.look-clean) .list-rows-paged .list-row:not(:has(.nw-overlay, .air-dot)) {
   filter: drop-shadow(0 0 2px rgba(251, 191, 36, 0.7)) drop-shadow(0 0 8px rgba(251, 191, 36, 0.3));
 }
 
 /* "10 Shows" opens the shows window: on hover it turns blue, number and
    word, as the bottom panels' counts do (the strip sets --accent2 to gold
    for its icons, so the blue is named here). */
-body:not(.light-theme) .series-panel-stat-clickable:hover .series-panel-stat .num,
-body:not(.light-theme) .series-panel-stat-clickable:hover .series-panel-stat .label { color: #7dd3fc; text-decoration: underline; }
+body:not(.light-theme):not(.look-clean) .series-panel-stat-clickable:hover .series-panel-stat .num,
+body:not(.light-theme):not(.look-clean) .series-panel-stat-clickable:hover .series-panel-stat .label { color: #7dd3fc; text-decoration: underline; }
 
 /* The box on the left in the titles' face (Ready to Watch's): the name,
    the buttons' names and the greeting - condensed, heavy,
    italic. */
-body:not(.light-theme) .topbar .logo-text .logo-tv,
-body:not(.light-theme) .topbar .logo-accent,
-body:not(.light-theme) .topbar .nav-label {
+body:not(.light-theme):not(.look-clean) .topbar .logo-text .logo-tv,
+body:not(.light-theme):not(.look-clean) .topbar .logo-accent,
+body:not(.light-theme):not(.look-clean) .topbar .nav-label {
   font-family: "Barlow Condensed", "Segoe UI", Arial, sans-serif; font-style: italic; font-weight: 800;
   letter-spacing: 0.01em; text-transform: none;
 }
-body:not(.light-theme) .topbar .logo-text .logo-tv,
-body:not(.light-theme) .topbar .logo-accent { font-size: 1.7rem; line-height: 1; }
-body:not(.light-theme) .topbar .nav-label { font-size: 1.1rem; }
+body:not(.light-theme):not(.look-clean) .topbar .logo-text .logo-tv,
+body:not(.light-theme):not(.look-clean) .topbar .logo-accent { font-size: 1.7rem; line-height: 1; }
+body:not(.light-theme):not(.look-clean) .topbar .nav-label { font-size: 1.1rem; }
 /* (The gold tiles are taller than the plain icons: a little less padding
    round each button, so the greeting keeps its room at the box's foot.) */
-body:not(.light-theme).equal-panels:not(.panels-scroll) .topbar .nav-item { padding-top: 6px; padding-bottom: 6px; }
+body:not(.light-theme):not(.look-clean).equal-panels:not(.panels-scroll) .topbar .nav-item { padding-top: 6px; padding-bottom: 6px; }
 /* Each button in the middle between the rule above it and its own rule
    below: the room between them (the list's 10px gap) goes inside, half above
    and half below, instead of all of it above - the same height in all. */
-body:not(.light-theme).equal-panels:not(.panels-scroll) .topbar .navbar-nav { gap: 0; }
-body:not(.light-theme).equal-panels:not(.panels-scroll) .topbar .nav-item { padding-top: 10px; padding-bottom: 10px; }
+body:not(.light-theme):not(.look-clean).equal-panels:not(.panels-scroll) .topbar .navbar-nav { gap: 0; }
+body:not(.light-theme):not(.look-clean).equal-panels:not(.panels-scroll) .topbar .nav-item { padding-top: 10px; padding-bottom: 10px; }
 /* The first one's rule above is the gold one under the logo, already 8px
    up (5px on a short screen - see .topbar-left::after): that much less. */
-body:not(.light-theme).equal-panels:not(.panels-scroll) .topbar .navbar-nav > .nav-item:first-child { padding-top: 2px; }
+body:not(.light-theme):not(.look-clean).equal-panels:not(.panels-scroll) .topbar .navbar-nav > .nav-item:first-child { padding-top: 2px; }
 @media (max-height: 860px) {
-  body:not(.light-theme).equal-panels:not(.panels-scroll) .topbar .navbar-nav > .nav-item:first-child { padding-top: 5px; }
+  body:not(.light-theme):not(.look-clean).equal-panels:not(.panels-scroll) .topbar .navbar-nav > .nav-item:first-child { padding-top: 5px; }
 }
 /* The buttons share the box's height between the logo and the greeting
    evenly - taller on a tall screen, shorter on a short one - so the
    greeting's row never grows, crowds its rule or spills out of the box. */
-body:not(.light-theme).equal-panels:not(.panels-scroll) .topbar .navbar-nav { min-height: 0; }
-body:not(.light-theme).equal-panels:not(.panels-scroll) .topbar .navbar-nav > .nav-item {
+body:not(.light-theme):not(.look-clean).equal-panels:not(.panels-scroll) .topbar .navbar-nav { min-height: 0; }
+body:not(.light-theme):not(.look-clean).equal-panels:not(.panels-scroll) .topbar .navbar-nav > .nav-item {
   flex: 1 1 0; min-height: 34px; padding-top: 0; padding-bottom: 0;
 }
 
 /* The logo ("TV Series" and its play mark) on a gold brush stroke like the
    box titles, in their ink - the stroke drawn round it (::before), so the
    box keeps its size. */
-body:not(.light-theme) .topbar .navbar-logo { position: relative; isolation: isolate; padding: 4px 22px 4px 14px; }
-body:not(.light-theme) .topbar .navbar-logo::before {
+body:not(.light-theme):not(.look-clean) .topbar .navbar-logo { position: relative; isolation: isolate; padding: 4px 22px 4px 14px; }
+body:not(.light-theme):not(.look-clean) .topbar .navbar-logo::before {
   content: ""; position: absolute; inset: -6px -10px -6px -8px; z-index: -1; pointer-events: none;
   background: url("brush-paint.webp") center / 100% 100% no-repeat;
 }
 /* Sideways on a phone only the play mark shows: the stroke drawn just
    round it, not spreading over the tabs. */
-body.phone-landscape:not(.light-theme) .topbar .navbar-logo { padding: 2px 10px 2px 8px; }
-body.phone-landscape:not(.light-theme) .topbar .navbar-logo::before { inset: -4px -6px; }
+body.phone-landscape:not(.light-theme):not(.look-clean) .topbar .navbar-logo { padding: 2px 10px 2px 8px; }
+body.phone-landscape:not(.light-theme):not(.look-clean) .topbar .navbar-logo::before { inset: -4px -6px; }
 /* Upright on a phone the stroke ran 9px under the Search button and was cut
    off there: a smaller logo and stroke, and clear room before the buttons. */
-body.phone-portrait:not(.light-theme) .topbar { gap: 16px; }
-body.phone-portrait:not(.light-theme) .topbar-left { flex: 0 1 auto; }
-body.phone-portrait:not(.light-theme) .topbar-controls { margin-left: auto; }
-body.phone-portrait:not(.light-theme) .topbar .navbar-logo { padding: 3px 16px 3px 10px; gap: 9px; }
-body.phone-portrait:not(.light-theme) .topbar .navbar-logo::before { inset: -5px -6px -5px -6px; }
-body.phone-portrait:not(.light-theme) .topbar .logo-icon svg { width: 28px; height: 28px; }
-body.phone-portrait:not(.light-theme) .topbar .logo-text .logo-tv,
-body.phone-portrait:not(.light-theme) .topbar .logo-accent { font-size: 1.55rem; }
+body.phone-portrait:not(.light-theme):not(.look-clean) .topbar { gap: 16px; }
+body.phone-portrait:not(.light-theme):not(.look-clean) .topbar-left { flex: 0 1 auto; }
+body.phone-portrait:not(.light-theme):not(.look-clean) .topbar-controls { margin-left: auto; }
+body.phone-portrait:not(.light-theme):not(.look-clean) .topbar .navbar-logo { padding: 3px 16px 3px 10px; gap: 9px; }
+body.phone-portrait:not(.light-theme):not(.look-clean) .topbar .navbar-logo::before { inset: -5px -6px -5px -6px; }
+body.phone-portrait:not(.light-theme):not(.look-clean) .topbar .logo-icon svg { width: 28px; height: 28px; }
+body.phone-portrait:not(.light-theme):not(.look-clean) .topbar .logo-text .logo-tv,
+body.phone-portrait:not(.light-theme):not(.look-clean) .topbar .logo-accent { font-size: 1.55rem; }
 /* The bottom panels' pager: bigger arrows on rounded gold-edged squares,
    the counter in the titles' face, the page bar in gold. */
-body:not(.light-theme) .list-panel .list-pager { gap: 10px; }
-body:not(.light-theme) .list-pager-arrow {
+body:not(.light-theme):not(.look-clean) .list-panel .list-pager { gap: 10px; }
+body:not(.light-theme):not(.look-clean) .list-pager-arrow {
   width: 32px; height: 32px; border-radius: 8px;
   border: 1.5px solid rgba(251, 191, 36, 0.6); background: rgba(251, 191, 36, 0.07); color: var(--gold);
 }
-body:not(.light-theme) .list-pager-arrow:hover:not(.off) { border-color: var(--gold); color: var(--gold); background: rgba(251, 191, 36, 0.18); }
-body:not(.light-theme) .list-pager-arrow svg { width: 18px; height: 18px; stroke-width: 3; }
-body:not(.light-theme) .list-pager-range {
+body:not(.light-theme):not(.look-clean) .list-pager-arrow:hover:not(.off) { border-color: var(--gold); color: var(--gold); background: rgba(251, 191, 36, 0.18); }
+body:not(.light-theme):not(.look-clean) .list-pager-arrow svg { width: 18px; height: 18px; stroke-width: 3; }
+body:not(.light-theme):not(.look-clean) .list-pager-range {
   font-family: "Barlow Condensed", "Segoe UI", Arial, sans-serif; font-style: italic; font-weight: 800;
   font-size: 1rem; line-height: 1; min-width: 64px;
 }
-body:not(.light-theme) .list-pager-bar { background: rgba(255, 255, 255, 0.15); }
-body:not(.light-theme) .list-pager-bar > i { background: var(--gold); }
+body:not(.light-theme):not(.look-clean) .list-pager-bar { background: rgba(255, 255, 255, 0.15); }
+body:not(.light-theme):not(.look-clean) .list-pager-bar > i { background: var(--gold); }
 /* The swipe arrows in gold, like the box titles. */
-body.phone-portrait:not(.light-theme) .swipe-arrow { color: var(--gold); border-color: rgba(251, 191, 36, 0.6); }
-body:not(.light-theme) .topbar .logo-icon polygon { fill: var(--cine-ink); }
-body:not(.light-theme) .topbar .logo-text .logo-tv,
-body:not(.light-theme) .topbar .logo-accent { color: var(--cine-ink); -webkit-text-stroke: 0; text-shadow: none; }
+body.phone-portrait:not(.light-theme):not(.look-clean) .swipe-arrow { color: var(--gold); border-color: rgba(251, 191, 36, 0.6); }
+body:not(.light-theme):not(.look-clean) .topbar .logo-icon polygon { fill: var(--cine-ink); }
+body:not(.light-theme):not(.look-clean) .topbar .logo-text .logo-tv,
+body:not(.light-theme):not(.look-clean) .topbar .logo-accent { color: var(--cine-ink); -webkit-text-stroke: 0; text-shadow: none; }
 
 /* A faint piece of the backdrop (its gold film corner) in the empty part of
    Ready to Watch's and Airing Next's title rows, fading in after the title
    and out before what's on the right. */
-body:not(.light-theme) .series-panel-header,
-body:not(.light-theme) .list-panel--airing .list-panel-header-row { position: relative; }
-body:not(.light-theme) .series-panel-header::before,
-body:not(.light-theme) .list-panel--airing .list-panel-header-row::before {
+body:not(.light-theme):not(.look-clean) .series-panel-header,
+body:not(.light-theme):not(.look-clean) .list-panel--airing .list-panel-header-row { position: relative; }
+body:not(.light-theme):not(.look-clean) .series-panel-header::before,
+body:not(.light-theme):not(.look-clean) .list-panel--airing .list-panel-header-row::before {
   /* (A window over the empty part, showing the backdrop's top-left corner,
      where its film strips are - the same piece whatever the row's width.) */
   content: ""; position: absolute; top: 0; bottom: 0; left: 30%; width: 24%; z-index: 0; pointer-events: none;
@@ -252,27 +252,27 @@ body:not(.light-theme) .list-panel--airing .list-panel-header-row::before {
   -webkit-mask-image: linear-gradient(90deg, transparent, #000 25%, #000 75%, transparent);
   mask-image: linear-gradient(90deg, transparent, #000 25%, #000 75%, transparent);
 }
-body:not(.light-theme) .series-panel-header > *,
-body:not(.light-theme) .list-panel--airing .list-panel-header-row > * { position: relative; z-index: 1; }
+body:not(.light-theme):not(.look-clean) .series-panel-header > *,
+body:not(.light-theme):not(.look-clean) .list-panel--airing .list-panel-header-row > * { position: relative; z-index: 1; }
 /* Airing Next's row is narrower: its window runs wider, from just after
    the title almost to the page counter. */
-body:not(.light-theme) .list-panel--airing .list-panel-header-row::before { left: 26%; width: 48%; background-position: left -10px top -10px; }
+body:not(.light-theme):not(.look-clean) .list-panel--airing .list-panel-header-row::before { left: 26%; width: 48%; background-position: left -10px top -10px; }
 
 /* A thin gold rule between the logo and the buttons under them,
    drawn in the gap between them (no box grows). */
-body:not(.light-theme).equal-panels:not(.panels-scroll) .topbar-left { position: relative; }
-body:not(.light-theme).equal-panels:not(.panels-scroll) .topbar-left::after {
+body:not(.light-theme):not(.look-clean).equal-panels:not(.panels-scroll) .topbar-left { position: relative; }
+body:not(.light-theme):not(.look-clean).equal-panels:not(.panels-scroll) .topbar-left::after {
   content: ""; position: absolute; left: 4px; right: 4px; bottom: -8px; height: 1px;
   background: linear-gradient(90deg, transparent, rgba(251, 191, 36, 0.6) 15%, rgba(251, 191, 36, 0.6) 85%, transparent);
 }
 @media (max-height: 860px) {
-  body:not(.light-theme).equal-panels:not(.panels-scroll) .topbar-left::after { bottom: -5px; }
+  body:not(.light-theme):not(.look-clean).equal-panels:not(.panels-scroll) .topbar-left::after { bottom: -5px; }
 }
 /* In a narrow bottom panel the bigger pager crowded the title's brush:
    there it gets a clear gap from the title and a tighter build. */
 @container (max-width: 479px) {
-  body:not(.light-theme) .list-panel .list-pager { gap: 6px; padding-left: 14px; }
-  body:not(.light-theme) .list-pager-arrow { width: 28px; height: 28px; }
-  body:not(.light-theme) .list-pager-arrow svg { width: 16px; height: 16px; }
-  body:not(.light-theme) .list-pager-range { font-size: 0.9rem; min-width: 50px; }
+  body:not(.light-theme):not(.look-clean) .list-panel .list-pager { gap: 6px; padding-left: 14px; }
+  body:not(.light-theme):not(.look-clean) .list-pager-arrow { width: 28px; height: 28px; }
+  body:not(.light-theme):not(.look-clean) .list-pager-arrow svg { width: 16px; height: 16px; }
+  body:not(.light-theme):not(.look-clean) .list-pager-range { font-size: 0.9rem; min-width: 50px; }
 }

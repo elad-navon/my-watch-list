@@ -124,6 +124,7 @@ const LS_TVDB_KEY = "tvdb_api_key";       // optional: TheTVDB posters/backgroun
 const LS_TVDB_TOKEN = "tvdb_token";       // {key, token, at}: TheTVDB's month-long read token for that key
 const LS_IMAGE_MODE = "simkl_image_mode"; // "poster" | "banner"
 const LS_THEME = "simkl_theme"; // "light" | "dark"
+const LS_LOOK = "simkl_look"; // "clean" (like a show's page - theme/clean.css), else the cinematic look
 const LS_PANEL_LAYOUT = "simkl_panel_layout"; // "paged" (one-page, default) | "scroll" (older vertically scrolling panels)
 const LS_PANEL_IMAGES = "panel_image_mode"; // "banner" (default) | "poster" - the three bottom panels' thumbnails
 const LS_LOADER_POSTERS = "loader_posters"; // the posters the loading screen rolls past (the last ones shown)
@@ -380,6 +381,11 @@ function showSettings(afterSaveCallback) {
         <button class="theme-toggle" id="themeToggleBtn" title="Toggle light/dark"></button>
       </div>
       <div class="theme-toggle-wrap" style="margin-top:12px">
+        <span class="nav-icon"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"></rect><line x1="3" y1="9" x2="21" y2="9"></line></svg></span>
+        <span style="flex:1 1 auto;text-align:left">Clean Look</span>
+        <button class="theme-toggle" id="lookToggleBtn" title="Dark mode's look: clean (like a show's page) or cinematic"></button>
+      </div>
+      <div class="theme-toggle-wrap" style="margin-top:12px">
         <span class="nav-icon"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"></rect><line x1="3" y1="12" x2="21" y2="12"></line><line x1="12" y1="12" x2="12" y2="21"></line></svg></span>
         <span style="flex:1 1 auto;text-align:left">One-Page Layout</span>
         <button class="theme-toggle" id="layoutToggleBtn" title="Toggle one-page / scrolling bottom panels"></button>
@@ -428,6 +434,13 @@ function showSettings(afterSaveCallback) {
     updateThemeToggleButton();
   };
   updateThemeToggleButton();
+  // The look applies at once; the page fits itself to it again (resize).
+  document.getElementById("lookToggleBtn").onclick = () => {
+    const isClean = document.body.classList.toggle("look-clean");
+    safeSetItem(LS_LOOK, isClean ? "clean" : "cinematic");
+    updateThemeToggleButton();
+    window.dispatchEvent(new Event("resize"));
+  };
   // Takes effect on the next render - closing Settings (returnToPreviousView)
   // or saving (main) both re-render the panels.
   document.getElementById("layoutToggleBtn").onclick = () => {
