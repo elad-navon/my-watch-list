@@ -554,7 +554,7 @@ async function msBuildDetail(docId, show, token) {
 
   const images = detail ? computeImages(detail, tmdb, "top") : {};
   const poster = images.posterUrl || row.poster || null;
-  const backdrop = detail && detail.backdrop_path ? msImgUrl(detail.backdrop_path, "w1280") : images.bannerUrl || null;
+  const backdrop = msBackdropFor(detail) || images.bannerUrl || null;
   const title = (detail && detail.name) || show.title;
 
   // Facts line
@@ -743,6 +743,22 @@ async function msBuildDetail(docId, show, token) {
       }).catch(() => {});
     });
   }
+}
+
+// The page's backdrop: a picture from the show, not its poster again.
+// TMDB's main backdrop is mostly the poster's key art laid wide, so a
+// picture with no text on it (no language - a scene from the show) comes
+// first, the best voted one other than the main backdrop; then any other
+// backdrop; the main one only when there's nothing else. All of them come
+// with the show's details (no extra request).
+function msBackdropFor(detail) {
+  if (!detail) return null;
+  const main = detail.backdrop_path || null;
+  const all = ((detail.images && detail.images.backdrops) || []).filter(b => b && b.file_path && b.file_path !== main);
+  const best = list => list.slice().sort((a, b) => (b.vote_average || 0) - (a.vote_average || 0) || (b.vote_count || 0) - (a.vote_count || 0))[0];
+  const pick = best(all.filter(b => b.iso_639_1 == null)) || best(all);
+  const path = pick ? pick.file_path : main;
+  return path ? msImgUrl(path, "w1280") : null;
 }
 
 // "Mondays 05:00" - the weekday and local time of the show's latest
