@@ -16,7 +16,10 @@ pageAction("thumbError", (el, e, source, idx, mode) => handleThumbError(el, sour
 // A show's title (the top cards and the panels' rows) opens its page (my-shows.js).
 pageAction("showPage", (el, e, source, idx) => {
   const row = (getCycleRows(source) || [])[idx];
-  if (row) openShowPage({ library: row.showId, tmdb: row.tmdbId, imdb: row.imdbId });
+  if (!row) return;
+  Promise.resolve()
+    .then(() => openShowPage({ library: row.showId, tmdb: row.tmdbId, imdb: row.imdbId }))
+    .catch(err => showToast(`Couldn't open the show's page: ${err.message || err}`, true));
 });
 pageAction("episodes", (el, e, idx) => openEpisodesModal(idx));
 pageAction("cardMenu", (el, e, idx) => openCardMenu(idx, el));
