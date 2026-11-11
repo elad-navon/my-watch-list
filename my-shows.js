@@ -712,6 +712,10 @@ async function msBuildDetail(docId, show, token) {
     };
   });
   pane.querySelector(".ms-back").onclick = () => history.back();
+  msFitHero();
+  const posterImg = pane.querySelector("img.ms-d-poster");
+  if (posterImg && !posterImg.complete) posterImg.addEventListener("load", msFitHero, { once: true });
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(msFitHero);
   pane.querySelectorAll(".ms-status-btn").forEach(b => {
     b.onclick = () => msChangeStatus(docId, b.dataset.status, title, show.year);
   });
@@ -793,6 +797,45 @@ function msWireCastRow(row) {
   row.querySelectorAll("img").forEach(img => img.addEventListener("load", paintArrows, { once: true }));
   paintArrows();
 }
+
+// The top of a show's page in one block: the poster, the text and the box
+// on the right start and end on the same lines. Their height is the taller
+// of the text and the box (as each lays out on its own); the poster takes
+// it, as wide as a poster that tall (at most 340px - cropped a little past
+// that), the box and the text stretch to it (the box's dates and the
+// links go to its foot). The poster's width changes the text's, so it's
+// measured again until it settles. Not on a phone (its own layout), and
+// below 1100px the box sits under the other two: just those two then.
+const MS_POSTER_MAX_W = 340;
+function msFitHero() {
+  const pane = document.getElementById("msDetail");
+  if (!pane || pane.hidden) return;
+  const hero = pane.querySelector(".ms-hero-in");
+  const poster = pane.querySelector(".ms-d-poster");
+  const info = pane.querySelector(".ms-d-info");
+  const mine = pane.querySelector(".ms-mine");
+  if (!hero || !poster || !info || !mine) return;
+  const clear = () => {
+    [poster, info, mine].forEach(el => el.style.removeProperty("height"));
+    hero.style.removeProperty("--ms-poster-w");
+  };
+  clear();
+  if (window.innerWidth <= 720) return;
+  let h = 0;
+  for (let i = 0; i < 4; i++) {
+    [info, mine].forEach(el => el.style.removeProperty("height"));
+    const sameRow = Math.abs(mine.offsetTop - info.offsetTop) < 2;
+    const next = Math.ceil(Math.max(info.offsetHeight, sameRow ? mine.offsetHeight : 0));
+    if (Math.abs(next - h) < 2) break;
+    h = next;
+    hero.style.setProperty("--ms-poster-w", `${Math.min(MS_POSTER_MAX_W, Math.round(h * 2 / 3))}px`);
+  }
+  const sameRow = Math.abs(mine.offsetTop - info.offsetTop) < 2;
+  poster.style.height = `${h}px`;
+  info.style.height = `${h}px`;
+  if (sameRow) mine.style.height = `${h}px`;
+}
+window.addEventListener("resize", () => { if (document.getElementById("msDetail")) msFitHero(); });
 
 // The page's backdrop: a picture from the show, not its poster again.
 // TMDB's main backdrop is mostly the poster's key art laid wide, so a

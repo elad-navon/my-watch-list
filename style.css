@@ -2699,7 +2699,7 @@
                 linear-gradient(0deg, rgba(5, 7, 10, 0.9) 0%, transparent 40%);
   }
   .ms-hero-in {
-    position: relative; display: grid; grid-template-columns: 240px minmax(0, 1fr) 330px; gap: 22px 32px; align-items: start;
+    position: relative; display: grid; grid-template-columns: var(--ms-poster-w, 240px) minmax(0, 1fr) 330px; gap: 22px 32px; align-items: start;
     padding: 18px max(40px, calc((100% - 1440px) / 2)) 34px; color: #eef3f8;
     --text: #eef3f8; --muted: #a9b8c9; --border: rgba(255, 255, 255, 0.18); --accent: #38bdf8;
   }
@@ -2710,8 +2710,12 @@
   }
   .ms-back:hover { border-color: var(--gold); color: var(--gold); }
   .ms-detail > .ms-d-top { padding: 18px max(40px, calc((100% - 1440px) / 2)); }
+  /* The poster, the text and the box on the right: one top line and one
+     bottom line - msFitHero sets all three to the taller of the text and
+     the box, the poster as wide as that height makes it (--ms-poster-w). */
   .ms-d-poster { width: 100%; aspect-ratio: 2 / 3; object-fit: cover; border-radius: 12px; border: 1px solid rgba(251, 191, 36, 0.4); box-shadow: 0 18px 40px rgba(0, 0, 0, 0.6); }
-  .ms-d-info { min-width: 0; display: grid; gap: 15px; align-content: start; padding-top: 4px; }
+  .ms-d-info { min-width: 0; display: flex; flex-direction: column; gap: 15px; }
+  .ms-d-info > .ms-links { margin-top: auto; }
   .ms-d-title {
     margin: 0; font-family: "Barlow Condensed", "Segoe UI", Arial, sans-serif; font-weight: 700; font-size: clamp(2rem, 3.4vw, 3rem);
     line-height: 1.02; letter-spacing: 0.02em; text-transform: uppercase; text-wrap: balance;
@@ -2743,7 +2747,7 @@
   .ms-link:hover { border-color: #fbbf24; }
 
   .ms-mine {
-    display: grid; gap: 15px; padding: 18px; border-radius: 14px; background: rgba(12, 19, 28, 0.88);
+    display: flex; flex-direction: column; gap: 15px; padding: 18px; border-radius: 14px; background: rgba(12, 19, 28, 0.88);
     border: 1px solid rgba(251, 191, 36, 0.4); box-shadow: 0 0 24px rgba(251, 191, 36, 0.08);
   }
   .ms-mine-status { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
@@ -2763,6 +2767,7 @@
   .ms-stats dt { color: var(--muted); }
   .ms-fill { flex: 1 1 auto; border-bottom: 1px dotted rgba(255, 255, 255, 0.22); transform: translateY(-3px); }
   .ms-stats dd { margin: 0; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .ms-mine > .ms-stats { margin-top: auto; }
   /* Move the show to another status: one button each, the current one lit. */
   .ms-status-pick { display: flex; flex-wrap: wrap; gap: 6px; }
   .ms-status-btn {
@@ -2847,7 +2852,7 @@
 
   @media (prefers-reduced-motion: reduce) { .ms-poster { transition: none; } }
   @media (max-width: 1100px) {
-    .ms-hero-in { grid-template-columns: 190px minmax(0, 1fr); }
+    .ms-hero-in { grid-template-columns: var(--ms-poster-w, 190px) minmax(0, 1fr); }
     .ms-mine { grid-column: 1 / -1; }
     .ms-d-two { grid-template-columns: minmax(0, 1fr); }
   }
