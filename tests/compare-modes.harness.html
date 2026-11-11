@@ -579,9 +579,114 @@ async function runStats() {
   return results;
 }
 
+// ?scenario=myshows: the My Shows page - opens, each status tab lists its
+// shows (with counts that add up), posters / list and search work, a show's
+// page opens over the list and Back / Escape step back to the list then
+// close it, nothing is changed in the library, and no errors.
+async function runMyShows() {
+  const { w } = await loadMode("library", false, "");
+  const results = [];
+  const check = (name, ok, detail) => results.push({ name, ok: !!ok, detail: detail === undefined ? null : detail });
+  const doc = w.document;
+  const $ = s => doc.querySelector(s);
+  const $$ = s => [...doc.querySelectorAll(s)];
+  const errors = [];
+  w.addEventListener("error", e => errors.push(String(e.message)));
+  w.addEventListener("unhandledrejection", e => errors.push(String(e.reason && e.reason.message || e.reason)));
+  const clean = el => !/NaN|Infinity|undefined|null/.test((el || {}).textContent || "");
+  const store = w.eval("library").store;
+  const before = JSON.stringify([...store.view()]);
+  const open = async () => { await sleep(300); $("#myShowsBtn").click(); await waitFor(() => $("#msList") && $("#msList").children.length); };
+
+  await open();
+  check("opens", !!$("#myShowsPage") && doc.body.classList.contains("stats-open"));
+  const statuses = ["watching", "completed", "hold", "dropped", "plantowatch"];
+  const counts = {};
+  for (const t of statuses) {
+    $(`#msTabs .sx-tab[data-tab='${t}']`).click();
+    await sleep(150);
+    const expected = [...store.view().values()].filter(s => s.status === t).length;
+    const shown = $$("#msList [data-doc]").length;
+    counts[t] = { expected, shown, badge: Number($(`#msTabs .sx-tab[data-tab='${t}'] .ms-count`).textContent), clean: clean($("#msList")) };
+  }
+  check("each tab lists its shows, its count right, no NaN / undefined / null",
+    Object.values(counts).every(c => c.shown === c.expected && c.badge === c.expected && c.clean), counts);
+  check("the tabs add up to the library", Object.values(counts).reduce((a, c) => a + c.badge, 0) === store.view().size);
+  $("#msTabs .sx-tab[data-tab='watching']").click();
+  await waitFor(() => /\/ \d+ episodes/.test($("#msList").textContent), 4000).catch(() => {});
+  check("Watching shows episodes out of the aired ones", /\/ \d+ episodes/.test($("#msList").textContent), $("#msList").textContent.slice(0, 200));
+  $(".ms-views button[data-view='list']").click();
+  check("list view", !!$("#msList .ms-rows") && clean($("#msList")));
+  $(".ms-views button[data-view='grid']").click();
+  check("posters view", !!$("#msList .ms-grid"));
+  const firstTitle = $("#msList .ms-name").textContent.trim().split(" ")[0];
+  const search = $("#msSearch");
+  search.value = "zzzz"; search.dispatchEvent(new w.Event("input", { bubbles: true }));
+  check("a search with no match says so", !!$("#msList .ms-empty"));
+  search.value = firstTitle; search.dispatchEvent(new w.Event("input", { bubbles: true }));
+  check("search finds the show", $$("#msList [data-doc]").length >= 1);
+  search.value = ""; search.dispatchEvent(new w.Event("input", { bubbles: true }));
+
+  // A show's page, for every show in the library.
+  const pages = {};
+  for (const t of statuses) {
+    $(`#msTabs .sx-tab[data-tab='${t}']`).click();
+    await sleep(100);
+    for (const card of $$("#msList [data-doc]")) {
+      const id = card.dataset.doc;
+      card.click();
+      await waitFor(() => $("#msDetail .ms-hero"), 5000).catch(() => {});
+      pages[id] = { status: t, drawn: !!$("#msDetail .ms-hero"), clean: clean($("#msDetail")), ring: !!$("#msDetail .ms-ring") };
+      w.history.back();
+      await waitFor(() => $("#msDetail").hidden, 3000).catch(() => {});
+      pages[id].back = $("#msDetail").hidden && !!$("#myShowsPage");
+    }
+  }
+  check("every show's page draws, with no NaN / undefined / null", Object.values(pages).every(p => p.drawn && p.clean && p.ring),
+    Object.fromEntries(Object.entries(pages).filter(([, p]) => !(p.drawn && p.clean && p.ring))));
+  check("Back from a show's page comes back to the list", Object.values(pages).every(p => p.back));
+  $("#msTabs .sx-tab[data-tab='watching']").click();
+  await sleep(100);
+  $("#msList [data-doc]").click();
+  await waitFor(() => $("#msDetail .ms-hero"), 5000);
+  const eps = $$("#msDetail .ms-ep");
+  check("its episodes, watched ones marked", eps.length > 0 && $$("#msDetail .ms-ep.w").length > 0, { eps: eps.length });
+  doc.dispatchEvent(new w.KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+  await waitFor(() => $("#msDetail").hidden, 3000).catch(() => {});
+  check("Escape on a show's page comes back to the list", $("#msDetail").hidden && !!$("#myShowsPage"));
+  await sleep(100);
+  doc.dispatchEvent(new w.KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+  check("Escape on the list closes it, the page scrolls again", !$("#myShowsPage") && !doc.body.classList.contains("stats-open"));
+  await open();
+  check("reopens on the last tab", $("#msTabs .sx-tab[aria-selected='true']").dataset.tab === "watching");
+  $("#msList [data-doc]").click();
+  await waitFor(() => $("#msDetail .ms-hero"), 5000);
+  w.history.back();
+  await waitFor(() => $("#msDetail").hidden, 3000).catch(() => {});
+  await sleep(100);
+  w.history.back();
+  await waitFor(() => !$("#myShowsPage"), 5000).catch(() => {});
+  check("Back, Back: show's page, then the list, closed", !$("#myShowsPage"));
+  await open();
+  w.eval("myShowsRefreshIfOpen")();
+  check("an episode marked while it's open: redrawn in place", !!$("#myShowsPage") && $$("#msList [data-doc]").length > 0);
+  $("#myShowsCloseBtn").click();
+  for (let i = 0; i < 3; i++) { await open(); $("#myShowsCloseBtn").click(); }
+  check("open and close again and again", !$("#myShowsPage") && !doc.body.classList.contains("stats-open"));
+  check("nothing in the library changed", JSON.stringify([...store.view()]) === before);
+  check("no errors in the page", !errors.length, errors);
+  return results;
+}
+
 (async () => {
   const out = document.getElementById("result");
   try {
+    if (params.get("scenario") === "myshows") {
+      const results = await runMyShows();
+      out.dataset.done = "1";
+      out.textContent = JSON.stringify({ writes: results }, null, 1);
+      return;
+    }
     if (params.get("scenario") === "stats") {
       const results = await runStats();
       out.dataset.done = "1";

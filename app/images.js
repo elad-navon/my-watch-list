@@ -504,6 +504,7 @@ const CINE_NAV_ICONS = {
   poster: `<svg viewBox="0 0 24 24" width="23" height="23" fill="currentColor"><path fill-rule="evenodd" d="M7.5 1.5h9A2.5 2.5 0 0 1 19 4v16a2.5 2.5 0 0 1-2.5 2.5h-9A2.5 2.5 0 0 1 5 20V4a2.5 2.5 0 0 1 2.5-2.5zM7.6 4.2v11.6h8.8V4.2z"></path><polygon points="7.6,15.8 10.6,11 12.4,13.4 13.6,12 16.4,15.8"></polygon><circle cx="14.2" cy="7" r="1.4"></circle></svg>`,
   banner: `<svg viewBox="0 0 24 24" width="23" height="23" fill="currentColor"><path fill-rule="evenodd" d="M3.5 5h17A2.5 2.5 0 0 1 23 7.5v9a2.5 2.5 0 0 1-2.5 2.5h-17A2.5 2.5 0 0 1 1 16.5v-9A2.5 2.5 0 0 1 3.5 5zM3.6 7.6v8.8h16.8V7.6z"></path><polygon points="3.6,16.4 8.5,10.8 11.5,14 13.5,12.2 17.5,16.4"></polygon><circle cx="16.8" cy="10" r="1.4"></circle></svg>`,
   search: `<svg viewBox="0 0 24 24" width="23" height="23" fill="currentColor"><path fill-rule="evenodd" d="M10 1.8a8.2 8.2 0 1 1 0 16.4 8.2 8.2 0 0 1 0-16.4zM10 5.2a4.8 4.8 0 1 0 0 9.6 4.8 4.8 0 0 0 0-9.6z"></path><line x1="15.9" y1="15.9" x2="21" y2="21" stroke="currentColor" stroke-width="4.4" stroke-linecap="round"></line><path d="M7.4 8.6a3.2 3.2 0 0 1 2.4-1.9" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"></path></svg>`,
+  shows: `<svg viewBox="0 0 24 24" width="23" height="23" fill="currentColor"><rect x="2" y="3" width="5.4" height="18" rx="1.4"></rect><rect x="8.9" y="3" width="5.4" height="18" rx="1.4"></rect><path d="M15.2 4.6l4.4-1.1a1.2 1.2 0 0 1 1.45.9l3.05 15a1.2 1.2 0 0 1-.9 1.4l-4.4 1.1a1.2 1.2 0 0 1-1.45-.9l-3.05-15a1.2 1.2 0 0 1 .9-1.4z"></path></svg>`,
   stats: `<svg viewBox="0 0 24 24" width="23" height="23" fill="currentColor"><rect x="2.5" y="12" width="5" height="9.5" rx="1.5"></rect><rect x="9.5" y="3.5" width="5" height="18" rx="1.5"></rect><rect x="16.5" y="8" width="5" height="13.5" rx="1.5"></rect></svg>`,
   settings: `<svg viewBox="0 0 24 24" width="23" height="23"><path fill="currentColor" fill-rule="evenodd" d="M19.94 9.96 L22.46 10.28 L22.46 13.72 L19.94 14.04 L19.06 16.17 L20.61 18.18 L18.18 20.61 L16.17 19.06 L14.04 19.94 L13.72 22.46 L10.28 22.46 L9.96 19.94 L7.83 19.06 L5.82 20.61 L3.39 18.18 L4.94 16.17 L4.06 14.04 L1.54 13.72 L1.54 10.28 L4.06 9.96 L4.94 7.83 L3.39 5.82 L5.82 3.39 L7.83 4.94 L9.96 4.06 L10.28 1.54 L13.72 1.54 L14.04 4.06 L16.17 4.94 L18.18 3.39 L20.61 5.82 L19.06 7.83Z M15.4 12a3.4 3.4 0 1 0-6.8 0 3.4 3.4 0 1 0 6.8 0z"></path></svg>`,
 };
@@ -517,7 +518,7 @@ const withCineIcon = (usual, cineSvg) =>
   `<span class="title-icon-usual">${usual}</span><span class="title-icon-cine">${cineSvg}</span>`;
 const titleIcons = (usual, cine) => withCineIcon(usual, CINE_TITLE_ICONS[cine]);
 // The three buttons written into index.html get theirs once, here.
-for (const [id, key] of [["addShowBtn", "search"], ["statsBtn", "stats"], ["settingsBtn", "settings"]]) {
+for (const [id, key] of [["addShowBtn", "search"], ["myShowsBtn", "shows"], ["statsBtn", "stats"], ["settingsBtn", "settings"]]) {
   const icon = document.querySelector(`#${id} .nav-icon`);
   if (icon) icon.innerHTML = withCineIcon(icon.innerHTML, CINE_NAV_ICONS[key]);
 }
