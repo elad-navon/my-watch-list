@@ -679,7 +679,11 @@ async function msBuildDetail(docId, show, token) {
       </div>
       <section class="ms-sec" id="msCastSec" hidden>
         <div class="ms-sec-h"><h3 class="ms-h">Cast</h3></div>
-        <div class="ms-cast" id="msCast"></div>
+        <div class="ms-cast-wrap">
+          <button type="button" class="carousel-arrow left ms-cast-arrow is-hidden" data-dir="-1" title="Scroll left" aria-label="Scroll left">${CAROUSEL_ARROW_LEFT_ICON_SVG}</button>
+          <div class="ms-cast" id="msCast"></div>
+          <button type="button" class="carousel-arrow ms-cast-arrow is-hidden" data-dir="1" title="Scroll right" aria-label="Scroll right">${CAROUSEL_ARROW_ICON_SVG}</button>
+        </div>
       </section>
     </div>`;
 
@@ -723,7 +727,7 @@ async function msBuildDetail(docId, show, token) {
     castEl.innerHTML = cast.map((p, i) => {
       const role = (p.roles && p.roles[0] && p.roles[0].character) || "";
       const face = p.profile_path
-        ? `<img class="ms-face" src="${TMDB_PROFILE_BASE}${esc(p.profile_path)}" alt="" loading="lazy">`
+        ? `<img class="ms-face" src="${TMDB_PROFILE_BASE}${esc(p.profile_path)}" alt="" loading="lazy" draggable="false">`
         : `<span class="ms-face ms-pic-empty">${esc((p.name || "?")[0])}</span>`;
       return `<div class="ms-person" data-i="${i}">${face}<b class="ms-person-name">${esc(p.name)}</b><span>${esc(role)}</span></div>`;
     }).join("");
@@ -738,11 +742,56 @@ async function msBuildDetail(docId, show, token) {
         a.target = "_blank";
         a.rel = "noopener";
         a.title = `${p.name} on IMDb`;
+        a.draggable = false;
         a.innerHTML = el.innerHTML;
         el.replaceWith(a);
       }).catch(() => {});
     });
+    msWireCastRow(castEl);
   }
+}
+
+// The cast row: no scrollbar; dragged sideways with the mouse, or moved by
+// the arrows at its ends (the home page's carousel arrows), each shown only
+// while there's more that way. A touch scrolls it natively. A drag never
+// counts as a click on the person under it (their IMDb link).
+function msWireCastRow(row) {
+  const wrap = row.parentElement;
+  const [prev, next] = [wrap.querySelector(".ms-cast-arrow[data-dir='-1']"), wrap.querySelector(".ms-cast-arrow[data-dir='1']")];
+  const paintArrows = () => {
+    const max = row.scrollWidth - row.clientWidth;
+    prev.classList.toggle("is-hidden", max <= 1 || row.scrollLeft <= 1);
+    next.classList.toggle("is-hidden", max <= 1 || row.scrollLeft >= max - 1);
+  };
+  [prev, next].forEach(btn => {
+    btn.onclick = () => row.scrollBy({ left: Number(btn.dataset.dir) * Math.max(200, row.clientWidth * 0.8), behavior: "smooth" });
+  });
+  row.addEventListener("scroll", paintArrows, { passive: true });
+  let drag = null, moved = false;
+  row.addEventListener("pointerdown", e => {
+    if (e.pointerType !== "mouse" || e.button !== 0) return;
+    drag = { x: e.clientX, left: row.scrollLeft, id: e.pointerId };
+    moved = false;
+  });
+  row.addEventListener("pointermove", e => {
+    if (!drag || e.pointerId !== drag.id) return;
+    const dx = e.clientX - drag.x;
+    if (!moved && Math.abs(dx) < 5) return;
+    if (!moved) { moved = true; row.setPointerCapture(drag.id); row.classList.add("dragging"); }
+    row.scrollLeft = drag.left - dx;
+  });
+  const end = e => {
+    if (!drag || e.pointerId !== drag.id) return;
+    drag = null;
+    row.classList.remove("dragging");
+  };
+  row.addEventListener("pointerup", end);
+  row.addEventListener("pointercancel", end);
+  row.addEventListener("click", e => { if (moved) { e.preventDefault(); e.stopPropagation(); moved = false; } }, true);
+  // Pictures arriving or the window resized change how far it goes.
+  if (window.ResizeObserver) new ResizeObserver(paintArrows).observe(row);
+  row.querySelectorAll("img").forEach(img => img.addEventListener("load", paintArrows, { once: true }));
+  paintArrows();
 }
 
 // The page's backdrop: a picture from the show, not its poster again.
