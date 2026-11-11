@@ -105,7 +105,6 @@
   }
   .nav-item.active .nav-icon { color: var(--accent); }
   .profile-greeting-inline { display: flex; align-items: center; gap: 8px; margin-left: 22px; }
-  .profile-greeting-hi { font-size: 1.26rem; font-weight: 700; color: var(--text); white-space: nowrap; }
   .profile-pic-small { width: 55px; height: 55px; border-radius: 50%; object-fit: cover; flex: 0 0 auto; }
   .profile-greeting-inline { position: relative; }
   /* The picture is a button (the account menu); in the top bar the name
@@ -1207,15 +1206,15 @@
       margin: auto 0 0; padding-top: 14px; border-top: 1px solid var(--border);
       justify-content: center; gap: 10px;
     }
-    /* The greeting in the box: the picture (a button), then the name with
-       what's on today under it; its menu opens upwards, as wide as the box. */
+    /* The greeting in the box: the picture (a button), then beside it
+       what's on today; its menu opens upwards, as wide as the box. */
     body.equal-panels:not(.panels-scroll) .profile-greeting-inline { justify-content: center; }
     /* (Never wider than this, so the picture and the lines stay centred;
        a longer show's name ends in "...".) */
-    body.equal-panels:not(.panels-scroll) .profile-greeting-text { max-width: 150px; }
+    body.equal-panels:not(.panels-scroll) .profile-greeting-text { max-width: 165px; }
     .gs-sum { overflow: hidden; text-overflow: ellipsis; }
     body.equal-panels:not(.panels-scroll) .profile-greeting-text { order: 0; }
-    body.equal-panels:not(.panels-scroll) .profile-greeting-status:not([hidden]) { display: flex; flex-direction: column; gap: 1px; }
+    body.equal-panels:not(.panels-scroll) .profile-greeting-status:not([hidden]) { display: flex; flex-direction: column; gap: 4px; font-size: 1.02rem; }
     /* The summary as a button: a dotted underline and a caret, lit on hover. */
     .gs-open {
       padding: 0; border: none; background: none; font: inherit; color: inherit; text-align: left; cursor: pointer;
@@ -2272,7 +2271,6 @@
   body.phone-portrait .topbar-controls { width: auto; gap: 8px; }
   body.phone-portrait .navbar-nav { flex: none; gap: 8px; }
   body.phone-portrait .nav-item.icon-only { flex: none; width: 44px; height: 44px; padding: 0; justify-content: center; }
-  body.phone-portrait .profile-greeting-hi { display: none; }
   body.phone-portrait .profile-greeting-inline { margin-left: 2px; }
   body.phone-portrait .profile-pic-small { width: 40px; height: 40px; }
   /* Ready to Watch: exactly one card across the panel, snapping one at a

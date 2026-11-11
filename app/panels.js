@@ -348,7 +348,7 @@ function tickAirCountdowns() {
 }
 
 // ---------------------------------------------------------------------
-// The greeting at the foot of the box on the left: under "Hi Elad" a line
+// The greeting at the foot of the box on the left: beside the picture a line
 // with what's on today - how many episodes in Airing Next air today (a
 // button: it opens their list, each with its time) and how many shows are
 // Ready to Watch. The profile picture is a button: it opens a small menu - who is
@@ -381,7 +381,7 @@ function updateGreetingStatus(now = Date.now()) {
   const timeOf = r => (r.airStart == null ? "Today"
     : r.airEnd != null && r.airStart <= now && now < r.airEnd ? "NOW"
     : new Date(r.airStart).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false }));
-  // Two lines under "Hi Elad": what's on today (opens tonight's list), and
+  // Two lines beside the picture: what's on today (opens tonight's list), and
   // how many shows are ready to watch.
   const ready = `<span class="gs-sum gs-ready"><b>${lastRows.length}</b> ready to watch</span>`;
   el.innerHTML = (today.length

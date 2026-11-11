@@ -106,8 +106,8 @@ body:not(.light-theme).equal-panels:not(.panels-scroll) .nav-item:hover:not(.act
 body:not(.light-theme).equal-panels:not(.panels-scroll) .nav-item.active { background: rgba(251, 191, 36, 0.12); border-radius: 6px; }
 
 /* The greeting: a signature at the box's foot, not a plate (it isn't a
-   button) - a thin gold rule above, the name in gold, what's on today
-   under it, the picture (the account menu's button) ringed in gold. */
+   button) - a thin gold rule above, what's on today and what's ready,
+   beside the picture (the account menu's button) ringed in gold. */
 /* (No rule of its own above it: the last button's rule is enough.) */
 /* A row of one fixed height at the box's foot, from that rule down to the
    box's edge (the box has no bottom padding here), what it holds centred
@@ -128,7 +128,6 @@ body:not(.light-theme) .today-pop-ep em { color: var(--gold); }
 body:not(.light-theme) .topbar .today-pop-ep, body:not(.light-theme) .topbar .today-pop-h {
   font-family: "Barlow Condensed", "Segoe UI", Arial, sans-serif; font-style: italic;
 }
-body:not(.light-theme).equal-panels:not(.panels-scroll) .profile-greeting-hi { color: var(--gold); font-size: 1.25rem; }
 body:not(.light-theme).equal-panels:not(.panels-scroll) .profile-greeting-status { color: #9fb0c2; }
 body:not(.light-theme).equal-panels:not(.panels-scroll) .profile-greeting-status b { color: #ffffff; }
 body:not(.light-theme).equal-panels:not(.panels-scroll) .profile-pic-small { width: 42px; height: 42px; box-shadow: 0 0 0 2px var(--gold); }
@@ -166,8 +165,7 @@ body:not(.light-theme) .series-panel-stat-clickable:hover .series-panel-stat .la
    italic. */
 body:not(.light-theme) .topbar .logo-text .logo-tv,
 body:not(.light-theme) .topbar .logo-accent,
-body:not(.light-theme) .topbar .nav-label,
-body:not(.light-theme) .topbar .profile-greeting-hi {
+body:not(.light-theme) .topbar .nav-label {
   font-family: "Barlow Condensed", "Segoe UI", Arial, sans-serif; font-style: italic; font-weight: 800;
   letter-spacing: 0.01em; text-transform: none;
 }
