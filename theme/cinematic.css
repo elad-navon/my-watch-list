@@ -80,10 +80,9 @@ body:not(.light-theme) .series-panel-stat .label { font-style: normal; font-weig
 body:not(.light-theme) .stats-divider { background: rgba(251, 191, 36, 0.55); transform: skewX(-22deg); }
 
 
-/* ---- The logo: white name, gold slogan. */
+/* ---- The logo: white name. */
 body:not(.light-theme) .logo-text .logo-tv,
 body:not(.light-theme) .logo-accent { color: #ffffff; }
-body:not(.light-theme) .topbar-slogan { color: var(--gold); }
 
 /* ---- The buttons: each icon on a small gold brush stroke like the box
    titles, the name in white; in the box beside the top panel, thin rules
@@ -163,11 +162,10 @@ body:not(.light-theme) .series-panel-stat-clickable:hover .series-panel-stat .nu
 body:not(.light-theme) .series-panel-stat-clickable:hover .series-panel-stat .label { color: #7dd3fc; text-decoration: underline; }
 
 /* The box on the left in the titles' face (Ready to Watch's): the name,
-   the slogan, the buttons' names and the greeting - condensed, heavy,
+   the buttons' names and the greeting - condensed, heavy,
    italic. */
 body:not(.light-theme) .topbar .logo-text .logo-tv,
 body:not(.light-theme) .topbar .logo-accent,
-body:not(.light-theme) .topbar .topbar-slogan,
 body:not(.light-theme) .topbar .nav-label,
 body:not(.light-theme) .topbar .profile-greeting-hi {
   font-family: "Barlow Condensed", "Segoe UI", Arial, sans-serif; font-style: italic; font-weight: 800;
@@ -184,7 +182,7 @@ body:not(.light-theme).equal-panels:not(.panels-scroll) .topbar .nav-item { padd
    and half below, instead of all of it above - the same height in all. */
 body:not(.light-theme).equal-panels:not(.panels-scroll) .topbar .navbar-nav { gap: 0; }
 body:not(.light-theme).equal-panels:not(.panels-scroll) .topbar .nav-item { padding-top: 10px; padding-bottom: 10px; }
-/* The first one's rule above is the gold one under the slogan, already 8px
+/* The first one's rule above is the gold one under the logo, already 8px
    up (5px on a short screen - see .topbar-left::after): that much less. */
 body:not(.light-theme).equal-panels:not(.panels-scroll) .topbar .navbar-nav > .nav-item:first-child { padding-top: 2px; }
 @media (max-height: 860px) {
@@ -255,7 +253,7 @@ body:not(.light-theme) .list-panel--airing .list-panel-header-row > * { position
    the title almost to the page counter. */
 body:not(.light-theme) .list-panel--airing .list-panel-header-row::before { left: 26%; width: 48%; background-position: left -10px top -10px; }
 
-/* A thin gold rule between the logo and slogan and the buttons under them,
+/* A thin gold rule between the logo and the buttons under them,
    drawn in the gap between them (no box grows). */
 body:not(.light-theme).equal-panels:not(.panels-scroll) .topbar-left { position: relative; }
 body:not(.light-theme).equal-panels:not(.panels-scroll) .topbar-left::after {

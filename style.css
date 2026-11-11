@@ -33,11 +33,6 @@
     --muted: #93a4b8;
   }
   .topbar-left { display: flex; align-items: center; gap: 14px; }
-  .topbar-slogan-sep { color: #ffffff; font-size: 0.9rem; }
-  .topbar-slogan {
-    font-weight: 800; font-size: 1.75rem; letter-spacing: 0.5px;
-    text-transform: uppercase; color: #ffffff; white-space: nowrap;
-  }
   .topbar-clock {
     justify-self: center; min-width: 0; max-width: 100%;
     display: flex; align-items: baseline; gap: 8px;
@@ -422,13 +417,12 @@
      sizes are the ones the old faces had, so names fit as before (and
      fitPairText / fitPanelRowLines still fit the long ones). */
   /* (body-prefixed: these win over the faces set further down.) */
-  body .logo-text .logo-tv, body .logo-accent, body .topbar-slogan,
+  body .logo-text .logo-tv, body .logo-accent,
   body .list-panel-header, body .list-panel-count, body .series-panel-stat .num, body .series-panel-stat .label,
   body .card-body h3, body .list-row-title {
     font-family: "Fraunces", Georgia, "Times New Roman", serif; text-transform: none; letter-spacing: 0;
   }
   body .logo-text .logo-tv, body .logo-accent { font-weight: 800; }
-  body .topbar-slogan { font-style: italic; font-weight: 600; }
   body .list-panel-header, body .list-panel-count { font-weight: 700; font-size: 1.2rem; }
   /* The bottom panels' titles share their row with the pager and the
      count: a size down, and a little less padding, so the whole name shows. */
@@ -1183,7 +1177,7 @@
     body.equal-panels:not(.panels-scroll) .bottom-panels-row .panel-pair { --pp-text: var(--bot-text, 210px); }
     body.equal-panels:not(.panels-scroll) .bottom-panels-row:has(.panel-pair) .list-panel--airing { flex: 0 0 var(--airing-w, 50%); box-sizing: border-box; }
     /* No top bar: what it held is a box of its own left of the top panel,
-       as tall as it (--top-box-h) - the logo and slogan, the four buttons
+       as tall as it (--top-box-h) - the logo, the buttons
        as wide as the box, each with its name, and the greeting at the
        bottom, all centred. The date and clock go. */
     body.equal-panels:not(.panels-scroll) { --home-w: 250px; }
@@ -1202,8 +1196,7 @@
     body.equal-panels:not(.panels-scroll) .topbar-left { flex-direction: column; align-items: center; gap: 6px; text-align: center; }
     body.equal-panels:not(.panels-scroll) .logo-icon svg { width: 40px; height: 40px; }
     body.equal-panels:not(.panels-scroll) .logo-text .logo-tv, body.equal-panels:not(.panels-scroll) .logo-accent { font-size: 1.6rem; }
-    body.equal-panels:not(.panels-scroll) .topbar-slogan { font-size: 1.2rem; }
-    body.equal-panels:not(.panels-scroll) .topbar-slogan-sep, body.equal-panels:not(.panels-scroll) .topbar-clock { display: none; }
+    body.equal-panels:not(.panels-scroll) .topbar-clock { display: none; }
     body.equal-panels:not(.panels-scroll) .topbar-controls { flex: 1 1 auto; min-height: 0; flex-direction: column; align-items: stretch; }
     body.equal-panels:not(.panels-scroll) .navbar-nav { flex: 1 1 auto; flex-direction: column; gap: 10px; }
     body.equal-panels:not(.panels-scroll) .nav-item,
@@ -1249,7 +1242,6 @@
     @media (max-height: 860px) {
       body.equal-panels:not(.panels-scroll) .topbar { padding: 12px 14px; gap: 10px; }
       body.equal-panels:not(.panels-scroll) .logo-icon svg { width: 32px; height: 32px; }
-      body.equal-panels:not(.panels-scroll) .topbar-slogan { font-size: 1.05rem; }
       body.equal-panels:not(.panels-scroll) .navbar-nav { gap: 7px; }
       body.equal-panels:not(.panels-scroll) .nav-item,
       body.equal-panels:not(.panels-scroll) .nav-item.icon-only { min-height: 38px; padding: 6px 12px; }
@@ -2145,7 +2137,7 @@
     /* Top bar wraps to two rows instead of becoming a bottom tab bar -
        logo stays on its own row, controls take the full width below it. */
     .topbar { display: flex; flex-wrap: wrap; padding: 10px 14px; gap: 8px; }
-    .topbar-slogan-sep, .topbar-slogan, .topbar-clock { display: none; }
+    .topbar-clock { display: none; }
     .topbar-controls { width: 100%; justify-content: space-between; }
     .navbar-nav { flex: 1 1 auto; gap: 6px; }
     .nav-item {
@@ -2336,7 +2328,6 @@
      no panel box, title or arrows: its posters in L-shaped pairs as tall as
      the screen allows (--phone-pair-h, fitTopPanelToWindow), swiped sideways. */
   body.phone-landscape .topbar { flex-wrap: nowrap; align-items: center; gap: 12px; padding: 6px 14px; min-height: 0; }
-  body.phone-landscape .topbar-slogan-sep, body.phone-landscape .topbar-slogan,
   body.phone-landscape .topbar-clock, body.phone-landscape .profile-greeting-inline { display: none; }
   body.phone-landscape .logo-icon svg { width: 26px; height: 26px; }
   /* The four tabs need the width: the logo's triangle stays, its words go. */
