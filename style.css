@@ -1587,9 +1587,9 @@
     from { transform: rotateY(-90deg); }
     to { transform: rotateY(0deg); }
   }
-  .episodes-modal, .cast-modal, .panel-shows-modal { animation: episodes-modal-in 0.8s ease-out; transform-origin: center; }
+  .episodes-modal, .panel-shows-modal { animation: episodes-modal-in 0.8s ease-out; transform-origin: center; }
   @media (prefers-reduced-motion: reduce) {
-    .episodes-modal, .cast-modal, .panel-shows-modal, .logo-icon { animation: none; }
+    .episodes-modal, .panel-shows-modal, .logo-icon { animation: none; }
   }
   .modal-close-btn {
     background: transparent; border: none; color: var(--muted); font-size: 1.4rem;
@@ -1667,47 +1667,8 @@
     font-family: "Barlow Condensed", "Segoe UI", Arial, sans-serif; font-weight: 700; font-size: 1.3rem;
     color: var(--gold); font-variant-numeric: tabular-nums;
   }
-  /* Cast modal - same head shape as .episodes-modal (list-panel-header +
-     subtitle), a card grid of cast members below: square headshot on top,
-     name + character centered underneath. */
-  .cast-modal { max-width: 760px; display: flex; flex-direction: column; max-height: 85vh; padding: 20px 0 4px; }
-  /* The cast window's CAST / EPISODES tabs: the active one underlined in
-     gold, the other dimmed, on one shared line. */
-  .modal-tabs { flex: 1 1 auto; display: flex; gap: 22px; border-bottom: 1px solid var(--border); }
-  .episodes-modal-head .modal-tab {
-    flex: 0 0 auto; margin: 0 0 -1px; padding: 0 0 8px; background: none; border: 0;
-    border-bottom: 3px solid transparent; color: var(--muted); cursor: pointer;
-  }
-  .episodes-modal-head .modal-tab.active { color: var(--text); border-bottom-color: var(--gold); }
-  .episodes-modal-head .modal-tab:not(.active) svg { opacity: 0.55; }
-  .episodes-modal-head .modal-tab:hover { color: var(--text); }
-  .cast-grid[hidden], .cast-episodes-tab[hidden] { display: none; }
-  /* The Episodes tab: the episodes manager, its season list scrolling and
-     its save bar kept in view. */
-  .cast-episodes-tab { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; padding: 4px 22px 16px; }
-  .cast-episodes-tab .ep-manager { flex: 1 1 auto; min-height: 0; max-height: none; }
-  .cast-grid {
-    overflow-y: auto; padding: 4px 22px 20px;
-    display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 20px;
-  }
-  .cast-item { display: flex; flex-direction: column; gap: 8px; padding: 6px; border-radius: 10px; }
-  .cast-item:hover { background: var(--card-hover); }
-  .cast-photo {
-    width: 100%; aspect-ratio: 1 / 1; border-radius: 10px; object-fit: cover; display: block;
-    background: var(--card-hover);
-  }
-  .cast-photo.placeholder {
-    display: flex; align-items: center; justify-content: center;
-    font-size: 2.2rem; font-weight: 700; color: var(--muted);
-  }
-  .cast-info { min-width: 0; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 2px; }
-  .cast-name { font-size: 0.9rem; font-weight: 700; color: var(--text); }
-  .cast-name-link { color: inherit; text-decoration: none; }
-  .cast-name-link:hover { text-decoration: underline; color: var(--accent2); }
-  .cast-character { font-size: 0.78rem; color: var(--muted); font-weight: 500; }
-  .cast-episodes { font-size: 0.68rem; color: var(--muted); font-weight: 500; opacity: 0.75; }
   /* "All shows" modal opened from a bottom panel's show-count link - same
-     head shape as .cast-modal. The grid still sits inside a .list-panel
+     head shape as .episodes-modal. The grid still sits inside a .list-panel
      wrapper (neutralized below) so its background/border/padding stays out
      of the way; shows posters, not banners, at the real 2:3 poster ratio
      (same ratio .poster uses in the top carousel) rather than a rotated
@@ -2242,7 +2203,6 @@
     .list-check { display: none; }
 
     .modal-overlay { padding: 12px; }
-    .cast-grid { grid-template-columns: repeat(2, 1fr); gap: 16px; }
     /* The 8-column grid only makes sense at desktop widths - on mobile it
        drops to 2 columns, scrolling vertically like the rest of the page
        instead of the fixed-width horizontally-swiped row used elsewhere,
@@ -2803,6 +2763,15 @@
   .ms-stats dt { color: var(--muted); }
   .ms-fill { flex: 1 1 auto; border-bottom: 1px dotted rgba(255, 255, 255, 0.22); transform: translateY(-3px); }
   .ms-stats dd { margin: 0; font-weight: 600; font-variant-numeric: tabular-nums; }
+  /* Move the show to another status: one button each, the current one lit. */
+  .ms-status-pick { display: flex; flex-wrap: wrap; gap: 6px; }
+  .ms-status-btn {
+    display: inline-flex; align-items: center; gap: 6px; background: rgba(255, 255, 255, 0.04); border: 1px solid var(--border);
+    color: var(--muted); font: inherit; font-weight: 600; font-size: 0.78rem; padding: 5px 10px; border-radius: 20px; cursor: pointer;
+  }
+  .ms-status-btn::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--ms-c); }
+  .ms-status-btn:hover { color: var(--text); border-color: var(--ms-c); }
+  .ms-status-btn[aria-pressed="true"] { color: var(--text); border-color: var(--ms-c); background: color-mix(in srgb, var(--ms-c) 18%, transparent); cursor: default; }
 
   .ms-d-body { display: grid; gap: 26px; padding: 28px max(40px, calc((100% - 1440px) / 2)) 80px; }
   .ms-d-two { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 26px; align-items: start; }
@@ -2831,6 +2800,18 @@
   .ms-ep.f { opacity: 0.6; }
   .ms-ep.f .ms-chk { border: 2px dashed var(--muted); }
   .ms-ep.next { border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold) inset; }
+  .ms-sec-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+  .ms-edit-eps {
+    background: var(--bg); border: 1px solid var(--gold); color: var(--gold); font: inherit; font-weight: 700; font-size: 0.85rem;
+    padding: 6px 12px; border-radius: 8px; cursor: pointer;
+  }
+  .ms-edit-eps:hover { background: var(--gold); color: #14100a; }
+  .ms-edit-eps:focus-visible, .ms-status-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .ms-eps-box { display: grid; gap: 16px; min-width: 0; }
+  /* Editing: the manager has its own seasons and Back. */
+  .ms-editing .ms-sec-tools { display: none; }
+  .ms-eps-box .ep-manager { max-height: none; }
+  .ms-eps-box .modal-back-btn { justify-self: start; margin: 0; }
   .ms-legend { display: flex; flex-wrap: wrap; gap: 16px; font-size: 0.8rem; color: var(--muted); }
   .ms-legend span { display: inline-flex; align-items: center; gap: 6px; }
   .ms-legend i { width: 11px; height: 11px; border-radius: 50%; }

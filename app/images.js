@@ -472,9 +472,6 @@ const CLOCK_ICON_SOLID_SVG = `<svg viewBox="0 0 24 24" width="17" height="17"><c
 // the "Episodes Left" modal header - a list reads as "what's inside" more
 // directly than a clock does.
 const LIST_ICON_SOLID_SVG = `<svg viewBox="0 0 24 24" width="17" height="17"><circle cx="12" cy="12" r="9" fill="var(--gold)"></circle><rect x="6.5" y="8.2" width="1.8" height="1.8" rx="0.4" fill="var(--card)"></rect><rect x="9.5" y="8.2" width="8" height="1.8" rx="0.4" fill="var(--card)"></rect><rect x="6.5" y="11.1" width="1.8" height="1.8" rx="0.4" fill="var(--card)"></rect><rect x="9.5" y="11.1" width="8" height="1.8" rx="0.4" fill="var(--card)"></rect><rect x="6.5" y="14" width="1.8" height="1.8" rx="0.4" fill="var(--card)"></rect><rect x="9.5" y="14" width="8" height="1.8" rx="0.4" fill="var(--card)"></rect></svg>`;
-// Same gold-circle-with-cutout language again, used only for the Cast
-// modal header - a head-and-shoulders silhouette.
-const CAST_ICON_SOLID_SVG = `<svg viewBox="0 0 24 24" width="17" height="17"><circle cx="12" cy="12" r="9" fill="var(--gold)"></circle><circle cx="12" cy="9.3" r="2.6" fill="var(--card)"></circle><path d="M6.3 17.2c0-3.1 2.6-4.4 5.7-4.4s5.7 1.3 5.7 4.4" fill="var(--card)"></path></svg>`;
 // Stat-row icons for the top card's header: a TV screen for "Series", a
 // stack of layers ("a pile of episodes") for "Episodes Left", and a
 // clock for "Watch Time Left" - same stroke language as the rest of the

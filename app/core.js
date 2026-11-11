@@ -17,8 +17,8 @@ const isImdbId = id => /^tt\d+$/.test(String(id || ""));
 
 // Element actions, instead of on*="code" inside the page's HTML: an element
 // names its action and arguments, and the action is a function registered
-// with pageAction(name, fn) - fn(element, event, ...args). onClick("cast",
-// "main", 3) gives ` data-onclick="cast" data-args="[&quot;main&quot;,3]"`;
+// with pageAction(name, fn) - fn(element, event, ...args). onClick("showPage",
+// "main", 3) gives ` data-onclick="showPage" data-args="[&quot;main&quot;,3]"`;
 // onClickStop also keeps the click from reaching what's around the element
 // (a button on a card that opens something else); clickStop() only that;
 // onError(...) for a picture that fails to load.

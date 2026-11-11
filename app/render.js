@@ -665,7 +665,7 @@ function renderRows(rows, totalRemainingEps, totalRemainingMinutes, recentlyWatc
         <div class="card-body"${pairPosters ? posterGlowStyle(displaySrcFor("main", row)) : ""}>
           ${pairPosters ? posterGlowHtml(displaySrcFor("main", row)) : ""}
           <div class="card-title-row">
-            <h3 title="View cast"${onClickStop("cast", "main", arrIdx)}>${esc(row.title)}</h3>
+            <h3 title="Open the show's page"${onClickStop("showPage", "main", arrIdx)}>${esc(row.title)}</h3>
             <button class="card-menu-btn" title="Manage"${onClickStop("cardMenu", arrIdx)}>&#8942;</button>
           </div>
           <div class="next-up-row">
@@ -799,7 +799,7 @@ function renderAiringRows(rows) {
       <div class="card">
         ${wrapHtml}
         <div class="card-body">
-          <h3 title="View cast"${onClickStop("cast", "main", arrIdx)}>${esc(row.title)}</h3>
+          <h3 title="Open the show's page"${onClickStop("showPage", "main", arrIdx)}>${esc(row.title)}</h3>
           <div class="next-up">Next: ${row.nextLabel}</div>
           ${row.nextEpisodeTitle ? `<div class="episode-title">${esc(row.nextEpisodeTitle)}</div>` : ""}
           <div class="air-date">&#128197; ${airDateText(row)}</div>

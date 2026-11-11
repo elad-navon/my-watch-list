@@ -8,8 +8,11 @@
 // only for the shows on screen; Watching, Plan to Watch and On Hold use
 // the episode lists the home page already loaded. A show's page uses
 // TMDB's details and cast (the same cached calls as the home page and the
-// cast window) and MDBList's scores (kept a day). Nothing is ever changed
-// from here. Uses app.js's globals and stats.js's statsShowInfo / statsPool.
+// cast) and MDBList's scores (kept a day). A show's page is also where its
+// status is changed and its episodes marked (the search window's episodes
+// manager, saved the same way), and a show's title on the home page opens
+// it (openShowPage). Uses app.js's globals and stats.js's statsShowInfo /
+// statsPool.
 
 const MS_TABS = [
   { id: "watching", label: "Watching", color: "var(--accent)" },
@@ -28,6 +31,9 @@ let msRows = [];               // one per library show (msGatherRows)
 const msInfo = new Map();      // docId -> statsShowInfo result, this session
 const msEnriched = new Set();  // statuses whose episode counts are in
 let msDetailToken = 0;
+let msStandalone = false;      // opened from the home page: Back closes it all
+let msChanged = false;         // a status changed here: the home page redraws on close
+let msGuard = null;            // the episodes manager's "leave with unsaved changes?"
 
 // ---------------------------------------------------------------------
 // Small helpers
@@ -179,8 +185,11 @@ function msLoadState() {
   } catch (e) { /* defaults */ }
 }
 
-function msOpenPage() {
+function msOpenPage(opts = {}) {
   if (!library || !library.store || !library.adapter || document.getElementById("myShowsPage")) return;
+  msStandalone = !!opts.docId;
+  msChanged = false;
+  msGuard = null;
   msLoadState();
   msState.q = "";
   const overlay = document.createElement("div");
@@ -247,7 +256,26 @@ function msOpenPage() {
   });
 
   msRenderSubtitle();
-  msSelectTab(msState.tab, true);
+  msSelectTab(msState.tab, !msStandalone);
+  if (msStandalone) msOpenDetail(String(opts.docId));
+}
+
+// A show's page straight from the home page (its title): over everything,
+// and Back closes it. Any other window open (the all-shows window) is
+// closed first, its history entry gone, before this one takes its own.
+async function openShowPage(ids) {
+  if (!library || !library.adapter) return;
+  const found = library.adapter.find(ids);
+  if (!found) { showToast("This show isn't in your list.", true); return; }
+  if (document.getElementById("myShowsPage")) { msOpenDetail(found.docId); return; }
+  if (activeModalClose) {
+    await new Promise(resolve => {
+      window.addEventListener("popstate", () => setTimeout(resolve, 0), { once: true });
+      history.back();
+    });
+    if (activeModalClose) return; // that window refused to close
+  }
+  msOpenPage({ docId: found.docId });
 }
 
 function msRenderSubtitle() {
@@ -377,13 +405,20 @@ function msKeyHandler(e) {
 function msClosePage() {
   const page = document.getElementById("myShowsPage");
   if (!page) return;
+  if (msGuard && !msGuard()) return;
+  msGuard = null;
   msDetailToken++;
   page.remove();
   if (!document.getElementById("statsPage")) document.body.classList.remove("stats-open");
   document.removeEventListener("keydown", msKeyHandler);
   consumeModalHistoryState();
-  const btn = document.getElementById("myShowsBtn");
-  if (btn) btn.focus();
+  if (!msStandalone) { const btn = document.getElementById("myShowsBtn"); if (btn) btn.focus(); }
+  // Changed here: the home page behind is stale.
+  if (msChanged || watchedMarksChanged) {
+    msChanged = false;
+    watchedMarksChanged = false;
+    main();
+  }
 }
 
 // An episode marked while the page is open (Emby): the rows again, in place.
@@ -406,7 +441,8 @@ function myShowsRefreshIfOpen() {
 // Opened over the list (which keeps its place). Back - the page's button,
 // Escape, the browser's or the phone's - comes back to the list: it has a
 // history entry of its own, and while it's open the modal history's close
-// function is "back to the list".
+// function is "back to the list". Opened from the home page it shares the
+// page's entry instead, so Back closes it all.
 function msOpenDetail(docId) {
   const pane = document.getElementById("msDetail");
   const show = library.store.view().get(String(docId));
@@ -414,23 +450,79 @@ function msOpenDetail(docId) {
   pane.hidden = false;
   pane.scrollTop = 0;
   pane.innerHTML = `<div class="ms-d-loading"><div class="spinner"></div></div>`;
-  activeModalClose = msCloseDetail;
-  history.pushState({ modal: true }, "");
+  if (!msStandalone) {
+    activeModalClose = msCloseDetail;
+    history.pushState({ modal: true }, "");
+  }
   const token = ++msDetailToken;
   msBuildDetail(String(docId), show, token).catch(err => {
-    if (token === msDetailToken) pane.innerHTML = `<div class="ms-d-top"><button type="button" class="ms-back" data-ep-back>&larr; My Shows</button></div><p class="ms-empty">Couldn't load this show: ${esc(err.message || err)}</p>`;
+    if (token === msDetailToken) pane.innerHTML = `<div class="ms-d-top"><button type="button" class="ms-back" data-ep-back>&larr; ${msStandalone ? "Back" : "My Shows"}</button></div><p class="ms-empty">Couldn't load this show: ${esc(err.message || err)}</p>`;
   });
 }
 // Called by the history handler (popstate) - the entry is already gone.
 function msCloseDetail() {
+  if (msGuard && !msGuard()) return;
+  msGuard = null;
   const pane = document.getElementById("msDetail");
   msDetailToken++;
   if (pane) { pane.hidden = true; pane.innerHTML = ""; }
   // The list is open again: its own close function back, once the history
   // handler is done (set now, it would read as a refused close).
   queueMicrotask(() => { if (document.getElementById("myShowsPage")) activeModalClose = msClosePage; });
+  if (msChanged || watchedMarksChanged) myShowsRefreshIfOpen();
   const card = document.querySelector(`#msList [data-doc="${CSS.escape(String(msLastDetailDoc || ""))}"]`);
   if (card) card.focus({ preventScroll: true });
+}
+
+// The show's page drawn again after a change made on it, where it was.
+async function msRedrawDetail(docId) {
+  const pane = document.getElementById("msDetail");
+  const show = library.store.view().get(String(docId));
+  if (!pane || !show) return;
+  msGuard = null;
+  msRows = msGatherRows();
+  const y = pane.scrollTop;
+  const token = ++msDetailToken;
+  await msBuildDetail(String(docId), show, token).catch(() => {});
+  if (token === msDetailToken) pane.scrollTop = y;
+}
+
+async function msChangeStatus(docId, status, title, year) {
+  const show = library.store.view().get(String(docId));
+  if (!show || show.status === status) return;
+  try {
+    // Sent to Plan to Watch by hand: kept there (as the card menu does).
+    await saveShowStatus({ library: docId }, status,
+      status === "plantowatch" ? { title, year, autoStarted: "manual" } : { title, year });
+    msChanged = true;
+    showToast(`Moved "${title}" to ${msTab(status).label}`);
+  } catch (err) {
+    reportWriteError(err);
+  }
+  await msRedrawDetail(docId);
+}
+
+// Edit episodes: the episodes manager (search.js) in the Episodes box -
+// marks staged until Save, a guard against leaving with unsaved ones, and
+// its Back draws the page again with what was saved.
+async function msEditEpisodes(docId, title) {
+  const box = document.getElementById("msEpsBox");
+  const pane = document.getElementById("msDetail");
+  if (!box || !pane) return;
+  const match = await library.adapter.findStatus({ library: docId }).catch(() => null);
+  if (!match) { showToast("This show isn't in your list.", true); return; }
+  const section = box.closest(".ms-sec");
+  section.classList.add("ms-editing");
+  // The phone's Back steps out of the manager first (appBackPressed takes
+  // the first [data-ep-back] on screen).
+  const pageBack = pane.querySelector(".ms-back");
+  if (pageBack) pageBack.removeAttribute("data-ep-back");
+  openEpisodesManager({ title }, match, {
+    body: box,
+    overlay: pane,
+    setGuard: fn => { msGuard = fn; },
+    onBack: () => { msGuard = null; msRedrawDetail(docId); },
+  });
 }
 let msLastDetailDoc = null;
 
@@ -539,7 +631,7 @@ async function msBuildDetail(docId, show, token) {
     <section class="ms-hero">
       ${backdrop ? `<div class="ms-backdrop" style="background-image:url('${esc(backdrop)}')"></div>` : `<div class="ms-backdrop"></div>`}
       <div class="ms-hero-in">
-        <div class="ms-d-top"><button type="button" class="ms-back" data-ep-back>&larr; My Shows</button></div>
+        <div class="ms-d-top"><button type="button" class="ms-back" data-ep-back>&larr; ${msStandalone ? "Back" : "My Shows"}</button></div>
         ${poster ? `<img class="ms-d-poster" src="${esc(poster)}" alt="">` : `<div class="ms-d-poster ms-pic-empty">${esc((title[0] || "?").toUpperCase())}</div>`}
         <div class="ms-d-info">
           <h1 class="ms-d-title">${esc(title)}</h1>
@@ -551,6 +643,8 @@ async function msBuildDetail(docId, show, token) {
         </div>
         <aside class="ms-mine">
           <div class="ms-mine-status"><span class="ms-pill"><i></i>${esc(tab.label)}</span><span class="ms-mine-sub">${statusSub}</span></div>
+          <div class="ms-status-pick" role="group" aria-label="Move to">${MS_TABS.map(t =>
+            `<button type="button" class="ms-status-btn" data-status="${t.id}" style="--ms-c:${t.color}" aria-pressed="${t.id === show.status}">${t.label}</button>`).join("")}</div>
           <div class="ms-ringrow">
             <svg class="ms-ring" viewBox="0 0 100 100" role="img" aria-label="${pct}% watched">
               <circle cx="50" cy="50" r="42" fill="none" stroke="var(--border)" stroke-width="10"></circle>
@@ -568,9 +662,14 @@ async function msBuildDetail(docId, show, token) {
       <div class="ms-d-two">
         <section class="ms-sec">
           <div class="ms-sec-h"><h3 class="ms-h">Episodes</h3>
-            ${seasons.length > 1 ? `<div class="ms-seasons" role="group" aria-label="Season">${seasons.map(s => `<button type="button" class="ms-season" data-season="${s}" aria-pressed="${s === startSeason}">${s}</button>`).join("")}</div>` : ""}</div>
-          <div class="ms-eps" id="msEps"></div>
-          <div class="ms-legend"><span><i class="w"></i>Watched</span><span><i class="u"></i>Not watched</span><span><i class="f"></i>Not aired yet</span></div>
+            <div class="ms-sec-tools">
+              ${seasons.length > 1 ? `<div class="ms-seasons" role="group" aria-label="Season">${seasons.map(s => `<button type="button" class="ms-season" data-season="${s}" aria-pressed="${s === startSeason}">${s}</button>`).join("")}</div>` : ""}
+              ${eps.length ? `<button type="button" class="ms-edit-eps" id="msEditEps">Edit episodes</button>` : ""}
+            </div></div>
+          <div class="ms-eps-box" id="msEpsBox">
+            <div class="ms-eps" id="msEps"></div>
+            <div class="ms-legend"><span><i class="w"></i>Watched</span><span><i class="u"></i>Not watched</span><span><i class="f"></i>Not aired yet</span></div>
+          </div>
         </section>
         <section class="ms-sec">
           <div class="ms-sec-h"><h3 class="ms-h">${nextEp ? "Up next" : "Latest episode"}</h3></div>
@@ -609,6 +708,11 @@ async function msBuildDetail(docId, show, token) {
     };
   });
   pane.querySelector(".ms-back").onclick = () => history.back();
+  pane.querySelectorAll(".ms-status-btn").forEach(b => {
+    b.onclick = () => msChangeStatus(docId, b.dataset.status, title, show.year);
+  });
+  const editBtn = pane.querySelector("#msEditEps");
+  if (editBtn) editBtn.onclick = () => msEditEpisodes(docId, title);
 
   // Cast: the same picks as the cast window, each name an IMDb link once
   // that person's id is in (lazily, as there).

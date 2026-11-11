@@ -53,15 +53,10 @@ function listPanelCountHtml(count, source) {
 // three render*Html functions below so the "all shows" modal's flip-card
 // back face (openPanelShowsModal) can show precisely the same info as the
 // show's own row instead of a second, drift-prone copy of this markup.
-// mode "row" is the row's own title (opens the cast modal, as always);
-// mode "flip" is the flip-card back face's title (an IMDb link instead,
-// since the cast modal doesn't make sense floating over a poster grid).
+// Either way the title opens the show's page (my-shows.js) - mode "row"
+// is the row's own text, mode "flip" the flip-card back face's.
 function rowInfoWrapHtml(row, idx, source, mode) {
-  const titleHtml = mode === "flip"
-    ? (isImdbId(row.imdbId)
-        ? `<div class="list-row-title"><a href="https://www.imdb.com/title/${row.imdbId}/" target="_blank" rel="noopener"${clickStop()}>${esc(row.title)}</a></div>`
-        : `<div class="list-row-title">${esc(row.title)}</div>`)
-    : `<div class="list-row-title" title="View cast"${onClickStop("cast", source, idx)}>${esc(row.title)}</div>`;
+  const titleHtml = `<div class="list-row-title" title="Open the show's page"${onClickStop("showPage", source, idx)}>${esc(row.title)}</div>`;
   // In the one-page layout the badges and IMDb rating sit on the thumbnail
   // (thumbBarHtml), so the row's text leaves them out; the flip-card back
   // face and the older scrolling layout keep them as text.
@@ -178,7 +173,7 @@ function stackedRowsHtml(items, start, rowHtmlFn) {
 // `pageSize` stacked rows per page, the last page holding whatever is left
 // (no show repeated across pages). Row markup itself comes from
 // `rowHtmlFn(item, idx)`, idx being the item's index in the FULL list (not
-// the page), since row handlers like openCastModal/openPlanCardMenu index
+// the page), since row handlers like showPage/openPlanCardMenu index
 // into that full list.
 function pagedPanelHtml(list, pageSize, rowHtmlFn) {
   const n = list.length;
