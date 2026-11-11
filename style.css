@@ -403,6 +403,12 @@
   body:not(.light-theme) .poster-pair .watch-progress-track { background: rgba(0, 0, 0, 0.45); }
   /* Whole names (fitPairText sizes them). */
   .poster-pair .card-body h3 { max-height: none; overflow: visible; }
+  /* Nothing in a top box shrinks: squeezed, its lines ran over each other
+     (a long name) while the last one still sat inside, so fitPairText saw
+     no overflow; whole, the overflow shows at the foot and it fits them. */
+  .poster-pair .card-body > * { flex-shrink: 0; }
+  /* The time left a slimmer line, for more of the text above it. */
+  .poster-pair .time-left { padding-top: 5px; line-height: 1.1; }
   /* (.list-rows-paged in front: the paged lists' 2-line clamp, later on, would clip the letters' outline.) */
   .list-rows-paged .panel-pair .list-row-title, .panel-pair .list-row-title { display: block; -webkit-line-clamp: none; overflow: visible; }
   /* The bottom pairs' boxes are short: the network chip and the air date's
