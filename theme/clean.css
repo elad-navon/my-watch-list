@@ -3,7 +3,7 @@
    cinematic one (theme/cinematic.css skips itself here). Plain dark boxes
    with a thin edge; each box title in small spaced capitals beside a bar
    and an icon in the box's own colour (Ready to Watch blue, Airing Next
-   gold, Just Watched green, Plan to Watch purple); show names in condensed
+   gold, Just Watched green, Plan to Watch orange); show names in condensed
    capitals; the home box's buttons with their icons on small tiles.
    Nothing here changes a box's size or what it holds. Loaded after
    cinematic.css. */
@@ -34,7 +34,7 @@ body.look-clean:not(.light-theme).equal-panels:not(.panels-scroll) .topbar {
 body.look-clean:not(.light-theme) .series-panel { --clean-c: #38bdf8; }
 body.look-clean:not(.light-theme) .list-panel--airing { --clean-c: #fbbf24; }
 body.look-clean:not(.light-theme) .list-panel--watched { --clean-c: #4ade80; }
-body.look-clean:not(.light-theme) .list-panel--plan { --clean-c: #c084fc; }
+body.look-clean:not(.light-theme) .list-panel--plan { --clean-c: #fb923c; }
 
 /* ---- Box titles: small spaced capitals after a bar and the solid icon,
    both in the box's colour - no frame round them. As tall as before, so
@@ -49,7 +49,7 @@ body.look-clean:not(.light-theme).equal-panels:not(.panels-scroll) .series-panel
   border: none; border-left: 4px solid var(--clean-c, #38bdf8); border-radius: 0;
   padding: 0 4px 0 12px; margin-bottom: 0;
   color: var(--text); font-family: "Work Sans", "Segoe UI", Arial, sans-serif;
-  font-size: 1rem; font-weight: 700; font-style: normal; line-height: 1;
+  font-size: 1.25rem; font-weight: 700; font-style: normal; line-height: 1;
   letter-spacing: 0.14em; text-transform: uppercase;
   -webkit-text-stroke: 0; text-shadow: none;
 }
@@ -57,7 +57,7 @@ body.look-clean:not(.light-theme).equal-panels:not(.panels-scroll) .series-panel
    the capitals a little tighter there, so the whole name shows.) */
 body.look-clean:not(.light-theme) .list-panel .list-panel-header,
 body.look-clean:not(.light-theme):not(.panels-scroll) .list-panel .list-panel-header {
-  flex: 0 1 auto; font-size: 0.92rem; letter-spacing: 0.06em; gap: 8px; padding-left: 10px;
+  flex: 0 1 auto; font-size: 1.12rem; letter-spacing: 0.05em; gap: 8px; padding-left: 10px;
 }
 /* (In a narrow box the page counter between the arrows gives way first -
    the arrows stay; style.css does the same below 390px.) */
@@ -68,7 +68,7 @@ body.look-clean:not(.light-theme) .list-panel .list-panel-header > span { min-wi
 body.look-clean:not(.light-theme) .list-panel .list-panel-count { flex: 0 0 auto; white-space: nowrap; }
 body.look-clean:not(.light-theme) .title-icon-usual { display: none; }
 body.look-clean:not(.light-theme) .title-icon-cine { display: inline-flex; color: var(--clean-c, #38bdf8); }
-body.look-clean:not(.light-theme) .list-panel-header .title-icon-cine svg { width: 21px; height: 21px; }
+body.look-clean:not(.light-theme) .list-panel-header .title-icon-cine svg { width: 24px; height: 24px; }
 
 /* ---- Ready to Watch's three numbers: small tiles beside its title. */
 body.look-clean:not(.light-theme) .series-panel-header-left,
