@@ -116,14 +116,16 @@ function msGatherRows() {
 
 // The poster the home page shows for this show if one was picked there,
 // else TMDB's own.
+// (w342: the grid's posters are 165-330px wide - w185 was blurry. TMDB's
+// image server, not its API: no quota.)
 function msPosterFor(show, info) {
   const tmdb = show.ids && show.ids.tmdb;
   if (tmdb != null) {
     const picked = getImageOverrides()[tmdb];
     const path = picked && (picked.panelPosterPath || picked.posterPath);
-    if (path) return msImgUrl(path, "w185");
+    if (path) return msImgUrl(path, "w342");
   }
-  return info && info.p ? msImgUrl(info.p, "w185") : null;
+  return info && info.p ? msImgUrl(info.p, "w342") : null;
 }
 
 // Watching / Plan to Watch / On Hold: episode counts and the next episode,
