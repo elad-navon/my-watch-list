@@ -121,8 +121,34 @@
   // `extra` lists after it - aired or not, so a new season's episodes stay
   // once they air: dated after the snapshot's last dated episode, or undated
   // and numbered after its last episode. Nothing the snapshot covers is
-  // replaced (numbering between the two can differ).
-  function appendAfter(base, extra) {
+  // replaced (numbering between the two can differ) - except, with
+  // `fillDates`, a snapshot episode still undated after its last dated one:
+  // listed before its air date was set, it takes the date (and time) of the
+  // other source's episode of the same number, else it never airs (Eretz
+  // Nehederet's S24E03, undated when imported, kept the show off Ready to
+  // Watch for good). Its own keys and any real title stay. Older undated
+  // episodes are left alone (whole old seasons some shows have undated,
+  // numbered differently elsewhere).
+  function appendAfter(base, extra, { fillDates = false } = {}) {
+    if (fillDates) {
+      const byNum = new Map((extra || []).filter(e => e.date).map(e => [`${e.season}-${e.episode}`, e]));
+      let lastDated = null;
+      for (const e of base) {
+        if (!e.date || e.season == null || e.season === 0 || e.episode == null) continue;
+        if (!lastDated || e.season > lastDated.season || (e.season === lastDated.season && e.episode > lastDated.episode)) lastDated = e;
+      }
+      const later = e => !!lastDated && e.season != null && e.season !== 0 && e.episode != null &&
+        (e.season > lastDated.season || (e.season === lastDated.season && e.episode > lastDated.episode));
+      base = base.map(e => {
+        const twin = !e.date && later(e) ? byNum.get(`${e.season}-${e.episode}`) : null;
+        if (!twin) return e;
+        const filled = { ...e, date: twin.date };
+        if (twin.hasTime) filled.hasTime = true; else delete filled.hasTime;
+        if (!realTitle(e.title) && realTitle(twin.title)) filled.title = twin.title;
+        if (e.runtime == null && twin.runtime != null) filled.runtime = twin.runtime;
+        return filled;
+      });
+    }
     const nums = new Set(base.map(e => `${e.season}-${e.episode}`));
     const baseDates = base.map(e => e.date && e.date.slice(0, 10)).filter(Boolean).sort();
     const lastDate = baseDates.length ? baseDates[baseDates.length - 1] : null;
