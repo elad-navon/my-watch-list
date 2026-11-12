@@ -74,7 +74,7 @@
       try {
         if (show.episodeSource === "snapshot" && Array.isArray(show.snapshotEpisodes)) {
           const res = await source.getEpisodes(ids, { now: now() });
-          return appendAfter(show.snapshotEpisodes, res.episodes).episodes;
+          return appendAfter(show.snapshotEpisodes, res.episodes, { fillDates: true }).episodes;
         }
         const res = await source.getEpisodes(ids, { prefer: show.episodeSource === "tmdb" ? "tmdb" : undefined, now: now() });
         if (!res.episodes.length && res.errors && res.errors.length) failures.set(docId, show.title);
