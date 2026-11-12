@@ -192,6 +192,19 @@ async function runWrites() {
   // The page never talks to SIMKL (the computer's bridge does).
   const simkl = w.__calls.filter(c => c.startsWith("api.simkl.com"));
   check("nothing reaches SIMKL", !simkl.length, simkl);
+
+  // A device without the SIMKL V2 app id never erases the account's: it
+  // takes it instead (the bridge signs in to SIMKL with it).
+  const meta = lib().backend.meta;
+  meta.set("keys", { ...w.eval("localAccountKeys")(), clientIdV2: "v2-from-account" });
+  w.localStorage.removeItem("simkl_client_id_v2");
+  await fn("saveKeysToAccount")();
+  check("a key missing here doesn't erase the account's", meta.get("keys").clientIdV2 === "v2-from-account", meta.get("keys").clientIdV2);
+  check("...and is copied to this device", w.localStorage.getItem("simkl_client_id_v2") === "v2-from-account");
+  // A key this device does have still goes to the account.
+  w.localStorage.setItem("simkl_client_id_v2", "v2-typed-here");
+  await fn("saveKeysToAccount")();
+  check("a key set here still reaches the account", meta.get("keys").clientIdV2 === "v2-typed-here", meta.get("keys").clientIdV2);
   return results;
 }
 
