@@ -407,3 +407,34 @@ test("advanceToEarlierDates: earlier only when TMDB agrees with TheTVDB, 2+ days
   assert.equal(episodes[3].date, "2026-10-19");
   assert.equal(advanceToEarlierDates(eps, tvdb, null, NOW_OCT20).moved, 0, "no TMDB, no move");
 });
+
+test("appendAfter with fillDates: a snapshot episode with no date takes the other source's date for the same number", () => {
+  const { appendAfter } = require("../episode-source.js");
+  const snapshot = [
+    { season: 24, episode: 2, date: "2026-10-20T14:30:00-04:00", title: "Episode 2", keys: ["simklep:24-2"] },
+    { season: 24, episode: 3, date: null, title: "Episode 3", keys: ["simklep:24-3"] },
+  ];
+  const other = [
+    { season: 24, episode: 2, date: "2026-10-21T18:30:00+00:00", hasTime: true, title: "Second", keys: ["tvmaze:2"] },
+    { season: 24, episode: 3, date: "2026-10-27T19:30:00+00:00", hasTime: true, title: "The Big Sample", runtime: 60, keys: ["tvmaze:3"] },
+    { season: 24, episode: 4, date: "2026-11-04T19:30:00+00:00", hasTime: true, title: "Fourth", keys: ["tvmaze:4"] },
+  ];
+  const r = appendAfter(snapshot, other, { fillDates: true });
+  // a dated snapshot episode keeps its own date
+  assert.equal(r.episodes[0].date, "2026-10-20T14:30:00-04:00");
+  // the undated one is filled, keeping its keys
+  assert.equal(r.episodes[1].date, "2026-10-27T19:30:00+00:00");
+  assert.equal(r.episodes[1].hasTime, true);
+  assert.equal(r.episodes[1].title, "The Big Sample");
+  assert.equal(r.episodes[1].runtime, 60);
+  assert.deepEqual(r.episodes[1].keys, ["simklep:24-3"]);
+  // and later episodes still come after it, once each
+  assert.deepEqual(r.episodes.map(e => `${e.season}-${e.episode}`), ["24-2", "24-3", "24-4"]);
+  // without the option, nothing changes
+  assert.equal(appendAfter(snapshot, other).episodes[1].date, null);
+  // an undated episode before the snapshot's last dated one stays undated
+  const old = [{ season: 1, episode: 2, date: null, title: "Episode 2", keys: ["simklep:1-2"] }, ...snapshot];
+  const r2 = appendAfter(old, [{ season: 1, episode: 2, date: "2004-01-01", title: "Old" }, ...other], { fillDates: true });
+  assert.equal(r2.episodes[0].date, null);
+  assert.equal(r2.episodes[2].date, "2026-10-27T19:30:00+00:00");
+});
