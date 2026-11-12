@@ -286,7 +286,7 @@ function openPanelShowsModal(source) {
   const itemsHtml = rows.map((row, idx) => {
     const posterSrc = row.posterUrl || row.bannerUrl;
     const thumbHtml = posterSrc
-      ? `<img class="list-thumb" loading="lazy" src="${esc(posterSrc)}" alt="${esc(row.title)}">`
+      ? `<img class="list-thumb" loading="lazy" src="${esc(posterSrc)}"${srcsetAttr(posterSrc)} alt="${esc(row.title)}">`
       : `<div class="list-thumb placeholder">${esc((row.title[0] || "?").toUpperCase())}</div>`;
     const infoHtml = rowInfoWrapHtml(row, idx, source, "flip");
     // Landscape banner (not the portrait poster - already used on the

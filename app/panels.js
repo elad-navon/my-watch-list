@@ -251,7 +251,7 @@ function renderRecentlyWatchedHtml(list) {
     const bannerSrc = panelThumbSrc(ep);
     const { cycleableClass, attrs, mode } = thumbCycleAttrs(ep, "watched", idx);
     const thumbHtml = bannerSrc
-      ? `<img class="list-thumb" loading="lazy" src="${esc(bannerSrc)}" alt="${esc(ep.title)}"${onError("thumbError", "watched", idx, mode)}>`
+      ? `<img class="list-thumb" loading="lazy" src="${esc(bannerSrc)}"${srcsetAttr(bannerSrc)} alt="${esc(ep.title)}"${onError("thumbError", "watched", idx, mode)}>`
       : `<div class="list-thumb placeholder">${esc((ep.title[0] || "?").toUpperCase())}</div>`;
     return `
       <div class="list-row ${rowToneClass(idx)}">
@@ -280,7 +280,7 @@ function renderPlanToWatchHtml(list) {
     const bannerSrc = panelThumbSrc(row);
     const { cycleableClass, attrs, mode } = thumbCycleAttrs(row, "plan", idx);
     const thumbHtml = bannerSrc
-      ? `<img class="list-thumb" loading="lazy" src="${esc(bannerSrc)}" alt="${esc(row.title)}"${onError("thumbError", "plan", idx, mode)}>`
+      ? `<img class="list-thumb" loading="lazy" src="${esc(bannerSrc)}"${srcsetAttr(bannerSrc)} alt="${esc(row.title)}"${onError("thumbError", "plan", idx, mode)}>`
       : `<div class="list-thumb placeholder">${esc((row.title[0] || "?").toUpperCase())}</div>`;
     return `
       <div class="list-row ${rowToneClass(idx)}">

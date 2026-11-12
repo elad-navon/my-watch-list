@@ -215,7 +215,7 @@ function patchImagesForTmdbId(tmdbId) {
       const img = wrap && wrap.querySelector(".poster, .list-thumb");
       if (!img) return;
       const newSrc = displaySrcFor(source, r);
-      if (newSrc && img.src !== newSrc) img.src = newSrc;
+      if (newSrc && img.src !== newSrc) setImgSrc(img, newSrc);
       const tile = newSrc && wrap.closest(".card, .list-row");
       const glow = tile && tile.querySelector(".pp-glow i");
       if (glow) {
@@ -270,7 +270,7 @@ function handleThumbError(imgEl, source, idx, mode) {
   row[cfg.urlKey] = nextUrl;
   saveImageOverride(row.tmdbId, mode, paths[nextIndex], imageAreaOf(source));
   syncImageAcrossCards(row.tmdbId, cfg, nextIndex, nextUrl, imageAreaOf(source));
-  imgEl.src = nextUrl;
+  setImgSrc(imgEl, nextUrl);
 }
 
 // Black mark, gold text - square corners (no rx), flush at the card's
@@ -537,7 +537,7 @@ function cardImageBits(row, mode, arrIdx, extraOverlayHtml) {
   const imageUrl = mode === "banner" ? (row.bannerUrl || row.posterUrl) : row[cfg.urlKey];
   const posterClass = "poster" + cfg.extraClass;
   const posterHtml = imageUrl
-    ? `<img class="${posterClass}" loading="lazy" src="${esc(imageUrl)}" alt="${esc(row.title)}"${onError("thumbError", "main", arrIdx, mode)}>`
+    ? `<img class="${posterClass}" loading="lazy" src="${esc(imageUrl)}"${srcsetAttr(imageUrl)} alt="${esc(row.title)}"${onError("thumbError", "main", arrIdx, mode)}>`
     : `<div class="${posterClass} placeholder">${esc((row.title[0] || "?").toUpperCase())}</div>`;
   const altCount = (row[cfg.pathsKey] || []).length;
   const cycleable = altCount > 1 || !!row.imdbId;

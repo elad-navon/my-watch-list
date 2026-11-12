@@ -63,6 +63,7 @@ function retryWithoutResizer(img) {
   } catch (e) { /* not a URL */ }
   if (!original || !/^https?:\/\//.test(original)) return false;
   img.dataset.resizerSkipped = "1";
+  img.removeAttribute("srcset");
   img.src = original;
   return true;
 }
@@ -85,6 +86,40 @@ const TMDB_IMAGE_BASE = "https://image.tmdb.org/t/p/w342";
 const TMDB_BACKDROP_BASE = "https://image.tmdb.org/t/p/w780";
 const TMDB_LOGO_BASE = "https://image.tmdb.org/t/p/w92";
 const TMDB_PROFILE_BASE = "https://image.tmdb.org/t/p/w185";
+
+// Sharper pictures on sharp screens: a poster/banner also lists the same
+// picture at bigger sizes (srcset), and the browser picks by the screen - an
+// ordinary one keeps the size it always had (1x), a phone or Windows scaling
+// at 150% takes a bigger one. TMDB's sizes: posters w342 -> w500 / w780,
+// backdrops w780 -> w1280. A wsrv.nl picture asks the resizer for the bigger
+// width, never enlarging past the original (we). Any other picture: none.
+const HI_RES_STEPS = { 342: [[500, 1.5], [780, 2]], 780: [[1280, 1.5]] };
+function hiResSrcset(url) {
+  if (typeof url !== "string") return "";
+  const m = url.match(/^(https:\/\/image\.tmdb\.org\/t\/p\/)w(\d+)(\/[^\s,]+)$/);
+  if (m && HI_RES_STEPS[m[2]]) return [`${url} 1x`, ...HI_RES_STEPS[m[2]].map(([w, x]) => `${m[1]}w${w}${m[3]} ${x}x`)].join(", ");
+  try {
+    const u = new URL(url);
+    const w = u.hostname === "wsrv.nl" && u.searchParams.get("w");
+    if (w && HI_RES_STEPS[w] && !/[\s,]/.test(url)) {
+      return [`${url} 1x`, ...HI_RES_STEPS[w].map(([nw, x]) => {
+        const big = new URL(url);
+        big.searchParams.set("w", String(nw));
+        big.searchParams.set("we", "1");
+        return `${big} ${x}x`;
+      })].join(", ");
+    }
+  } catch (e) { /* not a URL */ }
+  return "";
+}
+// The srcset as an attribute for a template, and setting a live <img> - the
+// srcset goes with the src, or a stale srcset would keep winning over it.
+const srcsetAttr = url => { const s = hiResSrcset(url); return s ? ` srcset="${esc(s)}"` : ""; };
+function setImgSrc(img, url) {
+  const s = hiResSrcset(url);
+  if (s) img.srcset = s; else img.removeAttribute("srcset");
+  img.src = url;
+}
 // Manual fallback for networks that have no logo in TMDB (or aren't in TMDB
 // at all) - mainly small/regional broadcasters,
 // e.g. Israeli channels. `names` lists every name variant this network

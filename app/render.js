@@ -67,7 +67,7 @@ function renderAiringNextPreviewHtml(list) {
     const bannerSrc = panelThumbSrc(row);
     const { cycleableClass, attrs, mode } = thumbCycleAttrs(row, "airing", idx);
     const thumbHtml = bannerSrc
-      ? `<img class="list-thumb" loading="lazy" src="${esc(bannerSrc)}" alt="${esc(row.title)}"${onError("thumbError", "airing", idx, mode)}>`
+      ? `<img class="list-thumb" loading="lazy" src="${esc(bannerSrc)}"${srcsetAttr(bannerSrc)} alt="${esc(row.title)}"${onError("thumbError", "airing", idx, mode)}>`
       : `<div class="list-thumb placeholder">${esc((row.title[0] || "?").toUpperCase())}</div>`;
     return `
       <div class="list-row ${rowToneClass(idx, true)}">
