@@ -242,3 +242,15 @@ body.look-clean:not(.light-theme) .episodes-modal-foot .total {
   body.look-clean:not(.light-theme) .list-panel .list-pager { gap: 4px; }
   body.look-clean:not(.light-theme) .list-pager-arrow { width: 30px; height: 30px; }
 }
+
+/* ---- Upright on a phone the condensed capitals ran under the buttons: a
+   smaller name, and the buttons pushed to the right end with room before
+   them (as the cinematic look does). */
+body.phone-portrait.look-clean:not(.light-theme) .topbar { gap: 12px; }
+body.phone-portrait.look-clean:not(.light-theme) .topbar-left { flex: 0 1 auto; min-width: 0; }
+body.phone-portrait.look-clean:not(.light-theme) .topbar-controls { margin-left: auto; }
+body.phone-portrait.look-clean:not(.light-theme) .topbar .navbar-logo { gap: 6px; }
+body.phone-portrait.look-clean:not(.light-theme) .topbar .logo-icon svg { width: 24px; height: 24px; }
+body.phone-portrait.look-clean:not(.light-theme) .topbar .logo-text { gap: 5px; }
+body.phone-portrait.look-clean:not(.light-theme) .topbar .logo-text .logo-tv,
+body.phone-portrait.look-clean:not(.light-theme) .topbar .logo-accent { font-size: 1.1rem; letter-spacing: 0.01em; }
