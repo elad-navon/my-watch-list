@@ -14,7 +14,7 @@ import { spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const ALL = ["main", "ui", "writes", "onair", "airtimes", "posters", "nowwatching", "order", "stats"];
+const ALL = ["main", "ui", "writes", "onair", "airtimes", "posters", "nowwatching", "order", "stats", "myshows"];
 const scenarios = process.argv.slice(2).length ? process.argv.slice(2) : ALL;
 const CHROME = process.env.CHROME || "C:/Program Files/Google/Chrome/Application/chrome.exe";
 const TIMEOUT_MS = 6 * 60 * 1000;

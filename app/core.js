@@ -17,8 +17,8 @@ const isImdbId = id => /^tt\d+$/.test(String(id || ""));
 
 // Element actions, instead of on*="code" inside the page's HTML: an element
 // names its action and arguments, and the action is a function registered
-// with pageAction(name, fn) - fn(element, event, ...args). onClick("cast",
-// "main", 3) gives ` data-onclick="cast" data-args="[&quot;main&quot;,3]"`;
+// with pageAction(name, fn) - fn(element, event, ...args). onClick("showPage",
+// "main", 3) gives ` data-onclick="showPage" data-args="[&quot;main&quot;,3]"`;
 // onClickStop also keeps the click from reaching what's around the element
 // (a button on a card that opens something else); clickStop() only that;
 // onError(...) for a picture that fails to load.
@@ -63,6 +63,7 @@ function retryWithoutResizer(img) {
   } catch (e) { /* not a URL */ }
   if (!original || !/^https?:\/\//.test(original)) return false;
   img.dataset.resizerSkipped = "1";
+  img.removeAttribute("srcset");
   img.src = original;
   return true;
 }
@@ -85,6 +86,40 @@ const TMDB_IMAGE_BASE = "https://image.tmdb.org/t/p/w342";
 const TMDB_BACKDROP_BASE = "https://image.tmdb.org/t/p/w780";
 const TMDB_LOGO_BASE = "https://image.tmdb.org/t/p/w92";
 const TMDB_PROFILE_BASE = "https://image.tmdb.org/t/p/w185";
+
+// Sharper pictures on sharp screens: a poster/banner also lists the same
+// picture at bigger sizes (srcset), and the browser picks by the screen - an
+// ordinary one keeps the size it always had (1x), a phone or Windows scaling
+// at 150% takes a bigger one. TMDB's sizes: posters w342 -> w500 / w780,
+// backdrops w780 -> w1280. A wsrv.nl picture asks the resizer for the bigger
+// width, never enlarging past the original (we). Any other picture: none.
+const HI_RES_STEPS = { 342: [[500, 1.5], [780, 2]], 780: [[1280, 1.5]] };
+function hiResSrcset(url) {
+  if (typeof url !== "string") return "";
+  const m = url.match(/^(https:\/\/image\.tmdb\.org\/t\/p\/)w(\d+)(\/[^\s,]+)$/);
+  if (m && HI_RES_STEPS[m[2]]) return [`${url} 1x`, ...HI_RES_STEPS[m[2]].map(([w, x]) => `${m[1]}w${w}${m[3]} ${x}x`)].join(", ");
+  try {
+    const u = new URL(url);
+    const w = u.hostname === "wsrv.nl" && u.searchParams.get("w");
+    if (w && HI_RES_STEPS[w] && !/[\s,]/.test(url)) {
+      return [`${url} 1x`, ...HI_RES_STEPS[w].map(([nw, x]) => {
+        const big = new URL(url);
+        big.searchParams.set("w", String(nw));
+        big.searchParams.set("we", "1");
+        return `${big} ${x}x`;
+      })].join(", ");
+    }
+  } catch (e) { /* not a URL */ }
+  return "";
+}
+// The srcset as an attribute for a template, and setting a live <img> - the
+// srcset goes with the src, or a stale srcset would keep winning over it.
+const srcsetAttr = url => { const s = hiResSrcset(url); return s ? ` srcset="${esc(s)}"` : ""; };
+function setImgSrc(img, url) {
+  const s = hiResSrcset(url);
+  if (s) img.srcset = s; else img.removeAttribute("srcset");
+  img.src = url;
+}
 // Manual fallback for networks that have no logo in TMDB (or aren't in TMDB
 // at all) - mainly small/regional broadcasters,
 // e.g. Israeli channels. `names` lists every name variant this network
@@ -124,6 +159,7 @@ const LS_TVDB_KEY = "tvdb_api_key";       // optional: TheTVDB posters/backgroun
 const LS_TVDB_TOKEN = "tvdb_token";       // {key, token, at}: TheTVDB's month-long read token for that key
 const LS_IMAGE_MODE = "simkl_image_mode"; // "poster" | "banner"
 const LS_THEME = "simkl_theme"; // "light" | "dark"
+const LS_LOOK = "simkl_look"; // "clean" (like a show's page - theme/clean.css), else the cinematic look
 const LS_PANEL_LAYOUT = "simkl_panel_layout"; // "paged" (one-page, default) | "scroll" (older vertically scrolling panels)
 const LS_PANEL_IMAGES = "panel_image_mode"; // "banner" (default) | "poster" - the three bottom panels' thumbnails
 const LS_LOADER_POSTERS = "loader_posters"; // the posters the loading screen rolls past (the last ones shown)
@@ -380,6 +416,11 @@ function showSettings(afterSaveCallback) {
         <button class="theme-toggle" id="themeToggleBtn" title="Toggle light/dark"></button>
       </div>
       <div class="theme-toggle-wrap" style="margin-top:12px">
+        <span class="nav-icon"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"></rect><line x1="3" y1="9" x2="21" y2="9"></line></svg></span>
+        <span style="flex:1 1 auto;text-align:left">Clean Look</span>
+        <button class="theme-toggle" id="lookToggleBtn" title="Dark mode's look: clean (like a show's page) or cinematic"></button>
+      </div>
+      <div class="theme-toggle-wrap" style="margin-top:12px">
         <span class="nav-icon"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"></rect><line x1="3" y1="12" x2="21" y2="12"></line><line x1="12" y1="12" x2="12" y2="21"></line></svg></span>
         <span style="flex:1 1 auto;text-align:left">One-Page Layout</span>
         <button class="theme-toggle" id="layoutToggleBtn" title="Toggle one-page / scrolling bottom panels"></button>
@@ -428,6 +469,13 @@ function showSettings(afterSaveCallback) {
     updateThemeToggleButton();
   };
   updateThemeToggleButton();
+  // The look applies at once; the page fits itself to it again (resize).
+  document.getElementById("lookToggleBtn").onclick = () => {
+    const isClean = document.body.classList.toggle("look-clean");
+    safeSetItem(LS_LOOK, isClean ? "clean" : "cinematic");
+    updateThemeToggleButton();
+    window.dispatchEvent(new Event("resize"));
+  };
   // Takes effect on the next render - closing Settings (returnToPreviousView)
   // or saving (main) both re-render the panels.
   document.getElementById("layoutToggleBtn").onclick = () => {

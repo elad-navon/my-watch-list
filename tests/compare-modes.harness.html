@@ -214,6 +214,7 @@ async function runUi() {
   const results = [];
   const check = (name, ok, detail) => results.push({ name, ok: !!ok, detail: detail === undefined ? null : detail });
   const $ = sel => w.document.querySelector(sel);
+  const $$ = sel => [...w.document.querySelectorAll(sel)];
   const fn = name => w.eval(name);
 
   fn("openSearchModal")();
@@ -246,37 +247,41 @@ async function runUi() {
     s1.classList.contains("all") && !s1.disabled, { className: s1.className, disabled: s1.disabled });
   fn("closeSearchModal")();
 
-  // The cast window's Episodes tab: the same manager, marking and saving there.
+  // A show's page from its title on the home page: Edit episodes is the
+  // same manager, marking and saving there.
   // (A moment first: closing the search window steps browser history back,
   // and that lands asynchronously - a window opened before it would close.)
   await sleep(500);
-  const alphaIdx = w.eval("lastRows").findIndex(r => r.title === "Alpha");
-  try { await fn("openCastModal")("main", alphaIdx); }
-  catch (e) { check("cast window: opens", false, String(e && e.stack || e)); return results; }
-  await waitFor(() => $("#castModalOverlay .modal-tab[data-tab='episodes']"));
-  $("#castModalOverlay .modal-tab[data-tab='episodes']").click();
-  await waitFor(() => $("#castEpisodes .ep-manage-summary"));
-  const epSummary = $("#castEpisodes .ep-manage-summary");
-  check("cast window: Episodes tab shows the show's episodes",
-    epSummary && /11\/18 episodes watched/.test(epSummary.textContent) && $("#castGrid").hidden,
-    epSummary ? epSummary.textContent : { tab: ($("#castEpisodes") || {}).innerHTML, overlay: !!$("#castModalOverlay"), alphaIdx, cache: !!w.eval("sharedCache"), view: w.eval("currentView"), row: JSON.stringify(Object.keys((w.eval("lastRows") || [])[alphaIdx] || {})) });
+  const alphaTitle = [...$$(".series-panel h3[data-onclick='showPage']")].find(h => h.textContent.trim() === "Alpha");
+  if (!alphaTitle) { check("show page: Alpha's title opens it", false, "no title"); return results; }
+  alphaTitle.click();
+  await waitFor(() => $("#msDetail .ms-hero") && $("#msEditEps"), 5000).catch(() => {});
+  check("show page: a title on the home page opens it, with Back (not My Shows)",
+    !!$("#msDetail .ms-hero") && /Back/.test(($("#msDetail .ms-back") || {}).textContent || ""));
+  if (!$("#msEditEps")) return results;
+  $("#msEditEps").click();
+  await waitFor(() => $("#msEpsBox .ep-manage-summary"));
+  const epSummary = $("#msEpsBox .ep-manage-summary");
+  check("show page: Edit episodes shows the show's episodes",
+    epSummary && /11\/18 episodes watched/.test(epSummary.textContent), epSummary ? epSummary.textContent : null);
   if (!epSummary) return results;
-  $("#castEpisodes [data-toggle-ep='2']").click();
+  $("#msEpsBox [data-toggle-ep='2']").click();
   let asked = 0;
   w.confirm = () => { asked++; return false; }; // keep the unsaved change
-  fn("closeCastModal")();
-  check("cast window: closing with an unsaved change asks first, and stays open", asked === 1 && !!$("#castModalOverlay"));
-  $("#castEpisodes #epSaveBtn").click();
+  fn("msClosePage")();
+  check("show page: closing with an unsaved change asks first, and stays open", asked === 1 && !!$("#myShowsPage"));
+  $("#msEpsBox #epSaveBtn").click();
   const alphaDoc = () => w.eval("library").backend.docs.get("101");
-  await waitFor(() => Object.values(alphaDoc().watched).some(r => r.s === 2 && r.e === 2) && !$("#castEpisodes #epSaveBtn"));
+  await waitFor(() => Object.values(alphaDoc().watched).some(r => r.s === 2 && r.e === 2) && !$("#msEpsBox #epSaveBtn"));
   w.confirm = () => true;
   const marker = w.document.querySelector(".series-panel-updated");
   if (marker) marker.dataset.old = "1";
-  fn("closeCastModal")();
+  fn("msClosePage")();
   await waitFor(() => { const m = w.document.querySelector(".series-panel-updated"); return m && !m.dataset.old; });
   const alphaRow = w.eval("lastRows").find(r => r.title === "Alpha");
-  check("cast window: saved there, and the panels refresh on close",
-    !$("#castModalOverlay") && alphaRow && alphaRow.nextLabel === "S02E03", alphaRow && alphaRow.nextLabel);
+  check("show page: saved there, and the panels refresh on close",
+    !$("#myShowsPage") && alphaRow && alphaRow.nextLabel === "S02E03", alphaRow && alphaRow.nextLabel);
+  await sleep(300);
 
   fn("showSettings")(fn("main"));
   await waitFor(() => $("#libraryBackupBtn"));
@@ -592,9 +597,158 @@ async function runStats() {
   return results;
 }
 
+// ?scenario=myshows: the My Shows page - opens, each status tab lists its
+// shows (with counts that add up), posters / list and search work, a show's
+// page opens over the list and Back / Escape step back to the list then
+// close it, looking changes nothing in the library, a status changed on a
+// show's page is saved and the list follows, a title on the home page
+// opens its show's page (Back closes it), and no errors.
+async function runMyShows() {
+  const { w } = await loadMode("library", false, "");
+  const results = [];
+  const check = (name, ok, detail) => results.push({ name, ok: !!ok, detail: detail === undefined ? null : detail });
+  const doc = w.document;
+  const $ = s => doc.querySelector(s);
+  const $$ = s => [...doc.querySelectorAll(s)];
+  const errors = [];
+  w.addEventListener("error", e => errors.push(String(e.message)));
+  w.addEventListener("unhandledrejection", e => errors.push(String(e.reason && e.reason.message || e.reason)));
+  const clean = el => !/NaN|Infinity|undefined|null/.test((el || {}).textContent || "");
+  const store = w.eval("library").store;
+  const before = JSON.stringify([...store.view()]);
+  const open = async () => { await sleep(300); $("#myShowsBtn").click(); await waitFor(() => $("#msList") && $("#msList").children.length); };
+
+  await open();
+  check("opens", !!$("#myShowsPage") && doc.body.classList.contains("stats-open"));
+  const statuses = ["watching", "completed", "hold", "dropped", "plantowatch"];
+  const counts = {};
+  for (const t of statuses) {
+    $(`#msTabs .sx-tab[data-tab='${t}']`).click();
+    await sleep(150);
+    const expected = [...store.view().values()].filter(s => s.status === t).length;
+    const shown = $$("#msList [data-doc]").length;
+    counts[t] = { expected, shown, badge: Number($(`#msTabs .sx-tab[data-tab='${t}'] .ms-count`).textContent), clean: clean($("#msList")) };
+  }
+  check("each tab lists its shows, its count right, no NaN / undefined / null",
+    Object.values(counts).every(c => c.shown === c.expected && c.badge === c.expected && c.clean), counts);
+  check("the tabs add up to the library", Object.values(counts).reduce((a, c) => a + c.badge, 0) === store.view().size);
+  $("#msTabs .sx-tab[data-tab='watching']").click();
+  await waitFor(() => /\/ \d+ episodes/.test($("#msList").textContent), 4000).catch(() => {});
+  check("Watching shows episodes out of the aired ones", /\/ \d+ episodes/.test($("#msList").textContent), $("#msList").textContent.slice(0, 200));
+  $(".ms-views button[data-view='list']").click();
+  check("list view", !!$("#msList .ms-rows") && clean($("#msList")));
+  $(".ms-views button[data-view='grid']").click();
+  check("posters view", !!$("#msList .ms-grid"));
+  const firstTitle = $("#msList .ms-name").textContent.trim().split(" ")[0];
+  const search = $("#msSearch");
+  search.value = "zzzz"; search.dispatchEvent(new w.Event("input", { bubbles: true }));
+  check("a search with no match says so", !!$("#msList .ms-empty"));
+  search.value = firstTitle; search.dispatchEvent(new w.Event("input", { bubbles: true }));
+  check("search finds the show", $$("#msList [data-doc]").length >= 1);
+  search.value = ""; search.dispatchEvent(new w.Event("input", { bubbles: true }));
+
+  // A show's page, for every show in the library.
+  const pages = {};
+  for (const t of statuses) {
+    $(`#msTabs .sx-tab[data-tab='${t}']`).click();
+    await sleep(100);
+    for (const card of $$("#msList [data-doc]")) {
+      const id = card.dataset.doc;
+      card.click();
+      await waitFor(() => $("#msDetail .ms-hero"), 5000).catch(() => {});
+      pages[id] = { status: t, drawn: !!$("#msDetail .ms-hero"), clean: clean($("#msDetail")), ring: !!$("#msDetail .ms-ring") };
+      w.history.back();
+      await waitFor(() => $("#msDetail").hidden, 3000).catch(() => {});
+      pages[id].back = $("#msDetail").hidden && !!$("#myShowsPage");
+    }
+  }
+  check("every show's page draws, with no NaN / undefined / null", Object.values(pages).every(p => p.drawn && p.clean && p.ring),
+    Object.fromEntries(Object.entries(pages).filter(([, p]) => !(p.drawn && p.clean && p.ring))));
+  check("Back from a show's page comes back to the list", Object.values(pages).every(p => p.back));
+  $("#msTabs .sx-tab[data-tab='watching']").click();
+  await sleep(100);
+  $("#msList [data-doc]").click();
+  await waitFor(() => $("#msDetail .ms-hero"), 5000);
+  const eps = $$("#msDetail .ms-ep");
+  check("its episodes, watched ones marked", eps.length > 0 && $$("#msDetail .ms-ep.w").length > 0, { eps: eps.length });
+  doc.dispatchEvent(new w.KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+  await waitFor(() => $("#msDetail").hidden, 3000).catch(() => {});
+  check("Escape on a show's page comes back to the list", $("#msDetail").hidden && !!$("#myShowsPage"));
+  await sleep(100);
+  doc.dispatchEvent(new w.KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+  check("Escape on the list closes it, the page scrolls again", !$("#myShowsPage") && !doc.body.classList.contains("stats-open"));
+  await open();
+  check("reopens on the last tab", $("#msTabs .sx-tab[aria-selected='true']").dataset.tab === "watching");
+  $("#msList [data-doc]").click();
+  await waitFor(() => $("#msDetail .ms-hero"), 5000);
+  w.history.back();
+  await waitFor(() => $("#msDetail").hidden, 3000).catch(() => {});
+  await sleep(100);
+  w.history.back();
+  await waitFor(() => !$("#myShowsPage"), 5000).catch(() => {});
+  check("Back, Back: show's page, then the list, closed", !$("#myShowsPage"));
+  await open();
+  w.eval("myShowsRefreshIfOpen")();
+  check("an episode marked while it's open: redrawn in place", !!$("#myShowsPage") && $$("#msList [data-doc]").length > 0);
+  $("#myShowsCloseBtn").click();
+  check("nothing in the library changed by looking", JSON.stringify([...store.view()]) === before);
+
+  // A status changed on a show's page: saved, the buttons and the list follow.
+  await open();
+  $("#msTabs .sx-tab[data-tab='watching']").click();
+  await sleep(100);
+  const doc1 = $("#msList [data-doc]").dataset.doc;
+  $("#msList [data-doc]").click();
+  await waitFor(() => $("#msDetail .ms-status-btn"), 5000);
+  $("#msDetail .ms-status-btn[data-status='hold']").click();
+  await waitFor(() => store.view().get(doc1).status === "hold" && $("#msDetail .ms-status-btn[data-status='hold'][aria-pressed='true']"), 5000).catch(() => {});
+  check("a status changed on a show's page is saved, and shown", store.view().get(doc1).status === "hold"
+    && !!$("#msDetail .ms-status-btn[data-status='hold'][aria-pressed='true']") && /On Hold/.test($("#msDetail .ms-pill").textContent));
+  w.history.back();
+  await waitFor(() => $("#msDetail").hidden, 3000).catch(() => {});
+  check("back on the list, the show has moved tab", !$$("#msList [data-doc]").some(c => c.dataset.doc === doc1)
+    && Number($("#msTabs .sx-tab[data-tab='hold'] .ms-count").textContent) === counts.hold.expected + 1);
+  $("#msTabs .sx-tab[data-tab='hold']").click();
+  await sleep(100);
+  [...$$("#msList [data-doc]")].find(c => c.dataset.doc === doc1).click();
+  await waitFor(() => $("#msDetail .ms-status-btn"), 5000);
+  $("#msDetail .ms-status-btn[data-status='watching']").click();
+  await waitFor(() => store.view().get(doc1).status === "watching", 5000).catch(() => {});
+  w.history.back();
+  await waitFor(() => $("#msDetail").hidden, 3000).catch(() => {});
+  $("#myShowsCloseBtn").click();
+  await sleep(300);
+
+  // From the home page: a title opens the show's page; Back closes it all.
+  const title = $(".series-panel h3[data-onclick='showPage']");
+  title.click();
+  await waitFor(() => $("#msDetail .ms-hero"), 5000).catch(() => {});
+  check("a title on the home page opens its show's page", !!$("#msDetail .ms-hero")
+    && $("#msDetail .ms-d-title").textContent.trim().toLowerCase() === title.textContent.trim().toLowerCase());
+  w.history.back();
+  await waitFor(() => !$("#myShowsPage"), 5000).catch(() => {});
+  check("Back from there closes it", !$("#myShowsPage") && !doc.body.classList.contains("stats-open"));
+  title.click();
+  await waitFor(() => $("#msDetail .ms-hero"), 5000).catch(() => {});
+  doc.dispatchEvent(new w.KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+  await waitFor(() => !$("#myShowsPage"), 5000).catch(() => {});
+  check("so does Escape", !$("#myShowsPage"));
+  await sleep(300);
+  for (let i = 0; i < 3; i++) { await open(); $("#myShowsCloseBtn").click(); }
+  check("open and close again and again", !$("#myShowsPage") && !doc.body.classList.contains("stats-open"));
+  check("no errors in the page", !errors.length, errors);
+  return results;
+}
+
 (async () => {
   const out = document.getElementById("result");
   try {
+    if (params.get("scenario") === "myshows") {
+      const results = await runMyShows();
+      out.dataset.done = "1";
+      out.textContent = JSON.stringify({ writes: results }, null, 1);
+      return;
+    }
     if (params.get("scenario") === "stats") {
       const results = await runStats();
       out.dataset.done = "1";
@@ -668,14 +822,14 @@ async function runStats() {
         await waitFor(() => w.document.querySelector(".series-panel-updated"));
         w.eval("showWatchingCleanup")();
       }
-      // ?open=cast / cast-episodes: Alpha's cast window, on either tab.
-      if (/^cast/.test(params.get("open") || "")) {
+      // ?open=show / show-episodes: Alpha's page, its episodes being edited or not.
+      if (/^show/.test(params.get("open") || "")) {
         const w = frame.contentWindow;
         await waitFor(() => w.document.querySelector(".series-panel-updated"));
-        await w.eval("openCastModal")("main", w.eval("lastRows").findIndex(r => r.title === "Alpha"));
-        if (params.get("open") === "cast-episodes") {
-          await waitFor(() => w.document.querySelector(".modal-tab[data-tab='episodes']"));
-          w.document.querySelector(".modal-tab[data-tab='episodes']").click();
+        await w.eval("openShowPage")({ tmdb: 101 });
+        if (params.get("open") === "show-episodes") {
+          await waitFor(() => w.document.querySelector("#msEditEps"));
+          w.document.querySelector("#msEditEps").click();
         }
       }
       return;

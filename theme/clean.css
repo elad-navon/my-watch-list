@@ -1,0 +1,288 @@
+/* The clean look (dark theme only, Settings > Clean Look - body.look-clean):
+   the home page in a show page's style (my-shows.js) instead of the
+   cinematic one (theme/cinematic.css skips itself here). Plain dark boxes
+   with a thin edge; each box title in small spaced capitals beside a bar
+   and an icon in the box's own colour (Ready to Watch blue, Airing Next
+   gold, Just Watched green, Plan to Watch orange); show names in condensed
+   capitals; the home box's buttons with their icons on small tiles.
+   Nothing here changes a box's size or what it holds. Loaded after
+   cinematic.css. */
+
+body.look-clean:not(.light-theme) {
+  --border: #2b394a;
+  --clean-box: #111a24;
+  --clean-tile: #1a2430;
+  --clean-cond: "Barlow Condensed", "Segoe UI", Arial, sans-serif;
+  background: #05070a;
+}
+/* A faint blue light from the top, on a fixed layer of its own (painted
+   once - a "fixed" page background is repainted on every movement). */
+body.look-clean:not(.light-theme)::before {
+  content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background: radial-gradient(ellipse 80% 50% at 70% 0%, #0f1a26 0%, #05070a 60%);
+  will-change: transform;
+}
+
+/* ---- The boxes. */
+body.look-clean:not(.light-theme) .series-panel,
+body.look-clean:not(.light-theme) .list-panel:not(.panel-shows-grid-wrap),
+body.look-clean:not(.light-theme).equal-panels:not(.panels-scroll) .topbar {
+  background: var(--clean-box); border: 1px solid var(--border); border-radius: 14px;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
+}
+/* Each box's colour. */
+body.look-clean:not(.light-theme) .series-panel { --clean-c: #38bdf8; }
+body.look-clean:not(.light-theme) .list-panel--airing { --clean-c: #fbbf24; }
+body.look-clean:not(.light-theme) .list-panel--watched { --clean-c: #4ade80; }
+body.look-clean:not(.light-theme) .list-panel--plan { --clean-c: #fb923c; }
+
+/* ---- Box titles: small spaced capitals after a bar and the solid icon,
+   both in the box's colour - no frame round them. As tall as before, so
+   the fitted page keeps its sizes. */
+body.look-clean:not(.light-theme) .list-panel .list-panel-header,
+body.look-clean:not(.light-theme) .series-panel .series-panel-title,
+body.look-clean:not(.light-theme):not(.panels-scroll) .list-panel .list-panel-header,
+body.look-clean:not(.light-theme):not(.panels-scroll) .series-panel .series-panel-title,
+body.look-clean:not(.light-theme).equal-panels:not(.panels-scroll) .series-panel .series-panel-title {
+  --card: var(--clean-box); /* the icons' cut-outs */
+  box-sizing: border-box; min-height: 35px; gap: 9px;
+  border: none; border-left: 4px solid var(--clean-c, #38bdf8); border-radius: 0;
+  padding: 0 4px 0 12px; margin-bottom: 0;
+  color: var(--text); font-family: "Work Sans", "Segoe UI", Arial, sans-serif;
+  font-size: 1.25rem; font-weight: 700; font-style: normal; line-height: 1;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  -webkit-text-stroke: 0; text-shadow: none;
+}
+/* (The bottom boxes share their title row with the pager and the count:
+   the capitals a little tighter there, so the whole name shows.) */
+body.look-clean:not(.light-theme) .list-panel .list-panel-header,
+body.look-clean:not(.light-theme):not(.panels-scroll) .list-panel .list-panel-header {
+  flex: 0 1 auto; font-size: 1.12rem; letter-spacing: 0.05em; gap: 8px; padding-left: 10px;
+}
+/* (In a narrow box the page counter between the arrows gives way first -
+   the arrows stay; style.css does the same below 390px.) */
+@container (max-width: 439px) {
+  body.look-clean:not(.light-theme) .list-pager-mid { display: none; }
+}
+body.look-clean:not(.light-theme) .list-panel .list-panel-header > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+body.look-clean:not(.light-theme) .list-panel .list-panel-count { flex: 0 0 auto; white-space: nowrap; }
+body.look-clean:not(.light-theme) .title-icon-usual { display: none; }
+body.look-clean:not(.light-theme) .title-icon-cine { display: inline-flex; color: var(--clean-c, #38bdf8); }
+body.look-clean:not(.light-theme) .list-panel-header .title-icon-cine svg { width: 24px; height: 24px; }
+
+/* ---- Ready to Watch's three numbers: small tiles beside its title. */
+body.look-clean:not(.light-theme) .series-panel-header-left,
+body.look-clean:not(.light-theme):not(.panels-scroll) .series-panel-header-left,
+body.look-clean:not(.light-theme).equal-panels:not(.panels-scroll) .series-panel-header-left {
+  border: none; border-radius: 0; padding: 0; gap: 8px;
+}
+body.look-clean:not(.light-theme) .stats-divider { display: none; }
+body.look-clean:not(.light-theme) .series-panel-header-left .series-panel-stat-group {
+  --card: var(--clean-tile);
+  gap: 8px; align-items: center; background: var(--clean-tile); border: 1px solid var(--border);
+  border-radius: 10px; padding: 5px 12px;
+}
+body.look-clean:not(.light-theme) .series-panel-header-left .title-icon-cine svg { width: 17px; height: 17px; }
+body.look-clean:not(.light-theme) .series-panel-stat { align-items: baseline; gap: 6px; }
+body.look-clean:not(.light-theme) .series-panel-stat .num,
+body.look-clean:not(.light-theme).equal-panels:not(.panels-scroll) .series-panel-stat .num {
+  font-family: var(--clean-cond); font-weight: 700; font-size: 1.3rem; line-height: 1; color: var(--text);
+  -webkit-text-stroke: 0; text-shadow: none; font-variant-numeric: tabular-nums;
+}
+body.look-clean:not(.light-theme) .series-panel-stat .label,
+body.look-clean:not(.light-theme).equal-panels:not(.panels-scroll) .series-panel-stat .label {
+  font-family: "Work Sans", "Segoe UI", Arial, sans-serif; font-style: normal; font-weight: 500;
+  font-size: 0.82rem; line-height: 1; color: var(--muted); text-transform: none; letter-spacing: 0;
+  -webkit-text-stroke: 0; text-shadow: none;
+}
+body.look-clean:not(.light-theme) .series-panel-stat-clickable:hover { border-color: rgba(251, 191, 36, 0.45); }
+body.look-clean:not(.light-theme) .series-panel-stat-clickable:hover .series-panel-stat .label { color: var(--text); }
+
+/* ---- The bottom boxes' count ("26 Shows") and pager. */
+body.look-clean:not(.light-theme) .list-panel-count {
+  font-family: "Work Sans", "Segoe UI", Arial, sans-serif; font-size: 0.85rem; font-weight: 600;
+  color: var(--muted); letter-spacing: 0; text-transform: none; -webkit-text-stroke: 0; text-shadow: none;
+}
+body.look-clean:not(.light-theme) .list-panel-count:hover { color: var(--text); }
+body.look-clean:not(.light-theme) .list-pager-arrow {
+  width: 28px; height: 28px; border-radius: 50%;
+  border: 1px solid var(--border); background: var(--clean-tile); color: var(--text);
+}
+body.look-clean:not(.light-theme) .list-pager-arrow:hover:not(.off) { border-color: rgba(251, 191, 36, 0.55); }
+body.look-clean:not(.light-theme) .list-pager-range { font-size: 0.8rem; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+body.look-clean:not(.light-theme) .list-pager-bar > i { background: var(--clean-c, var(--accent)); }
+
+/* ---- Show names: condensed capitals in white (gold on hover), like the
+   name on a show's page; the episode's name plain and muted under it. A
+   long name still steps down to fit (fitPairText / the title-fs- sizes). */
+body.look-clean:not(.light-theme) .card-body h3,
+body.look-clean:not(.light-theme) .list-row-title {
+  font-family: var(--clean-cond); font-weight: 700; text-transform: uppercase; letter-spacing: 0.02em;
+  line-height: 1.05; color: var(--text);
+  -webkit-text-stroke: 0; text-shadow: 0 1px 6px rgba(0, 0, 0, 0.55);
+}
+body.look-clean:not(.light-theme) .card-body h3,
+body.look-clean:not(.light-theme) .list-row-title:not([class*="title-fs-"]) { font-size: 1.3rem; }
+body.look-clean:not(.light-theme) .card-body h3:hover,
+body.look-clean:not(.light-theme) .list-row-title:hover { color: var(--gold); }
+body.look-clean:not(.light-theme) .episode-title {
+  font-family: "Work Sans", "Segoe UI", Arial, sans-serif; font-style: normal; font-weight: 500; color: var(--muted);
+}
+
+/* ---- The posters' and banners' frames: a thin white edge (gold on
+   hover) instead of the blue and brown ones. */
+body.look-clean:not(.light-theme) .poster-pair,
+body.look-clean:not(.light-theme) .panel-pair { --pp-line: 1px; }
+body.look-clean:not(.light-theme) .poster-pair > .card:nth-child(n),
+body.look-clean:not(.light-theme) .panel-pair > .list-row:nth-child(n),
+body.look-clean:not(.light-theme) .card.framed.tone-a,
+body.look-clean:not(.light-theme) .card.framed.tone-b { --pp-frame: rgba(255, 255, 255, 0.85); }
+body.look-clean:not(.light-theme) .card.framed.tone-a,
+body.look-clean:not(.light-theme) .card.framed.tone-b { --pp-tint: var(--clean-tile); }
+body.look-clean:not(.light-theme) .poster-pair > .card:nth-child(n).hover-stable,
+body.look-clean:not(.light-theme) .panel-pair > .list-row:nth-child(n):hover,
+body.look-clean:not(.light-theme) .card.framed.hover-stable { --pp-frame: rgba(251, 191, 36, 0.6); }
+body.look-clean:not(.light-theme) .card.framed.tone-a.hover-stable,
+body.look-clean:not(.light-theme) .card.framed.tone-b.hover-stable { --pp-tint: #22303e; }
+/* (The bottom boxes' banner rows: the same edge; its width kept.) */
+body.look-clean:not(.light-theme) .list-rows-paged .list-row.tone-a,
+body.look-clean:not(.light-theme) .list-rows-paged .list-row.tone-b { --row-frame: rgba(255, 255, 255, 0.85); --row-tint: var(--clean-tile); }
+body.look-clean:not(.light-theme) .list-rows-paged .list-row.tone-a:hover,
+body.look-clean:not(.light-theme) .list-rows-paged .list-row.tone-b:hover { --row-frame: rgba(251, 191, 36, 0.6); }
+
+/* ---- The home box: the name in condensed capitals ("Series" gold), the
+   buttons flat rows with their icons on small rounded tiles. */
+body.look-clean:not(.light-theme) .topbar .logo-text .logo-tv,
+body.look-clean:not(.light-theme) .topbar .logo-accent {
+  font-family: var(--clean-cond); font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;
+  -webkit-text-stroke: 0; text-shadow: none;
+}
+body.look-clean:not(.light-theme) .topbar .logo-text .logo-tv { color: var(--text); }
+body.look-clean:not(.light-theme) .topbar .logo-accent { color: var(--gold); }
+body.look-clean:not(.light-theme).equal-panels:not(.panels-scroll) .topbar-left {
+  align-self: stretch; padding-bottom: 12px; border-bottom: 1px solid var(--border);
+}
+body.look-clean:not(.light-theme).equal-panels:not(.panels-scroll) .topbar .navbar-nav { gap: 4px; }
+body.look-clean:not(.light-theme).equal-panels:not(.panels-scroll) .nav-item,
+body.look-clean:not(.light-theme).equal-panels:not(.panels-scroll) .nav-item.icon-only {
+  flex: 1 1 0; max-height: 58px; min-height: 40px; padding: 4px 10px; gap: 12px;
+  background: none; border: 1px solid transparent; border-radius: 10px; box-shadow: none; transform: none;
+  color: var(--text); font-size: 0.95rem; font-weight: 600;
+}
+body.look-clean:not(.light-theme).equal-panels:not(.panels-scroll) .nav-item:hover:not(.active) {
+  background: var(--clean-tile); border-color: var(--border); transform: none; box-shadow: none;
+}
+body.look-clean:not(.light-theme).equal-panels:not(.panels-scroll) .nav-item.active {
+  background: var(--clean-tile); border-color: rgba(251, 191, 36, 0.45); box-shadow: none; transform: none; color: var(--text);
+}
+body.look-clean:not(.light-theme).equal-panels:not(.panels-scroll) .nav-item .nav-icon {
+  width: 34px; height: 34px; border-radius: 9px; background: var(--clean-tile); border: 1px solid var(--border);
+  align-items: center; justify-content: center; color: var(--gold);
+}
+body.look-clean:not(.light-theme).equal-panels:not(.panels-scroll) .nav-item .nav-icon svg { width: 19px; height: 19px; }
+body.look-clean:not(.light-theme).equal-panels:not(.panels-scroll) .profile-greeting-inline { border-top-color: var(--border); }
+body.look-clean:not(.light-theme).equal-panels:not(.panels-scroll) .profile-pic-small { box-shadow: 0 0 0 2px var(--gold); }
+body.look-clean:not(.light-theme) .today-pop,
+body.look-clean:not(.light-theme) .profile-menu { background: var(--clean-tile); border-color: var(--border); }
+
+/* ---- The bottom boxes' pager and count a size up (the titles have room
+   enough beside them now). */
+body.look-clean:not(.light-theme) .list-panel .list-pager { gap: 8px; }
+body.look-clean:not(.light-theme) .list-pager-arrow { width: 32px; height: 32px; }
+body.look-clean:not(.light-theme) .list-pager-arrow svg { width: 18px; height: 18px; }
+body.look-clean:not(.light-theme) .list-pager-range { font-size: 0.95rem; font-weight: 700; min-width: 64px; }
+body.look-clean:not(.light-theme) .list-pager-bar { height: 4px; border-radius: 2px; }
+body.look-clean:not(.light-theme) .list-panel-count { font-size: 1.02rem; }
+
+/* ---- The episodes window (a top card's time left): a show page's
+   section - the plain dark box, its title after a bar, the show's name in
+   condensed capitals, each season headed in spaced capitals, the episode
+   up next edged in gold. */
+body.look-clean:not(.light-theme) .episodes-modal {
+  background: var(--clean-box); border: 1px solid var(--border);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+}
+body.look-clean:not(.light-theme) .episodes-modal-head .list-panel-header {
+  border: none; border-left: 4px solid #38bdf8; border-radius: 0; padding: 4px 0 4px 12px; gap: 9px;
+  font-family: "Work Sans", "Segoe UI", Arial, sans-serif; font-size: 1.1rem; font-weight: 700; font-style: normal;
+  letter-spacing: 0.14em; text-transform: uppercase; color: var(--text);
+  --accent2: #38bdf8; --card: var(--clean-box);
+  -webkit-text-stroke: 0; text-shadow: none;
+}
+body.look-clean:not(.light-theme) .episodes-modal-head .list-panel-header svg { width: 22px; height: 22px; }
+body.look-clean:not(.light-theme) .episodes-modal-subtitle {
+  margin: 12px 22px 14px; font-family: var(--clean-cond); font-size: 1.8rem; font-weight: 700; line-height: 1.05;
+  text-transform: uppercase; letter-spacing: 0.02em; color: var(--text);
+}
+body.look-clean:not(.light-theme) .episodes-season-head { border-bottom-color: var(--border); }
+body.look-clean:not(.light-theme) .episodes-season-name {
+  font-family: "Work Sans", "Segoe UI", Arial, sans-serif; font-size: 0.85rem; font-weight: 700;
+  letter-spacing: 0.14em; text-transform: uppercase;
+}
+body.look-clean:not(.light-theme) .episode-row { border: 1px solid transparent; border-radius: 10px; }
+body.look-clean:not(.light-theme) .episode-row:hover { background: var(--clean-tile); border-color: var(--border); }
+body.look-clean:not(.light-theme) .episode-row.is-next,
+body.look-clean:not(.light-theme) .episode-row.is-left.is-next {
+  background: var(--clean-tile); border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold) inset;
+}
+body.look-clean:not(.light-theme) .episode-row .episode-code { font-size: 1.1rem; line-height: 1.1; }
+body.look-clean:not(.light-theme) .episode-badge { border-radius: 5px; letter-spacing: 0.06em; }
+body.look-clean:not(.light-theme) .episode-badge.up-next { background: var(--gold); color: #14100a; }
+body.look-clean:not(.light-theme) .episodes-modal-foot { border-top-color: var(--border); }
+body.look-clean:not(.light-theme) .episodes-modal-foot .label { font-size: 0.8rem; letter-spacing: 0.14em; }
+body.look-clean:not(.light-theme) .episodes-modal-foot .total {
+  background: var(--clean-tile); border: 1px solid var(--border); border-radius: 10px; padding: 3px 12px;
+}
+/* (In a narrow box the title, the arrows and the count only just share the
+   row: tighter gaps and letters there, so the whole title still shows.) */
+@container (max-width: 439px) {
+  body.look-clean:not(.light-theme) .list-panel .list-panel-header,
+  body.look-clean:not(.light-theme):not(.panels-scroll) .list-panel .list-panel-header { letter-spacing: 0.02em; gap: 6px; padding-left: 8px; }
+  body.look-clean:not(.light-theme) .list-panel .list-panel-count { font-size: 0.92rem; }
+  body.look-clean:not(.light-theme) .list-panel .list-pager { gap: 4px; }
+  body.look-clean:not(.light-theme) .list-pager-arrow { width: 30px; height: 30px; }
+}
+
+/* ---- Upright on a phone the condensed capitals ran under the buttons: a
+   smaller name, and the buttons pushed to the right end with room before
+   them (as the cinematic look does). */
+body.phone-portrait.look-clean:not(.light-theme) .topbar { gap: 12px; }
+body.phone-portrait.look-clean:not(.light-theme) .topbar-left { flex: 0 1 auto; min-width: 0; }
+body.phone-portrait.look-clean:not(.light-theme) .topbar-controls { margin-left: auto; }
+body.phone-portrait.look-clean:not(.light-theme) .topbar .navbar-logo { gap: 6px; }
+body.phone-portrait.look-clean:not(.light-theme) .topbar .logo-icon svg { width: 24px; height: 24px; }
+body.phone-portrait.look-clean:not(.light-theme) .topbar .logo-text { gap: 5px; }
+body.phone-portrait.look-clean:not(.light-theme) .topbar .logo-text .logo-tv,
+body.phone-portrait.look-clean:not(.light-theme) .topbar .logo-accent { font-size: 1.1rem; letter-spacing: 0.01em; }
+
+/* ---- The "all shows" window (a box's show count): the episodes window's
+   plain box, its title bar in the colour of the box it came from. */
+body.look-clean:not(.light-theme) .panel-shows-modal {
+  background: var(--clean-box); border: 1px solid var(--border);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+}
+body.look-clean:not(.light-theme) .panel-shows-from-main { --clean-c: #38bdf8; }
+body.look-clean:not(.light-theme) .panel-shows-from-airing { --clean-c: #fbbf24; }
+body.look-clean:not(.light-theme) .panel-shows-from-watched { --clean-c: #4ade80; }
+body.look-clean:not(.light-theme) .panel-shows-from-plan { --clean-c: #fb923c; }
+body.look-clean:not(.light-theme) .panel-shows-modal .episodes-modal-head .list-panel-header {
+  border: none; border-left: 4px solid var(--clean-c, #38bdf8); border-radius: 0; padding: 4px 0 4px 12px; gap: 9px;
+  font-family: "Work Sans", "Segoe UI", Arial, sans-serif; font-size: 1.1rem; font-weight: 700; font-style: normal;
+  letter-spacing: 0.14em; text-transform: uppercase; color: var(--text);
+  --accent2: var(--clean-c, #38bdf8); --card: var(--clean-box);
+  -webkit-text-stroke: 0; text-shadow: none;
+}
+body.look-clean:not(.light-theme) .panel-shows-modal .episodes-modal-head .list-panel-header svg { width: 22px; height: 22px; color: var(--clean-c, #38bdf8); }
+body.look-clean:not(.light-theme) .panel-shows-modal-count {
+  margin-left: auto; font-size: 0.85rem; font-weight: 600; letter-spacing: 0; text-transform: none; color: var(--muted);
+}
+
+/* ---- The small menus (a card's ⋮, Plan to Watch's): a tile with the
+   boxes' edge and rounder corners, the hovered row on a lighter tile. */
+body.look-clean:not(.light-theme) .card-menu-dropdown {
+  background: var(--clean-tile); border: 1px solid var(--border); border-radius: 12px;
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.6); padding: 6px;
+}
+body.look-clean:not(.light-theme) .card-menu-item { border-radius: 8px; }
+body.look-clean:not(.light-theme) .card-menu-item:hover { background: #22303e; }
+body.look-clean:not(.light-theme) .card-menu-sep { background: var(--border); }

@@ -218,7 +218,7 @@ function closeEpisodesModal() {
   consumeModalHistoryState();
 }
 
-// Picks how many cast members count as "main cast": sorts by total episode
+// Picks how many cast members count as "main cast" (the show page's Cast): sorts by total episode
 // count (aggregate_credits sums it across every season, so long-running
 // leads still rank first late into a show's run) and looks for the natural
 // cliff where episode counts drop off - the point where the regulars end
@@ -243,172 +243,6 @@ function selectMainCast(cast) {
   }
   if (bestIdx >= 0 && bestRatio > 1.4) cutIdx = bestIdx;
   return withCounts.slice(0, cutIdx + 1);
-}
-
-// Preloads a cast photo so it's already decoded in the browser's cache by
-// the time the modal's HTML references it - otherwise, on a slow
-// connection, photos pop in one by one after the flip-in animation has
-// already finished. Never rejects: a failed photo just falls through to
-// the modal's own placeholder handling.
-function preloadImage(src) {
-  return new Promise(resolve => {
-    const img = new Image();
-    img.onload = resolve;
-    img.onerror = resolve;
-    img.src = src;
-    // A stalled request (dead network, slow host) must not block the
-    // whole modal from ever appearing - give up on this one photo after
-    // a few seconds and let it fall back to loading in the background.
-    setTimeout(resolve, 5000);
-  });
-}
-
-let castModalOpenToken = 0;
-
-// Main cast for a show - opened by clicking its title in any of the four
-// places it can appear (top carousel + the three bottom panels all share
-// this one handler via the same source/idx convention as getCycleRows).
-// Unlike the Episodes Left modal, there's real fetching to do here (no
-// cast data is part of the normal per-card fetch): credits and every
-// photo are resolved *before* the modal is built, so the flip-in
-// animation always reveals a fully-loaded grid instead of one that's
-// still populating mid-spin. A token guards against a second click
-// (same or different title) landing while the first is still loading.
-async function openCastModal(source, idx) {
-  const row = getCycleRows(source)[idx];
-  if (!row || !row.tmdbId || !sharedCache) return;
-
-  const openToken = ++castModalOpenToken;
-  const cache = sharedCache;
-  document.body.style.cursor = "wait";
-
-  const data = await cache.getCredits(row.tmdbId);
-  const top = selectMainCast((data && data.cast) || []);
-  await Promise.all(
-    top.filter(p => p.profile_path).map(p => preloadImage(`${TMDB_PROFILE_BASE}${p.profile_path}`))
-  );
-
-  if (openToken !== castModalOpenToken) return; // superseded by a newer click
-  document.body.style.cursor = "";
-
-  const overlay = document.createElement("div");
-  overlay.className = "modal-overlay";
-  overlay.id = "castModalOverlay";
-  overlay.style.paddingTop = `${modalTopGap()}px`;
-
-  const gridHtml = top.length
-    ? top.map((person, i) => {
-        const photoHtml = person.profile_path
-          ? `<img class="cast-photo" loading="lazy" src="${TMDB_PROFILE_BASE}${esc(person.profile_path)}" alt="${esc(person.name)}">`
-          : `<div class="cast-photo placeholder">${esc((person.name[0] || "?").toUpperCase())}</div>`;
-        const character = (person.roles && person.roles[0] && person.roles[0].character) || "";
-        const epCount = person.epCount || person.total_episode_count || 0;
-        return `
-          <div class="cast-item">
-            ${photoHtml}
-            <div class="cast-info">
-              <span class="cast-name" data-person-idx="${i}">${esc(person.name)}</span>
-              ${character ? `<span class="cast-character">${esc(character)}</span>` : ""}
-              ${epCount ? `<span class="cast-episodes">${epCount} episode${epCount === 1 ? "" : "s"}</span>` : ""}
-            </div>
-          </div>`;
-      }).join("\n")
-    : `<p style="color:var(--muted);font-size:0.85rem;padding:10px 4px">No cast information available.</p>`;
-
-  overlay.innerHTML = `
-    <div class="modal-box cast-modal">
-      <div class="episodes-modal-head">
-        <div class="modal-tabs" role="tablist">
-          <button class="list-panel-header modal-tab active" data-tab="cast" role="tab" aria-selected="true">${CAST_ICON_SOLID_SVG}<span>CAST</span></button>
-          <button class="list-panel-header modal-tab" data-tab="episodes" role="tab" aria-selected="false">${LIST_ICON_SOLID_SVG}<span>EPISODES</span></button>
-        </div>
-        <button class="modal-close-btn" id="castModalCloseBtn">&times;</button>
-      </div>
-      <div class="episodes-modal-subtitle">${esc(row.title)}</div>
-      <div class="cast-grid" id="castGrid">${gridHtml}</div>
-      <div class="cast-episodes-tab" id="castEpisodes" hidden></div>
-    </div>`;
-  document.body.appendChild(overlay);
-  pushModalHistoryState(closeCastModal);
-
-  document.getElementById("castModalCloseBtn").onclick = closeCastModal;
-  // Episodes tab: the same episodes manager as in search, loaded the first
-  // time it's opened; switching tabs keeps whatever is on it.
-  let episodesLoaded = false;
-  overlay.querySelectorAll(".modal-tab").forEach(tab => {
-    tab.onclick = async () => {
-      const toEpisodes = tab.dataset.tab === "episodes";
-      overlay.querySelectorAll(".modal-tab").forEach(t => {
-        t.classList.toggle("active", t === tab);
-        t.setAttribute("aria-selected", t === tab ? "true" : "false");
-      });
-      document.getElementById("castGrid").hidden = toEpisodes;
-      const episodesEl = document.getElementById("castEpisodes");
-      episodesEl.hidden = !toEpisodes;
-      if (!toEpisodes || episodesLoaded) return;
-      episodesLoaded = true;
-      episodesEl.innerHTML = `<div class="spinner" style="margin:30px auto"></div>`;
-      const match = library && library.adapter
-        ? await library.adapter.findStatus({ library: row.showId, tmdb: row.tmdbId, imdb: row.imdbId })
-        : null;
-      if (!match) {
-        episodesEl.innerHTML = `<div class="error-box">This show isn't in your list.</div>`;
-        return;
-      }
-      openEpisodesManager({ title: row.title }, match, {
-        body: episodesEl,
-        overlay: episodesEl,
-        setGuard: fn => { castModalCloseGuard = fn; },
-        onBack: null,
-      });
-    };
-  });
-  overlay.addEventListener("click", e => { if (e.target === overlay) closeCastModal(); });
-  document.addEventListener("keydown", castModalEscHandler);
-
-  const grid = document.getElementById("castGrid");
-  if (!top.length) return;
-
-  // Each name becomes an IMDb link once that person's id resolves - lazy,
-  // same reasoning as the Episodes Left modal's per-episode IMDb links.
-  top.forEach((person, i) => {
-    cache.getPersonExternalIds(person.id).then(ids => {
-      if (!ids || !ids.imdb_id) return;
-      const nameEl = grid.querySelector(`.cast-name[data-person-idx="${i}"]`);
-      if (!nameEl || nameEl.querySelector("a")) return;
-      const link = document.createElement("a");
-      link.href = `https://www.imdb.com/name/${ids.imdb_id}/`;
-      link.target = "_blank";
-      link.rel = "noopener";
-      link.className = "cast-name-link";
-      link.textContent = nameEl.textContent;
-      nameEl.textContent = "";
-      nameEl.appendChild(link);
-    });
-  });
-}
-
-function castModalEscHandler(e) {
-  if (e.key === "Escape") closeCastModal();
-}
-
-// Set while the cast window's Episodes tab holds unsaved changes (same as
-// searchModalCloseGuard): closing asks first.
-let castModalCloseGuard = null;
-
-function closeCastModal() {
-  if (castModalCloseGuard && !castModalCloseGuard()) return;
-  castModalCloseGuard = null;
-  const overlay = document.getElementById("castModalOverlay");
-  if (!overlay) return;
-  overlay.remove();
-  document.removeEventListener("keydown", castModalEscHandler);
-  consumeModalHistoryState();
-  // Watched marks changed on the Episodes tab: the panels behind are stale.
-  if (watchedMarksChanged) {
-    watchedMarksChanged = false;
-    main();
-  }
 }
 
 // Icon/title for the "all shows" modal opened from a bottom panel's show-count
@@ -452,7 +286,7 @@ function openPanelShowsModal(source) {
   const itemsHtml = rows.map((row, idx) => {
     const posterSrc = row.posterUrl || row.bannerUrl;
     const thumbHtml = posterSrc
-      ? `<img class="list-thumb" loading="lazy" src="${esc(posterSrc)}" alt="${esc(row.title)}">`
+      ? `<img class="list-thumb" loading="lazy" src="${esc(posterSrc)}"${srcsetAttr(posterSrc)} alt="${esc(row.title)}">`
       : `<div class="list-thumb placeholder">${esc((row.title[0] || "?").toUpperCase())}</div>`;
     const infoHtml = rowInfoWrapHtml(row, idx, source, "flip");
     // Landscape banner (not the portrait poster - already used on the
@@ -479,7 +313,7 @@ function openPanelShowsModal(source) {
 
   const countHtml = `<span class="panel-shows-modal-count">${rows.length} show${rows.length === 1 ? "" : "s"}</span>`;
   overlay.innerHTML = `
-    <div class="modal-box panel-shows-modal">
+    <div class="modal-box panel-shows-modal panel-shows-from-${source}">
       <div class="episodes-modal-head">
         <div class="list-panel-header">${config.icon}<span>${config.title}</span>${countHtml}</div>
         <button class="modal-close-btn" id="panelShowsModalCloseBtn">&times;</button>
