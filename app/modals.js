@@ -313,7 +313,7 @@ function openPanelShowsModal(source) {
 
   const countHtml = `<span class="panel-shows-modal-count">${rows.length} show${rows.length === 1 ? "" : "s"}</span>`;
   overlay.innerHTML = `
-    <div class="modal-box panel-shows-modal">
+    <div class="modal-box panel-shows-modal panel-shows-from-${source}">
       <div class="episodes-modal-head">
         <div class="list-panel-header">${config.icon}<span>${config.title}</span>${countHtml}</div>
         <button class="modal-close-btn" id="panelShowsModalCloseBtn">&times;</button>

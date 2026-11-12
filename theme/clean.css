@@ -254,3 +254,35 @@ body.phone-portrait.look-clean:not(.light-theme) .topbar .logo-icon svg { width:
 body.phone-portrait.look-clean:not(.light-theme) .topbar .logo-text { gap: 5px; }
 body.phone-portrait.look-clean:not(.light-theme) .topbar .logo-text .logo-tv,
 body.phone-portrait.look-clean:not(.light-theme) .topbar .logo-accent { font-size: 1.1rem; letter-spacing: 0.01em; }
+
+/* ---- The "all shows" window (a box's show count): the episodes window's
+   plain box, its title bar in the colour of the box it came from. */
+body.look-clean:not(.light-theme) .panel-shows-modal {
+  background: var(--clean-box); border: 1px solid var(--border);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+}
+body.look-clean:not(.light-theme) .panel-shows-from-main { --clean-c: #38bdf8; }
+body.look-clean:not(.light-theme) .panel-shows-from-airing { --clean-c: #fbbf24; }
+body.look-clean:not(.light-theme) .panel-shows-from-watched { --clean-c: #4ade80; }
+body.look-clean:not(.light-theme) .panel-shows-from-plan { --clean-c: #fb923c; }
+body.look-clean:not(.light-theme) .panel-shows-modal .episodes-modal-head .list-panel-header {
+  border: none; border-left: 4px solid var(--clean-c, #38bdf8); border-radius: 0; padding: 4px 0 4px 12px; gap: 9px;
+  font-family: "Work Sans", "Segoe UI", Arial, sans-serif; font-size: 1.1rem; font-weight: 700; font-style: normal;
+  letter-spacing: 0.14em; text-transform: uppercase; color: var(--text);
+  --accent2: var(--clean-c, #38bdf8); --card: var(--clean-box);
+  -webkit-text-stroke: 0; text-shadow: none;
+}
+body.look-clean:not(.light-theme) .panel-shows-modal .episodes-modal-head .list-panel-header svg { width: 22px; height: 22px; color: var(--clean-c, #38bdf8); }
+body.look-clean:not(.light-theme) .panel-shows-modal-count {
+  margin-left: auto; font-size: 0.85rem; font-weight: 600; letter-spacing: 0; text-transform: none; color: var(--muted);
+}
+
+/* ---- The small menus (a card's ⋮, Plan to Watch's): a tile with the
+   boxes' edge and rounder corners, the hovered row on a lighter tile. */
+body.look-clean:not(.light-theme) .card-menu-dropdown {
+  background: var(--clean-tile); border: 1px solid var(--border); border-radius: 12px;
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.6); padding: 6px;
+}
+body.look-clean:not(.light-theme) .card-menu-item { border-radius: 8px; }
+body.look-clean:not(.light-theme) .card-menu-item:hover { background: #22303e; }
+body.look-clean:not(.light-theme) .card-menu-sep { background: var(--border); }
