@@ -232,12 +232,23 @@ async function restoreKeysFromAccount() {
   return getConfig().tmdbKey ? "restored" : "none";
 }
 // Saves this device's keys to the account when they differ from what's there.
+// A key this device doesn't have never erases the account's: it's copied to
+// this device instead. (A device set up before a key existed - the phone, a
+// second browser, localhost - used to blank the SIMKL V2 app id in the
+// account on every load, and the PC bridge, which signs in to SIMKL with
+// it, lost its sign-in each time.)
 async function saveKeysToAccount() {
   if (!library || !library.backend.currentUser()) return;
   const mine = localAccountKeys();
   if (!mine.tmdbKey) return;
   try {
     const saved = (await library.backend.getMeta("keys")) || {};
+    for (const [field, lsKey] of Object.entries(ACCOUNT_KEY_FIELDS)) {
+      if (!mine[field] && typeof saved[field] === "string" && saved[field]) {
+        mine[field] = saved[field];
+        safeSetItem(lsKey, saved[field]);
+      }
+    }
     if (Object.keys(mine).every(k => (saved[k] || "") === mine[k])) return;
     await library.backend.setMeta("keys", { ...mine, savedAt: Date.now() });
   } catch (e) {
