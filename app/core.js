@@ -73,6 +73,13 @@ document.addEventListener("error", e => {
   if (retryWithoutResizer(el)) return;
   if (el.dataset.onerror) runPageAction(el, e, "error");
 }, true);
+// The name and icon at the top left: a click (or Enter) reloads the page.
+(() => {
+  const logo = document.getElementById("logoRefresh");
+  if (!logo) return;
+  logo.addEventListener("click", () => location.reload());
+  logo.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); location.reload(); } });
+})();
 // Small ones used in several places.
 pageAction("remove", el => el.remove());
 pageAction("openUrl", (el, e, url) => window.open(url, "_blank"));

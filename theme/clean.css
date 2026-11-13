@@ -530,3 +530,21 @@ body.phone-landscape.look-clean:not(.light-theme) .phone-tab-count { border-radi
 body.phone-landscape.look-clean:not(.light-theme) .nav-item.icon-only {
   border-radius: 10px; background: var(--clean-tile); border: 1px solid var(--border); box-shadow: none;
 }
+
+/* ---- The name and icon at the top left: a real heading - bigger, and a
+   click reloads the page (core.js), so it shows it can be pressed. */
+#logoRefresh { cursor: pointer; border-radius: 10px; }
+#logoRefresh:focus-visible { outline: 2px solid var(--gold); outline-offset: 4px; }
+@media (min-width: 721px) {
+  body.look-clean:not(.light-theme).equal-panels:not(.panels-scroll) .topbar .navbar-logo { gap: 10px; }
+  body.look-clean:not(.light-theme).equal-panels:not(.panels-scroll) .topbar .logo-icon svg { width: 50px; height: 50px; }
+  body.look-clean:not(.light-theme).equal-panels:not(.panels-scroll) .topbar .logo-text { gap: 8px; }
+  body.look-clean:not(.light-theme).equal-panels:not(.panels-scroll) .topbar .logo-text .logo-tv,
+  body.look-clean:not(.light-theme).equal-panels:not(.panels-scroll) .topbar .logo-accent { font-size: 2.3rem; line-height: 1; }
+  body.look-clean:not(.light-theme).equal-panels:not(.panels-scroll) .topbar .navbar-logo:hover .logo-accent { filter: brightness(1.12); }
+}
+@media (min-width: 721px) and (max-height: 860px) {
+  body.look-clean:not(.light-theme).equal-panels:not(.panels-scroll) .topbar .logo-icon svg { width: 42px; height: 42px; }
+  body.look-clean:not(.light-theme).equal-panels:not(.panels-scroll) .topbar .logo-text .logo-tv,
+  body.look-clean:not(.light-theme).equal-panels:not(.panels-scroll) .topbar .logo-accent { font-size: 2rem; }
+}
