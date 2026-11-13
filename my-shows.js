@@ -556,7 +556,8 @@ async function msBuildDetail(docId, show, token) {
 
   const images = detail ? computeImages(detail, tmdb, "top") : {};
   const poster = images.posterUrl || row.poster || null;
-  const backdrop = msBackdropFor(detail) || images.bannerUrl || null;
+  const savedBackdrop = detail && poster ? msSavedBackdrop(tmdb, poster) : null;
+  const backdrop = (savedBackdrop && savedBackdrop.path ? msImgUrl(savedBackdrop.path, "w1280") : msBackdropFor(detail)) || images.bannerUrl || null;
   const title = (detail && detail.name) || show.title;
 
   // Facts line
@@ -715,6 +716,7 @@ async function msBuildDetail(docId, show, token) {
   });
   pane.querySelector(".ms-back").onclick = () => history.back();
   msFitHero();
+  if (detail && poster && !savedBackdrop) msUpgradeBackdrop(pane, token, detail, tmdb, poster, backdrop);
   const posterImg = pane.querySelector("img.ms-d-poster");
   if (posterImg && !posterImg.complete) posterImg.addEventListener("load", msFitHero, { once: true });
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(msFitHero);
@@ -846,13 +848,113 @@ window.addEventListener("resize", () => { if (document.getElementById("msDetail"
 // backdrop; the main one only when there's nothing else. All of them come
 // with the show's details (no extra request).
 function msBackdropFor(detail) {
-  if (!detail) return null;
+  const path = msBackdropCandidates(detail)[0] || (detail && detail.backdrop_path) || null;
+  return path ? msImgUrl(path, "w1280") : null;
+}
+// The backdrops in the order above (paths), the main one left out.
+function msBackdropCandidates(detail) {
+  if (!detail) return [];
   const main = detail.backdrop_path || null;
   const all = ((detail.images && detail.images.backdrops) || []).filter(b => b && b.file_path && b.file_path !== main);
-  const best = list => list.slice().sort((a, b) => (b.vote_average || 0) - (a.vote_average || 0) || (b.vote_count || 0) - (a.vote_count || 0))[0];
-  const pick = best(all.filter(b => b.iso_639_1 == null)) || best(all);
-  const path = pick ? pick.file_path : main;
-  return path ? msImgUrl(path, "w1280") : null;
+  const byVotes = list => list.slice().sort((a, b) => (b.vote_average || 0) - (a.vote_average || 0) || (b.vote_count || 0) - (a.vote_count || 0));
+  return [...byVotes(all.filter(b => b.iso_639_1 == null)), ...byVotes(all.filter(b => b.iso_639_1 != null))].map(b => b.file_path);
+}
+
+// ...but a textless backdrop is often just the poster's key art again, laid
+// wide - and that's the one people vote for (Phony: half its 30 backdrops
+// are the poster's mother and son on grey, the scenes have no votes). The
+// main backdrop is that key art, so each candidate's colours (a coarse
+// histogram - the same art at another size or crop keeps its palette) are
+// compared with the main backdrop's, and its layout with the poster's; one
+// that looks like either is passed over. The first that doesn't wins; none
+// - the order above stands. The answer is kept per show and poster
+// (LS_MS_BACKDROPS), so this runs once. (Measured on Phony: the key art's
+// versions 0.11-0.36 from the main backdrop, its scenes 0.51-0.86.)
+const LS_MS_BACKDROPS = "ms_backdrops";
+const MS_BACKDROP_CHECK = 10;      // candidates looked at, at most
+const MS_MAIN_LIKE = 0.45;         // palette distance below which it's the main backdrop again
+const MS_POSTER_LIKE = 0.08;       // layout distance below which it's the poster laid wide
+function msLoadImage(url) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error("image didn't load"));
+    img.src = url;
+  });
+}
+function msPixels(img, w, h, sx = 0, sy = 0, sw = img.naturalWidth, sh = img.naturalHeight) {
+  const c = document.createElement("canvas");
+  c.width = w; c.height = h;
+  const g = c.getContext("2d", { willReadFrequently: true });
+  g.drawImage(img, sx, sy, sw, sh, 0, 0, w, h);
+  return g.getImageData(0, 0, w, h).data;
+}
+// Colours: 4 levels a channel, 64 bins, shares of the picture.
+function msHistogram(img) {
+  const d = msPixels(img, 32, 32), h = new Float32Array(64);
+  for (let i = 0; i < d.length; i += 4) h[(d[i] >> 6) * 16 + (d[i + 1] >> 6) * 4 + (d[i + 2] >> 6)] += 1 / 1024;
+  return h;
+}
+function msHistogramDistance(a, b) {
+  let shared = 0;
+  for (let i = 0; i < 64; i++) shared += Math.min(a[i], b[i]);
+  return 1 - shared;
+}
+// Layout: the backdrop's middle cut to the poster's shape, on an 8x12 grid.
+function msLayoutDistance(posterGrid, img) {
+  const W = img.naturalWidth, H = img.naturalHeight, w = H * 2 / 3;
+  const g = msPixels(img, 8, 12, (W - w) / 2, 0, w, H);
+  let sum = 0;
+  for (let i = 0; i < g.length; i += 4) sum += Math.abs(g[i] - posterGrid[i]) + Math.abs(g[i + 1] - posterGrid[i + 1]) + Math.abs(g[i + 2] - posterGrid[i + 2]);
+  return sum / (g.length * 0.75) / 255;
+}
+async function msPickBackdrop(detail, posterUrl) {
+  const candidates = msBackdropCandidates(detail).slice(0, MS_BACKDROP_CHECK);
+  if (!candidates.length) return null;
+  const mainImg = detail.backdrop_path ? await msLoadImage(msImgUrl(detail.backdrop_path, "w300")).catch(() => null) : null;
+  const mainHist = mainImg ? msHistogram(mainImg) : null;
+  const posterImg = posterUrl ? await msLoadImage(posterUrl.replace(/\/t\/p\/w\d+\//, "/t/p/w92/")).catch(() => null) : null;
+  const posterGrid = posterImg ? msPixels(posterImg, 8, 12) : null;
+  if (!mainHist && !posterGrid) return null;
+  for (const path of candidates) {
+    let img;
+    try { img = await msLoadImage(msImgUrl(path, "w300")); } catch (e) { continue; }
+    if (mainHist && msHistogramDistance(mainHist, msHistogram(img)) < MS_MAIN_LIKE) continue;
+    if (posterGrid && msLayoutDistance(posterGrid, img) < MS_POSTER_LIKE) continue;
+    return path;
+  }
+  return null;
+}
+function msSavedBackdrop(tmdbId, posterUrl) {
+  try {
+    const all = JSON.parse(localStorage.getItem(LS_MS_BACKDROPS) || "{}");
+    const hit = all[tmdbId];
+    return hit && hit.poster === posterUrl ? hit : null;
+  } catch (e) { return null; }
+}
+function msSaveBackdrop(tmdbId, posterUrl, path) {
+  try {
+    const all = JSON.parse(localStorage.getItem(LS_MS_BACKDROPS) || "{}");
+    delete all[tmdbId];
+    all[tmdbId] = { poster: posterUrl, path };
+    const keys = Object.keys(all);
+    for (const k of keys.slice(0, Math.max(0, keys.length - 400))) delete all[k];
+    localStorage.setItem(LS_MS_BACKDROPS, JSON.stringify(all));
+  } catch (e) { /* not kept - checked again next time */ }
+}
+// After the page is drawn: the checked pick, faded in if it differs.
+async function msUpgradeBackdrop(pane, token, detail, tmdbId, posterUrl, shownUrl) {
+  let path;
+  try { path = await msPickBackdrop(detail, posterUrl); } catch (e) { return; }
+  msSaveBackdrop(tmdbId, posterUrl, path);
+  const url = path ? msImgUrl(path, "w1280") : null;
+  if (!url || url === shownUrl || token !== msDetailToken) return;
+  try { await msLoadImage(url); } catch (e) { return; }
+  const el = pane.querySelector(".ms-backdrop");
+  if (!el || token !== msDetailToken) return;
+  el.style.opacity = "0";
+  setTimeout(() => { el.style.backgroundImage = `url('${url}')`; el.style.opacity = ""; }, 350);
 }
 
 // "Mondays 05:00" - the weekday and local time of the show's latest

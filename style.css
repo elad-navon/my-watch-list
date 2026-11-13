@@ -2698,7 +2698,7 @@
   .ms-detail { position: absolute; inset: 0; z-index: 3; overflow-y: auto; overflow-x: hidden; background: var(--bg); color: var(--text); }
   .ms-d-loading { display: grid; place-items: center; padding: 160px 0; }
   .ms-hero { position: relative; overflow: hidden; border-bottom: 1px solid var(--border); background: #0b1118; }
-  .ms-backdrop { position: absolute; inset: 0; background: #0b1118 center 25% / cover no-repeat; }
+  .ms-backdrop { position: absolute; inset: 0; background: #0b1118 center 25% / cover no-repeat; transition: opacity 0.35s ease; }
   .ms-backdrop::after {
     content: ""; position: absolute; inset: 0;
     background: linear-gradient(90deg, rgba(5, 7, 10, 0.95) 0%, rgba(5, 7, 10, 0.86) 40%, rgba(5, 7, 10, 0.45) 75%, rgba(5, 7, 10, 0.65) 100%),
