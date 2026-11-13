@@ -293,7 +293,7 @@ body.look-clean:not(.light-theme) .card-menu-sep { background: var(--border); }
    names in condensed capitals, the current choice edged in gold. */
 body.look-clean:not(.light-theme) .search-modal,
 body.look-clean:not(.light-theme) .picker-box,
-body.look-clean:not(.light-theme) .settings-box {
+body.look-clean:not(.light-theme) .center-box {
   background: var(--clean-box); border: 1px solid var(--border);
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
 }
@@ -307,21 +307,21 @@ body.look-clean:not(.light-theme) .search-modal > h2 { margin-bottom: 18px; gap:
 body.look-clean:not(.light-theme) .search-modal > h2 > span { min-width: 0; letter-spacing: 0.08em; line-height: 1.3; }
 body.look-clean:not(.light-theme) .search-modal .modal-close-btn,
 body.look-clean:not(.light-theme) .picker-box .modal-close-btn,
-body.look-clean:not(.light-theme) .settings-box .modal-close-btn {
+body.look-clean:not(.light-theme) .center-box .modal-close-btn {
   width: 34px; height: 34px; padding: 0; flex: 0 0 auto; border-radius: 9px; font-size: 1.3rem; line-height: 1;
   background: var(--clean-tile); border: 1px solid var(--border); color: var(--muted);
 }
 body.look-clean:not(.light-theme) .search-modal .modal-close-btn:hover,
 body.look-clean:not(.light-theme) .picker-box .modal-close-btn:hover,
-body.look-clean:not(.light-theme) .settings-box .modal-close-btn:hover { color: var(--text); border-color: rgba(251, 191, 36, 0.6); }
+body.look-clean:not(.light-theme) .center-box .modal-close-btn:hover { color: var(--text); border-color: rgba(251, 191, 36, 0.6); }
 /* Fields */
 body.look-clean:not(.light-theme) .search-input-row input,
-body.look-clean:not(.light-theme) .settings-box input[type="text"] {
+body.look-clean:not(.light-theme) .center-box input[type="text"] {
   background: var(--clean-tile); border: 1px solid var(--border); border-radius: 10px; color: var(--text);
 }
 body.look-clean:not(.light-theme) .search-input-row input { padding: 12px 14px; font-size: 1rem; }
 body.look-clean:not(.light-theme) .search-input-row input:focus,
-body.look-clean:not(.light-theme) .settings-box input[type="text"]:focus { outline: none; border-color: rgba(251, 191, 36, 0.7); }
+body.look-clean:not(.light-theme) .center-box input[type="text"]:focus { outline: none; border-color: rgba(251, 191, 36, 0.7); }
 /* Search results */
 body.look-clean:not(.light-theme) .search-results { margin-top: 14px; }
 body.look-clean:not(.light-theme) .search-result-row {
@@ -380,36 +380,36 @@ body.look-clean:not(.light-theme) .detail-status-picker .card-menu-item.danger {
 body.look-clean:not(.light-theme) .detail-status-picker .card-menu-item.danger:hover { border-color: rgba(248, 113, 113, 0.6); background: rgba(248, 113, 113, 0.08); }
 
 /* Settings */
-body.look-clean:not(.light-theme) .settings-box h2 {
+body.look-clean:not(.light-theme) .center-box h2 {
   font-family: "Work Sans", "Segoe UI", Arial, sans-serif; font-size: 1.25rem; font-weight: 700;
   letter-spacing: 0.14em; text-transform: uppercase;
 }
-body.look-clean:not(.light-theme) .settings-box h2::after {
+body.look-clean:not(.light-theme) .center-box h2::after {
   content: ""; display: block; width: 44px; height: 3px; margin: 8px auto 0; border-radius: 2px; background: var(--gold);
 }
-body.look-clean:not(.light-theme) .settings-box label { font-size: 0.8rem; line-height: 1.4; }
-body.look-clean:not(.light-theme) .settings-box a { color: var(--gold); }
-body.look-clean:not(.light-theme) .settings-box code { background: var(--clean-tile); border: 1px solid var(--border); }
-body.look-clean:not(.light-theme) .settings-box .theme-toggle-wrap {
+body.look-clean:not(.light-theme) .center-box label { font-size: 0.8rem; line-height: 1.4; }
+body.look-clean:not(.light-theme) .center-box a { color: var(--gold); }
+body.look-clean:not(.light-theme) .center-box code { background: var(--clean-tile); border: 1px solid var(--border); }
+body.look-clean:not(.light-theme) .center-box .theme-toggle-wrap {
   padding: 7px 12px 7px 8px; background: var(--clean-tile); border: 1px solid var(--border); border-radius: 12px; gap: 12px;
   font-weight: 600;
 }
-body.look-clean:not(.light-theme) .settings-box .theme-toggle-wrap + .theme-toggle-wrap { margin-top: 8px !important; }
-body.look-clean:not(.light-theme) .settings-box .theme-toggle-wrap .nav-icon {
+body.look-clean:not(.light-theme) .center-box .theme-toggle-wrap + .theme-toggle-wrap { margin-top: 8px !important; }
+body.look-clean:not(.light-theme) .center-box .theme-toggle-wrap .nav-icon {
   display: inline-flex; width: 32px; height: 32px; border-radius: 9px; align-items: center; justify-content: center;
   background: var(--clean-box); border: 1px solid var(--border); color: var(--gold);
 }
-body.look-clean:not(.light-theme) .settings-box .theme-toggle.on { background: var(--gold); }
-body.look-clean:not(.light-theme) .settings-box .pill {
+body.look-clean:not(.light-theme) .center-box .theme-toggle.on { background: var(--gold); }
+body.look-clean:not(.light-theme) .center-box .pill {
   padding: 8px 14px; border-radius: 10px; background: var(--clean-tile); border: 1px solid var(--border);
   color: var(--text); font: inherit; font-size: 0.85rem; font-weight: 600; cursor: pointer;
 }
-body.look-clean:not(.light-theme) .settings-box .pill:hover { border-color: rgba(251, 191, 36, 0.6); }
-body.look-clean:not(.light-theme) .settings-box #saveSettingsBtn {
+body.look-clean:not(.light-theme) .center-box .pill:hover { border-color: rgba(251, 191, 36, 0.6); }
+body.look-clean:not(.light-theme) .center-box #saveSettingsBtn {
   min-width: 140px; padding: 10px 22px; background: var(--gold); border-color: var(--gold); color: #14100a;
   font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase;
 }
-body.look-clean:not(.light-theme) .settings-box #saveSettingsBtn:hover { filter: brightness(1.08); }
+body.look-clean:not(.light-theme) .center-box #saveSettingsBtn:hover { filter: brightness(1.08); }
 
 /* The image picker */
 body.look-clean:not(.light-theme) .picker-box { padding: 20px 20px 16px; }
@@ -456,3 +456,77 @@ body.look-clean:not(.light-theme) .sx-net-name {
   text-transform: uppercase; letter-spacing: 0.02em;
 }
 body.look-clean:not(.light-theme) .sx-pace input { accent-color: var(--gold); }
+
+/* ---- The episodes manager inside the search window (a show's page draws
+   its own): seasons and episodes as tiles with the boxes' edge, the open
+   season and the episode up next edged in gold, watched ticks in Just
+   Watched's green, Save in gold. */
+body.look-clean:not(.light-theme) .search-modal .ep-manage-summary { color: #4ade80; }
+body.look-clean:not(.light-theme) .search-modal .ep-rail-item { background: var(--clean-tile); border: 1px solid var(--border); }
+body.look-clean:not(.light-theme) .search-modal .ep-rail-item:hover { border-color: rgba(255, 255, 255, 0.3); }
+body.look-clean:not(.light-theme) .search-modal .ep-rail-item.on { border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold) inset; }
+body.look-clean:not(.light-theme) .search-modal .ep-rail-name { font-size: 1.2rem; letter-spacing: 0.03em; }
+body.look-clean:not(.light-theme) .search-modal .ep-card { background: var(--clean-tile); border: 1px solid var(--border); border-radius: 10px; }
+body.look-clean:not(.light-theme) .search-modal .ep-card:hover { border-color: rgba(255, 255, 255, 0.4); }
+body.look-clean:not(.light-theme) .search-modal .ep-card.w { background: transparent; }
+body.look-clean:not(.light-theme) .search-modal .ep-card.nx { border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold) inset; }
+body.look-clean:not(.light-theme) .search-modal .ep-card.un:hover { border-color: var(--border); }
+body.look-clean:not(.light-theme) .search-modal .ep-card-code { font-size: 0.95rem; color: #38bdf8; }
+body.look-clean:not(.light-theme) .search-modal .ep-card.nx .ep-card-code { color: var(--gold); }
+body.look-clean:not(.light-theme) .search-modal .ep-cb { border-color: #5b6b7e; }
+body.look-clean:not(.light-theme) .search-modal .ep-cb:hover:not(:disabled) { border-color: #4ade80; }
+body.look-clean:not(.light-theme) .search-modal .ep-cb.all { background: #4ade80; border-color: #4ade80; color: #06210f; }
+body.look-clean:not(.light-theme) .search-modal .ep-cb.some { border-color: #4ade80; color: #4ade80; }
+body.look-clean:not(.light-theme) .search-modal .ep-savebar { background: var(--clean-tile); border-color: var(--gold); border-radius: 12px; }
+body.look-clean:not(.light-theme) .search-modal .ep-savebar-btn { background: var(--clean-box); border-color: var(--border); border-radius: 9px; padding: 7px 16px; }
+body.look-clean:not(.light-theme) .search-modal .ep-savebar-btn:hover:not(:disabled) { border-color: rgba(255, 255, 255, 0.4); }
+body.look-clean:not(.light-theme) .search-modal .ep-savebar-btn.primary {
+  background: var(--gold); border-color: var(--gold); color: #14100a; letter-spacing: 0.08em; text-transform: uppercase;
+}
+
+/* ---- Sign in and Clean up Watching share Settings' box (.center-box
+   above): the main button in gold, the shows to move as tiles. */
+body.look-clean:not(.light-theme) .center-box #librarySignInBtn,
+body.look-clean:not(.light-theme) .cleanup-box #cleanupMoveBtn {
+  min-width: 140px; padding: 10px 22px; background: var(--gold); border: 1px solid var(--gold); border-radius: 10px; color: #14100a;
+  font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase;
+}
+body.look-clean:not(.light-theme) .cleanup-box .cleanup-row { background: var(--clean-tile); border-color: var(--border); border-radius: 10px; }
+body.look-clean:not(.light-theme) .cleanup-box .cleanup-row:hover { border-color: rgba(255, 255, 255, 0.3); }
+body.look-clean:not(.light-theme) .cleanup-title { font-family: var(--clean-cond); font-size: 1.25rem; line-height: 1.1; letter-spacing: 0.02em; }
+body.look-clean:not(.light-theme) .cleanup-box .cleanup-row select { background: var(--clean-box); border-radius: 8px; }
+
+/* ---- Messages: the small one at the bottom a tile edged in green (red for
+   an error); "marked as watched" in the plain box, the show's name in
+   condensed capitals, its poster in the white frame. */
+body.look-clean:not(.light-theme) .toast {
+  background: var(--clean-tile); border: 1px solid var(--border); border-left: 4px solid #4ade80; border-radius: 12px;
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.55);
+}
+body.look-clean:not(.light-theme) .toast.error { border-left-color: #f87171; color: #fca5a5; }
+body.look-clean:not(.light-theme) .corner-toast { background: var(--clean-box); border-color: var(--border); border-radius: 16px; }
+body.look-clean:not(.light-theme) .wt-poster { box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.85); }
+body.look-clean:not(.light-theme) .wt-kicker { color: #4ade80; letter-spacing: 0.14em; }
+body.look-clean:not(.light-theme) .wt-body b {
+  color: var(--text); font-family: var(--clean-cond); font-size: 2.1rem; font-weight: 700; line-height: 1.02;
+  text-transform: uppercase; letter-spacing: 0.02em;
+}
+body.look-clean:not(.light-theme) .wt-ep i { font-family: inherit; font-style: normal; color: var(--muted); }
+body.look-clean:not(.light-theme) .wt-segs i { background: var(--clean-tile); }
+body.look-clean:not(.light-theme) .wt-segs i.on { background: #38bdf8; }
+
+/* ---- Loading: the frames in the posters' white edge. */
+body.look-clean:not(.light-theme) .film-frame { box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.5); }
+body.look-clean:not(.light-theme) .film-status { letter-spacing: 0.14em; }
+
+/* ---- A phone held sideways: the box tabs as rounded tiles with the boxes'
+   edge (the chosen one still gold), the buttons beside them as the home
+   box's icon tiles. */
+body.phone-landscape.look-clean:not(.light-theme) .phone-tabs button {
+  border-radius: 10px; background: var(--clean-tile); border: 1px solid var(--border);
+}
+body.phone-landscape.look-clean:not(.light-theme) .phone-tabs button[aria-pressed="true"] { background: var(--gold); border-color: var(--gold); }
+body.phone-landscape.look-clean:not(.light-theme) .phone-tab-count { border-radius: 6px; }
+body.phone-landscape.look-clean:not(.light-theme) .nav-item.icon-only {
+  border-radius: 10px; background: var(--clean-tile); border: 1px solid var(--border); box-shadow: none;
+}
