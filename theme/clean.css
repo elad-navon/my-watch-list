@@ -426,3 +426,33 @@ body.look-clean:not(.light-theme) .picker-done {
   background: var(--gold); color: #14100a; border-radius: 10px; padding: 9px 22px;
   font-size: 0.85rem; letter-spacing: 0.1em; text-transform: uppercase;
 }
+
+/* ---- My Stats: already drawn like a show's page - here it takes the clean
+   look's surfaces (the near-black page, plain boxes with the boxes' edge),
+   gold for what's chosen (the tab, a toggle, the section bars) and show
+   names in condensed capitals. The charts keep their own colours. */
+body.look-clean:not(.light-theme) .sx-overlay,
+body.look-clean:not(.light-theme) .sx-modal {
+  background: radial-gradient(1200px 600px at 70% -10%, rgba(56, 189, 248, 0.05), transparent 60%), #05070a;
+}
+body.look-clean:not(.light-theme) .sx-head { background: var(--clean-box); border-bottom-color: var(--border); }
+body.look-clean:not(.light-theme) .sx-title h2 { letter-spacing: 0.03em; }
+body.look-clean:not(.light-theme) .sx-tab[aria-selected="true"] { border-bottom-color: var(--gold); }
+body.look-clean:not(.light-theme) .sx-close { background: var(--clean-tile); border-color: var(--border); }
+body.look-clean:not(.light-theme) .sx-close:hover { border-color: rgba(251, 191, 36, 0.6); }
+body.look-clean:not(.light-theme) .sx-h { border-left-color: var(--gold); }
+body.look-clean:not(.light-theme) .sx-kpi,
+body.look-clean:not(.light-theme) .sx-card,
+body.look-clean:not(.light-theme) .sx-net { background: var(--clean-box); border-color: var(--border); }
+body.look-clean:not(.light-theme) .sx-empty { border-color: var(--border); background: rgba(17, 26, 36, 0.5); }
+body.look-clean:not(.light-theme) .sx-seg { background: var(--clean-tile); border-color: var(--border); }
+body.look-clean:not(.light-theme) .sx-seg-btn + .sx-seg-btn { border-left-color: var(--border); }
+body.look-clean:not(.light-theme) .sx-seg-btn:not(.on):hover { color: var(--text); }
+body.look-clean:not(.light-theme) .sx-seg-btn.on { background: var(--gold); color: #14100a; font-weight: 700; }
+body.look-clean:not(.light-theme) .sx-link { color: var(--gold); }
+body.look-clean:not(.light-theme) .sx-show-name,
+body.look-clean:not(.light-theme) .sx-net-name {
+  font-family: var(--clean-cond); font-weight: 700; font-size: 1.25rem; line-height: 1.1;
+  text-transform: uppercase; letter-spacing: 0.02em;
+}
+body.look-clean:not(.light-theme) .sx-pace input { accent-color: var(--gold); }
