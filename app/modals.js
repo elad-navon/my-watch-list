@@ -383,7 +383,7 @@ function openSearchModal() {
   overlay.id = "searchModalOverlay";
   overlay.style.paddingTop = `${modalTopGap()}px`;
   overlay.innerHTML = `
-    <div class="modal-box">
+    <div class="modal-box search-modal">
       <h2><span id="modalTitle">Search a TV show (English or Hebrew)</span> <button class="modal-close-btn" id="searchModalCloseBtn">&times;</button></h2>
       <div id="modalBody"></div>
     </div>`;

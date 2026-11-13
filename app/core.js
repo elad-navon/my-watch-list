@@ -382,7 +382,7 @@ function showSettings(afterSaveCallback) {
     ? `<button class="modal-close-btn" id="settingsCloseBtn" style="position:absolute;top:14px;right:14px" title="Back">&times;</button>`
     : "";
   app.innerHTML = `
-    <div class="center-box" style="position:relative">
+    <div class="center-box settings-box" style="position:relative">
       ${closeBtnHtml}
       ${siteVersionHtml()}
       <h2>Setup</h2>
