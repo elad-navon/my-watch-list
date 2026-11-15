@@ -458,6 +458,7 @@ function ratingsPopoverHtml(r) {
   });
   document.addEventListener("focusout", scheduleHide);
   document.addEventListener("scroll", hide, true);
+  window.hideRatingsPopover = hide; // the Android app's back button (appBackPressed)
 })();
 
 function ratingTilesHtml(r) {

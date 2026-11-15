@@ -54,11 +54,16 @@ window.addEventListener("popstate", () => {
 
 // The Android app's back button (android-app MainActivity) asks this first
 // and closes the app only on false: it steps back out of whatever is open -
-// a card's menu, a show's details or episodes back to the search / list
+// a card's menu, the ratings popover, the account menu or tonight's list,
+// a show's details or episodes back to the search / list
 // they came from, a modal (through history, as above), Settings or
 // Clean up - the way that screen's own X or Back button does.
 window.appBackPressed = () => {
   if (document.getElementById("cardMenuDropdown")) { closeCardMenu(); return true; }
+  if (document.querySelector(".ratings-popover")) { hideRatingsPopover(); return true; }
+  // The account menu and tonight's list close on a click anywhere else.
+  const smallPop = ["profileMenu", "todayPop"].some(id => { const el = document.getElementById(id); return el && !el.hidden; });
+  if (smallPop) { document.dispatchEvent(new MouseEvent("click")); return true; }
   const innerBack = activeModalClose && document.querySelector("[data-ep-back], #detailBackBtn");
   if (innerBack) { innerBack.click(); return true; }
   if (activeModalClose) { history.back(); return true; }
