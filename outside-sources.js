@@ -34,20 +34,30 @@
   // get(path, params): TMDB's JSON (or null). Same methods as the page's
   // TmdbCache always had.
   const TMDB_TTL = { show: DAY, season: 6 * 3600 * 1000, episodeIds: 7 * DAY, credits: DAY, personIds: 7 * DAY };
-  function createTmdbClient({ get, persisted, ttl = {} }) {
+  // fillNetwork(detail) -> a network name or null (optional): asked when
+  // TMDB lists no network for a show (Israeli shows, now and then, that
+  // TVMaze does know); the answer stands in as the show's one network.
+  function createTmdbClient({ get, persisted, ttl = {}, fillNetwork = null }) {
     const t = { ...TMDB_TTL, ...ttl };
-    const maps = { show: new Map(), season: new Map(), episodeIds: new Map(), credits: new Map(), personIds: new Map() };
+    const maps = { show: new Map(), filled: new Map(), season: new Map(), episodeIds: new Map(), credits: new Map(), personIds: new Map() };
     const one = (kind, key, cacheKey, path, params) =>
       memo(maps[kind], key, () => keptOrFetched(persisted, cacheKey, t[kind], () => get(path, params)));
+    // tmdbshow2: the cache key went up when content_ratings joined the
+    // request, so copies from before it (without the age rating) aren't
+    // served for a day. Images (all, for the picker), external ids and age
+    // ratings come with the one request every show needs anyway; English
+    // and untagged pictures, Hebrew as the fallback.
+    const rawShow = id => one("show", id, `tmdbshow2:${id}`, `/tv/${id}`, {
+      append_to_response: "images,external_ids,content_ratings", language: "en-US", include_image_language: "en,null,he",
+    });
+    const withNetwork = id => memo(maps.filled, id, async () => {
+      const d = await rawShow(id);
+      if (!d || !fillNetwork || (d.networks && d.networks.length)) return d;
+      const name = await Promise.resolve().then(() => fillNetwork(d)).catch(() => null);
+      return name ? { ...d, networks: [{ id: null, name, logo_path: null, origin_country: "", from: "tvmaze" }] } : d;
+    });
     return {
-      // tmdbshow2: the cache key went up when content_ratings joined the
-      // request, so copies from before it (without the age rating) aren't
-      // served for a day. Images (all, for the picker), external ids and age
-      // ratings come with the one request every show needs anyway; English
-      // and untagged pictures, Hebrew as the fallback.
-      getShow: id => one("show", id, `tmdbshow2:${id}`, `/tv/${id}`, {
-        append_to_response: "images,external_ids,content_ratings", language: "en-US", include_image_language: "en,null,he",
-      }),
+      getShow: id => withNetwork(id),
       getSeason: (id, season) => one("season", `${id}:${season}`, `tmdbseason:${id}:${season}`, `/tv/${id}/season/${season}`),
       // Per-episode IMDb ids have an endpoint of their own: asked lazily.
       getEpisodeExternalIds: (id, season, episode) => one("episodeIds", `${id}:${season}:${episode}`,
