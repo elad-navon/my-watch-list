@@ -112,7 +112,8 @@ const IMAGE_MODE_CONFIG = {
 // (panelThumbSrc: banners, or posters with Panels to Posters), falling back
 // to the other one - not getImageMode(), which governs the top carousel.
 function panelImageMode(row) {
-  return panelPosters() ? (row.posterUrl ? "poster" : "banner") : (row.bannerUrl ? "banner" : "poster");
+  // The other kind only when it's the one there is (none at all: the layout's own).
+  return panelPosters() ? (row.posterUrl || !row.bannerUrl ? "poster" : "banner") : (row.bannerUrl || !row.posterUrl ? "banner" : "poster");
 }
 
 // Which pictures the image picker lists for a show in one spot (its
@@ -123,7 +124,8 @@ function pickerModeFor(source, row) {
   if (!row) return null;
   const mode = source === "main" ? getImageMode() : panelImageMode(row);
   const altCount = (row[IMAGE_MODE_CONFIG[mode].pathsKey] || []).length;
-  return altCount > 1 || row.imdbId ? mode : null;
+  // Other sources find a show by its IMDb id or TMDB's details.
+  return altCount > 1 || row.imdbId || row.tmdbId ? mode : null;
 }
 
 // The small dark chip that opens the image picker - on a top card's
@@ -242,9 +244,18 @@ function patchImagesForTmdbId(tmdbId) {
     rows.forEach((r, i) => {
       if (!r || r.tmdbId !== tmdbId) return;
       const wrap = document.querySelector(`[data-cycle-key="${source}-${i}"]`);
-      const img = wrap && wrap.querySelector(".poster, .list-thumb");
+      let img = wrap && wrap.querySelector(".poster, .list-thumb");
       if (!img) return;
       const newSrc = displaySrcFor(source, r);
+      // A show that had no picture (its letter on a blank tile) gets one.
+      if (!(img instanceof HTMLImageElement)) {
+        if (!newSrc) return;
+        const el = document.createElement("img");
+        el.className = [...img.classList].filter(c => c !== "placeholder").join(" ");
+        el.alt = r.title || "";
+        img.replaceWith(el);
+        img = el;
+      }
       if (newSrc && img.src !== newSrc) setImgSrc(img, newSrc);
       const tile = newSrc && wrap.closest(".card, .list-row");
       const glow = tile && tile.querySelector(".pp-glow i");
@@ -693,18 +704,21 @@ async function fetchExtraImages(imdbId, tmdbId, onUpdate = () => {}) {
   // them too, for its cache; repeats are dropped).
   if (imdbId) arrive("metahub")(metahubImages(imdbId));
 
-  const keylessLoad = fetchKeylessImages(imdbId).then(arrive("keyless"));
+  // TMDB's details (already cached): TheTVDB's id, the name and premiere
+  // year - how TVMaze finds a show with no IMDb id.
+  let detail = null;
+  if (tmdbId && sharedCache) {
+    try { detail = await sharedCache.getShow(tmdbId); } catch (e) { /* TMDB unreachable: IMDb id alone */ }
+  }
+  const tmdbTvdbId = (detail && detail.external_ids && detail.external_ids.tvdb_id) || null;
+  const keylessLoad = fetchKeylessImages({
+    imdb: imdbId || null, tvdb: tmdbTvdbId,
+    name: detail ? detail.original_name || detail.name : null, year: detail && detail.first_air_date ? detail.first_air_date.slice(0, 4) : null,
+  }).then(arrive("keyless"));
   const cfg = getConfig();
   const keyed = (async () => {
     if (!cfg.fanartKey && !cfg.tvdbKey) return;
-    let tvdbId = null;
-    if (tmdbId && sharedCache) {
-      try {
-        const detail = await sharedCache.getShow(tmdbId); // already cached; carries external_ids
-        tvdbId = detail && detail.external_ids && detail.external_ids.tvdb_id;
-      } catch (e) { /* TMDB unreachable: TVMaze's id below */ }
-    }
-    if (!tvdbId) tvdbId = (await keylessLoad).tvdbId;
+    const tvdbId = tmdbTvdbId || (await keylessLoad).tvdbId;
     await Promise.all([
       fetchFanartImages(tvdbId).then(arrive("fanart")),
       fetchTvdbImages(tvdbId).then(arrive("tvdb")),
@@ -733,7 +747,7 @@ function openImagePicker(source, idx, mode) {
   if (!row) return;
   const cfg = IMAGE_MODE_CONFIG[mode];
   const paths = row[cfg.pathsKey] || [];
-  if (paths.length < 2 && !row.imdbId) return; // nothing to choose between
+  if (paths.length < 2 && !row.imdbId && !row.tmdbId) return; // nothing to choose between
   closeImagePicker();
 
   const thumbBase = mode === "banner" ? TMDB_PICKER_THUMB_BACKDROP : TMDB_PICKER_THUMB_POSTER;
@@ -751,7 +765,7 @@ function openImagePicker(source, idx, mode) {
     : `<div class="picker-ident-placeholder">${esc((row.title[0] || "?").toUpperCase())}</div>`;
   const tmdbEntries = paths.map((p, i) => ({ url: cfg.base + p, thumb: thumbBase + p, index: i }));
   let extras = [];
-  let extrasState = row.imdbId ? "loading" : "done";
+  let extrasState = row.imdbId || row.tmdbId ? "loading" : "done";
 
   const overlay = document.createElement("div");
   overlay.className = "modal-overlay";
@@ -831,7 +845,7 @@ function openImagePicker(source, idx, mode) {
     renderGrid();
   };
 
-  if (row.imdbId) {
+  if (row.imdbId || row.tmdbId) {
     // Each source's pictures join the grid as soon as that source answers.
     const show = (found, done) => {
       if (!overlay.isConnected) return; // closed while loading

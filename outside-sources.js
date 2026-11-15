@@ -145,20 +145,36 @@
     const rejected = { fanart: false, tvdb: false };
     let loginPending = null;
 
-    // TVMaze (many posters and 16:9 backgrounds, by IMDb id) and Metahub.
+    // TVMaze (many posters and 16:9 backgrounds) and Metahub (by IMDb id).
+    // The show is found on TVMaze by its IMDb id, else TheTVDB's, else its
+    // name when the premiere year agrees (a new Israeli show often has no
+    // IMDb id yet - Barkoni). `ids`: an IMDb id, or { imdb, tvdb, name, year }.
     // { poster, banner, tvdbId }; kept a week, but not when TVMaze's picture
     // list didn't come (the next opening asks again) or the lookup failed.
-    async function keyless(imdbId) {
+    async function keyless(ids) {
+      const { imdb: imdbId = null, tvdb = null, name = null, year = null } = typeof ids === "string" ? { imdb: ids } : ids || {};
       const out = { poster: [], banner: [], tvdbId: null };
-      if (!imdbId) return out;
-      const cacheKey = `extraimages2:${imdbId}`; // 2: TVMaze poster tiles from the full-size file
+      const tries = [
+        imdbId && `lookup/shows?imdb=${encodeURIComponent(imdbId)}`,
+        tvdb && `lookup/shows?thetvdb=${encodeURIComponent(tvdb)}`,
+        name && year && `singlesearch/shows?q=${encodeURIComponent(name)}`,
+      ].filter(Boolean);
+      if (!tries.length) return out;
+      // 2: TVMaze poster tiles from the full-size file
+      const cacheKey = imdbId ? `extraimages2:${imdbId}` : tvdb ? `extraimages2:tvdb:${tvdb}` : `extraimages2:q:${name}:${year}`;
       const cached = await persisted.read(cacheKey, IMAGES_TTL_MS);
       if (cached !== undefined) return cached;
       let partial = false;
       try {
-        const lookup = await tvmazeGet(`https://api.tvmaze.com/lookup/shows?imdb=${imdbId}`);
-        if (lookup.ok) {
-          const show = await lookup.json();
+        let show = null;
+        for (const path of tries) {
+          const lookup = await tvmazeGet(`https://api.tvmaze.com/${path}`);
+          if (lookup.status === 404) continue;
+          if (!lookup.ok) return out; // a TVMaze hiccup: what we have, asked again next time
+          const found = await lookup.json();
+          if (found && (!path.startsWith("singlesearch") || String(found.premiered || "").slice(0, 4) === String(year))) { show = found; break; }
+        }
+        if (show) {
           out.tvdbId = (show.externals && show.externals.thetvdb) || null; // lets Fanart.tv find the show too
           // TVMaze builds a show's picture list on the first request in a
           // while, which takes 5-10 seconds: a longer wait for this one.
@@ -176,15 +192,15 @@
           } else {
             partial = true;
           }
-        } else if (lookup.status !== 404) {
-          return out; // a TVMaze hiccup: what we have, asked again next time
         }
       } catch (e) {
         return out; // offline / blocked
       }
-      const meta = metahubImages(imdbId);
-      out.poster.push(...meta.poster);
-      out.banner.push(...meta.banner);
+      if (imdbId) {
+        const meta = metahubImages(imdbId);
+        out.poster.push(...meta.poster);
+        out.banner.push(...meta.banner);
+      }
       if (!partial) persisted.write(cacheKey, out);
       return out;
     }
