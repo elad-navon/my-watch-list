@@ -103,7 +103,40 @@ function TmdbCache() {
     persisted: { read: readPersistedCache, write: writePersistedCache },
     ttl: { show: CACHE_TTL_TMDB_SHOW_MS, season: CACHE_TTL_TMDB_SEASON_MS, episodeIds: CACHE_TTL_TMDB_EPISODE_IDS_MS,
       credits: CACHE_TTL_TMDB_CREDITS_MS, personIds: CACHE_TTL_TMDB_PERSON_IDS_MS },
+    fillNetwork: tvmazeNetworkFor,
   });
+}
+
+// A show TMDB lists no network for, as TVMaze has it (its TV network, else
+// its streaming service) - Nothing Happened: none on TMDB, HOT3 on TVMaze.
+// Found by the IMDb id, then TheTVDB's, then the name when the premiere
+// year agrees. Kept a week ("none" too); a TVMaze hiccup isn't kept.
+const CACHE_TTL_TVMAZE_NETWORK_MS = 7 * 24 * 60 * 60 * 1000;
+async function tvmazeNetworkFor(detail) {
+  const key = `tvmazenet:${detail.id}`;
+  const kept = await readPersistedCache(key, CACHE_TTL_TVMAZE_NETWORK_MS);
+  if (kept !== undefined) return (kept && kept.name) || null;
+  const get = typeof pacedFetch === "function" ? pacedFetch : fetch;
+  const ids = detail.external_ids || {};
+  const year = (detail.first_air_date || "").slice(0, 4);
+  const name = detail.original_name || detail.name;
+  const tries = [
+    ids.imdb_id && `lookup/shows?imdb=${encodeURIComponent(ids.imdb_id)}`,
+    ids.tvdb_id && `lookup/shows?thetvdb=${encodeURIComponent(ids.tvdb_id)}`,
+    name && year && `singlesearch/shows?q=${encodeURIComponent(name)}`,
+  ].filter(Boolean);
+  let show = null;
+  for (const path of tries) {
+    let res;
+    try { res = await get(`https://api.tvmaze.com/${path}`); } catch (e) { return null; }
+    if (res.status === 404) continue;
+    if (!res.ok) return null;
+    const found = await res.json().catch(() => null);
+    if (found && (!path.startsWith("singlesearch") || (found.premiered || "").slice(0, 4) === year)) { show = found; break; }
+  }
+  const network = show ? (show.network && show.network.name) || (show.webChannel && show.webChannel.name) || null : null;
+  writePersistedCache(key, { name: network });
+  return network;
 }
 
 function latestNetwork(showDetail) {
@@ -149,7 +182,8 @@ function normalizeNetworkName(name) {
   // or "Keshet"/"Keshet 12" are the same network. Stripping a trailing
   // " <number>" and lowercasing lets those forms match the same
   // LOCAL_NETWORK_LOGOS entry regardless of exact formatting.
-  return (name || "").trim().replace(/\s+\d+$/, "").trim().toLowerCase();
+  // (TVMaze writes them run together: "HOT3".)
+  return (name || "").trim().replace(/(\D)\s*\d+$/, "$1").trim().toLowerCase();
 }
 
 function findLocalNetworkLogo(networkName) {

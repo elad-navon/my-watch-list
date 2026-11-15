@@ -21,6 +21,17 @@ test("TMDB: one request per show even when asked twice at once; the answer is ke
   assert.deepEqual(store.m.get("tmdbshow2:1"), { id: 1, name: "A" });
 });
 
+test("TMDB: a show with no network takes fillNetwork's; one with a network isn't asked about", async () => {
+  const asked = [];
+  const shows = { 1: { id: 1, networks: [] }, 2: { id: 2, networks: [{ name: "HBO", logo_path: "/h.png" }] } };
+  const tmdb = createTmdbClient({ get: async p => shows[p.split("/")[2]], persisted: persisted(), fillNetwork: async d => { asked.push(d.id); return "HOT3"; } });
+  assert.equal((await tmdb.getShow(1)).networks[0].name, "HOT3");
+  assert.equal((await tmdb.getShow(2)).networks[0].name, "HBO");
+  assert.deepEqual(asked, [1]);
+  const none = createTmdbClient({ get: async () => ({ id: 3, networks: [] }), persisted: persisted(), fillNetwork: async () => { throw new Error("down"); } });
+  assert.deepEqual((await none.getShow(3)).networks, []);
+});
+
 test("TMDB: a kept copy answers without a request; a failure is null and isn't kept", async () => {
   let calls = 0;
   const store = persisted({ "tmdbseason:5:2": { episodes: [] } });
