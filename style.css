@@ -2729,6 +2729,7 @@
   .ms-d-loading { display: grid; place-items: center; padding: 160px 0; }
   .ms-hero { position: relative; overflow: hidden; border-bottom: 1px solid var(--border); background: #0b1118; }
   .ms-backdrop { position: absolute; inset: 0; background: #0b1118 center 25% / cover no-repeat; transition: opacity 0.35s ease; }
+  .ms-backdrop-tall { display: none; }
   .ms-backdrop::after {
     content: ""; position: absolute; inset: 0;
     background: linear-gradient(90deg, rgba(5, 7, 10, 0.95) 0%, rgba(5, 7, 10, 0.86) 40%, rgba(5, 7, 10, 0.45) 75%, rgba(5, 7, 10, 0.65) 100%),
@@ -2912,6 +2913,25 @@
       grid-template-columns: 110px minmax(0, 1fr); gap: 16px;
       padding: max(12px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) 24px max(16px, env(safe-area-inset-left, 0px));
     }
+    /* The backdrop whole at the top (a narrow, tall hero would crop it to
+       a sliver of mostly empty sky), fading into the dark below; the back
+       button over it, the poster and title over its faded bottom. */
+    .ms-backdrop { bottom: auto; aspect-ratio: 16 / 9; background-position: center top; }
+    .ms-backdrop::after {
+      background: linear-gradient(180deg, rgba(5, 7, 10, 0.3) 0%, rgba(5, 7, 10, 0) 28%, rgba(5, 7, 10, 0) 55%, #0b1118 100%);
+    }
+    .ms-hero-in > .ms-d-top { margin-bottom: max(0px, calc(56.25vw - 130px)); }
+    /* A tall picture when the show has one (msTallArtFor): it's the poster
+       here, so the small poster steps aside and the title runs full width. */
+    .ms-backdrop-tall { display: block; position: absolute; top: 0; left: 0; right: 0; aspect-ratio: 2 / 3; background: #0b1118 center top / cover no-repeat; }
+    .ms-backdrop-tall::after {
+      content: ""; position: absolute; inset: 0;
+      background: linear-gradient(180deg, rgba(5, 7, 10, 0.3) 0%, rgba(5, 7, 10, 0) 20%, rgba(5, 7, 10, 0) 42%, rgba(5, 7, 10, 0.8) 64%, #0b1118 100%);
+    }
+    .ms-hero:has(.ms-backdrop-tall) .ms-backdrop { display: none; }
+    .ms-hero:has(.ms-backdrop-tall) .ms-hero-in > .ms-d-top { margin-bottom: calc(84vw - 66px); }
+    .ms-hero:has(.ms-backdrop-tall) .ms-d-poster { display: none; }
+    .ms-hero:has(.ms-backdrop-tall) :is(.ms-d-title, .ms-facts) { grid-column: 1 / -1; }
     .ms-d-info { display: contents; }
     .ms-d-title, .ms-facts { grid-column: 2; }
     .ms-d-title { font-size: 1.6rem; align-self: end; }

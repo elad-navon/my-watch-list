@@ -558,6 +558,7 @@ async function msBuildDetail(docId, show, token) {
   const poster = images.posterUrl || row.poster || null;
   const savedBackdrop = detail && poster ? msSavedBackdrop(tmdb, poster) : null;
   const backdrop = (savedBackdrop && savedBackdrop.path ? msImgUrl(savedBackdrop.path, "w1280") : msBackdropFor(detail)) || images.bannerUrl || null;
+  const tallArt = msTallArtFor(detail, poster);
   const title = (detail && detail.name) || show.title;
 
   // Facts line
@@ -633,6 +634,7 @@ async function msBuildDetail(docId, show, token) {
   pane.innerHTML = `
     <section class="ms-hero">
       ${backdrop ? `<div class="ms-backdrop" style="background-image:url('${esc(backdrop)}')"></div>` : `<div class="ms-backdrop"></div>`}
+      ${tallArt ? `<div class="ms-backdrop-tall" style="background-image:url('${esc(tallArt)}')"></div>` : ""}
       <div class="ms-hero-in">
         <div class="ms-d-top"><button type="button" class="ms-back" data-ep-back>&larr; ${msStandalone ? "Back" : "My Shows"}</button></div>
         ${poster ? `<img class="ms-d-poster" src="${esc(poster)}" alt="">` : `<div class="ms-d-poster ms-pic-empty">${esc((title[0] || "?").toUpperCase())}</div>`}
@@ -850,6 +852,19 @@ window.addEventListener("resize", () => { if (document.getElementById("msDetail"
 function msBackdropFor(detail) {
   const path = msBackdropCandidates(detail)[0] || (detail && detail.backdrop_path) || null;
   return path ? msImgUrl(path, "w1280") : null;
+}
+// On a phone the hero is narrow and tall, and a wide backdrop cut to it
+// is a sliver of mostly empty background - so a tall picture instead: a
+// poster with no text on it (key art), the best voted one other than the
+// poster shown; that one only when it's the only one. None - the wide
+// backdrop stays. Only the phone layout shows it (a hidden element's
+// background isn't fetched).
+function msTallArtFor(detail, posterUrl) {
+  const all = ((detail && detail.images && detail.images.posters) || []).filter(p => p && p.file_path && p.iso_639_1 == null);
+  if (!all.length) return null;
+  all.sort((a, b) => (b.vote_average || 0) - (a.vote_average || 0) || (b.vote_count || 0) - (a.vote_count || 0));
+  const pick = all.find(p => !(posterUrl && posterUrl.endsWith(p.file_path))) || all[0];
+  return msImgUrl(pick.file_path, "w780");
 }
 // The backdrops in the order above (paths), the main one left out.
 function msBackdropCandidates(detail) {
