@@ -65,13 +65,13 @@ function renderAiringNextPreviewHtml(list) {
   const scroll = isScrollLayout();
   const rowHtmlFn = (row, idx) => {
     const bannerSrc = panelThumbSrc(row);
-    const { cycleableClass, attrs, mode } = thumbCycleAttrs(row, "airing", idx);
+    const mode = panelImageMode(row);
     const thumbHtml = bannerSrc
       ? `<img class="list-thumb" loading="lazy" src="${esc(bannerSrc)}"${srcsetAttr(bannerSrc)} alt="${esc(row.title)}"${onError("thumbError", "airing", idx, mode)}>`
       : `<div class="list-thumb placeholder">${esc((row.title[0] || "?").toUpperCase())}</div>`;
     return `
       <div class="list-row ${rowToneClass(idx, true)}">
-        <div class="list-thumb-wrap${cycleableClass}"${attrs}>${thumbHtml}${scroll ? "" : thumbBarHtml(imdbButtonHtml(row.imdbId, row.imdbRating, row.ratings), row)}${airCountHtml(row)}</div>
+        <div class="list-thumb-wrap"${thumbWrapAttrs("airing", idx)}>${thumbHtml}${scroll ? "" : thumbBarHtml(imdbButtonHtml(row.imdbId, row.imdbRating, row.ratings), row)}${airCountHtml(row)}${thumbPickHtml("airing", idx, row)}</div>
         ${rowDetailsHtml(rowInfoWrapHtml(row, idx, "airing", "row"), bannerSrc)}
         ${scroll ? `<span class="list-check">${BELL_ICON_SVG}</span>` : ""}
       </div>`;

@@ -7,24 +7,27 @@
 // plain scripts sharing one global scope - so code that runs while a file
 // loads may use only what earlier files define.
 
-// Computes the click-to-open-the-image-picker wrapper attributes for a bottom-panel
-// thumbnail (Recently Watched / Plan to Watch / Airing Next), matching the
-// same convention cardImageBits uses for the top carousel card.
-//
-// These thumbnails show the panels' own image kind (panelThumbSrc: banners,
-// or posters with Panels to Posters), falling back to the other one - so
-// the picker has to list whichever of the two is actually on screen, not
-// follow getImageMode() (which governs the top carousel).
-function thumbCycleAttrs(row, source, idx) {
-  const mode = panelPosters() ? (row.posterUrl ? "poster" : "banner") : (row.bannerUrl ? "banner" : "poster");
-  const cfg = IMAGE_MODE_CONFIG[mode];
-  const altCount = (row[cfg.pathsKey] || []).length;
-  if (altCount <= 1 && !row.imdbId) return { cycleableClass: "", attrs: "", mode };
-  return {
-    cycleableClass: " cycleable",
-    attrs: ` data-cycle-key="${source}-${idx}" title="Choose a different image"${onClick("imagePicker", source, idx, mode)}`,
-    mode,
-  };
+// A bottom-panel thumbnail's wrapper attributes (Just Watched / Plan to
+// Watch / Airing Next): a click opens the show's page, like its title - the
+// image picker is the row's own button (rowActionsHtml). data-cycle-key
+// finds the thumbnail again (patchImagesForTmdbId, the now-watching overlay).
+function thumbWrapAttrs(source, idx) {
+  return ` data-cycle-key="${source}-${idx}" title="Open the show's page"${onClick("showPage", source, idx)}`;
+}
+
+// A bottom-panel thumbnail's own content besides the picture: its picture
+// button (pickerButtonHtml) in the top-left corner.
+function thumbPickHtml(source, idx, row) {
+  return pickerButtonHtml(source, idx, row, " thumb-pick");
+}
+
+// Plan to Watch's ⋮ status menu (openPlanCardMenu) - a small white chip in
+// the row's top-right corner, like the picture button, so it shows on any
+// picture.
+function rowActionsHtml(source, idx) {
+  return source === "plan"
+    ? `<div class="row-actions"><button class="card-menu-btn row-btn" title="Manage"${onClickStop("planMenu", idx)}>&#8942;</button></div>`
+    : "";
 }
 
 // Network sub-line: shows the TMDB network logo image when available,
@@ -249,13 +252,13 @@ function renderRecentlyWatchedHtml(list) {
   const scroll = isScrollLayout();
   const rowHtmlFn = (ep, idx) => {
     const bannerSrc = panelThumbSrc(ep);
-    const { cycleableClass, attrs, mode } = thumbCycleAttrs(ep, "watched", idx);
+    const mode = panelImageMode(ep);
     const thumbHtml = bannerSrc
       ? `<img class="list-thumb" loading="lazy" src="${esc(bannerSrc)}"${srcsetAttr(bannerSrc)} alt="${esc(ep.title)}"${onError("thumbError", "watched", idx, mode)}>`
       : `<div class="list-thumb placeholder">${esc((ep.title[0] || "?").toUpperCase())}</div>`;
     return `
       <div class="list-row ${rowToneClass(idx)}">
-        <div class="list-thumb-wrap${cycleableClass}"${attrs}>${thumbHtml}${scroll ? "" : thumbBarHtml("", ep)}</div>
+        <div class="list-thumb-wrap"${thumbWrapAttrs("watched", idx)}>${thumbHtml}${scroll ? "" : thumbBarHtml("", ep)}${thumbPickHtml("watched", idx, ep)}</div>
         ${rowDetailsHtml(rowInfoWrapHtml(ep, idx, "watched", "row"), bannerSrc)}
         ${scroll ? `<span class="list-check">${CHECK_ICON_SVG}</span>` : ""}
       </div>`;
@@ -278,16 +281,16 @@ function renderPlanToWatchHtml(list) {
   const scroll = isScrollLayout();
   const rowHtmlFn = (row, idx) => {
     const bannerSrc = panelThumbSrc(row);
-    const { cycleableClass, attrs, mode } = thumbCycleAttrs(row, "plan", idx);
+    const mode = panelImageMode(row);
     const thumbHtml = bannerSrc
       ? `<img class="list-thumb" loading="lazy" src="${esc(bannerSrc)}"${srcsetAttr(bannerSrc)} alt="${esc(row.title)}"${onError("thumbError", "plan", idx, mode)}>`
       : `<div class="list-thumb placeholder">${esc((row.title[0] || "?").toUpperCase())}</div>`;
     return `
       <div class="list-row ${rowToneClass(idx)}">
-        <div class="list-thumb-wrap${cycleableClass}"${attrs}>${thumbHtml}${scroll ? "" : thumbBarHtml(imdbButtonHtml(row.imdbId, row.imdbRating, row.ratings))}</div>
+        <div class="list-thumb-wrap"${thumbWrapAttrs("plan", idx)}>${thumbHtml}${scroll ? "" : thumbBarHtml(imdbButtonHtml(row.imdbId, row.imdbRating, row.ratings))}${thumbPickHtml("plan", idx, row)}</div>
         ${rowDetailsHtml(rowInfoWrapHtml(row, idx, "plan", "row"), bannerSrc)}
         ${scroll ? `<span class="list-check">${STAR_ICON_SVG}</span>` : ""}
-        <button class="card-menu-btn plan-menu-btn" title="Manage"${onClickStop("planMenu", idx)}>&#8942;</button>
+        ${rowActionsHtml("plan", idx)}
       </div>`;
   };
   const { pagerHtml, rowsWrapHtml } = scroll ? scrollPanelHtml(list, rowHtmlFn) : panelPosters() ? pairedPanelHtml(list, rowHtmlFn, { byShow: true }) : pagedPanelHtml(list, 2, rowHtmlFn);

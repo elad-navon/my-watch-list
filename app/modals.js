@@ -460,13 +460,12 @@ function fitCardMenuOnScreen(menu, rect) {
   if (rect.bottom + 6 + h > window.innerHeight - 8) menu.style.top = `${Math.max(8, rect.top - 6 - h)}px`;
 }
 
-function openCardMenu(arrIdx, btnEl) {
+// Opens a card menu holding `html` under its button `btnEl` - or closes it,
+// when this button's menu is the one already open (null then).
+function openCardMenuDropdown(btnEl, html) {
   const alreadyOpenForThisBtn = cardMenuOpenerBtn === btnEl;
   closeCardMenu();
-  if (alreadyOpenForThisBtn) return; // second click on the same button toggles it closed
-
-  const row = lastRows && lastRows[arrIdx];
-  if (!row || !row.showId) return;
+  if (alreadyOpenForThisBtn) return null; // second click on the same button toggles it closed
 
   const rect = btnEl.getBoundingClientRect();
   const menu = document.createElement("div");
@@ -474,6 +473,20 @@ function openCardMenu(arrIdx, btnEl) {
   menu.id = "cardMenuDropdown";
   menu.style.top = `${rect.bottom + 6}px`;
   menu.style.left = `${Math.min(rect.left, window.innerWidth - 190)}px`;
+  menu.innerHTML = html;
+  document.body.appendChild(menu);
+  fitCardMenuOnScreen(menu, rect);
+  cardMenuOpenerBtn = btnEl;
+
+  setTimeout(() => document.addEventListener("click", cardMenuOutsideClickHandler), 0);
+  document.addEventListener("keydown", cardMenuEscHandler);
+  document.addEventListener("scroll", cardMenuScrollHandler, true);
+  return menu;
+}
+
+function openCardMenu(arrIdx, btnEl) {
+  const row = lastRows && lastRows[arrIdx];
+  if (!row || !row.showId) { closeCardMenu(); return; }
 
   const statusButtons = ALL_STATUS_OPTIONS.map(opt => `
     <button class="card-menu-item${opt.value === "watching" ? " active" : ""}" data-status="${opt.value}">
@@ -485,15 +498,13 @@ function openCardMenu(arrIdx, btnEl) {
        <div class="card-menu-sep"></div>`
     : "";
 
-  menu.innerHTML = `
+  const menu = openCardMenuDropdown(btnEl, `
     ${markWatchedHtml}
     ${statusButtons}
     <div class="card-menu-sep"></div>
     <button class="card-menu-item danger" id="cardMenuRemoveBtn">Remove from list</button>
-  `;
-  document.body.appendChild(menu);
-  fitCardMenuOnScreen(menu, rect);
-  cardMenuOpenerBtn = btnEl;
+  `);
+  if (!menu) return;
 
   menu.querySelectorAll("[data-status]").forEach(b => {
     b.onclick = () => changeShowStatus(row, b.dataset.status);
@@ -501,10 +512,6 @@ function openCardMenu(arrIdx, btnEl) {
   document.getElementById("cardMenuRemoveBtn").onclick = () => removeShowFromMyList(row);
   const markWatchedBtn = document.getElementById("cardMenuMarkWatchedBtn");
   if (markWatchedBtn) markWatchedBtn.onclick = () => markNextEpisodeWatched(row);
-
-  setTimeout(() => document.addEventListener("click", cardMenuOutsideClickHandler), 0);
-  document.addEventListener("keydown", cardMenuEscHandler);
-  document.addEventListener("scroll", cardMenuScrollHandler, true);
 }
 
 async function changeShowStatus(row, status) {
@@ -553,40 +560,23 @@ async function removeShowFromMyList(row) {
 // uses the full 5-status list - with Plan to Watch itself shown as the
 // active one - instead of the My List menu's watching-excluded set.
 function openPlanCardMenu(idx, btnEl) {
-  const alreadyOpenForThisBtn = cardMenuOpenerBtn === btnEl;
-  closeCardMenu();
-  if (alreadyOpenForThisBtn) return;
-
   const row = getCycleRows("plan")[idx];
-  if (!row || !row.showId) return;
-
-  const rect = btnEl.getBoundingClientRect();
-  const menu = document.createElement("div");
-  menu.className = "card-menu-dropdown";
-  menu.id = "cardMenuDropdown";
-  menu.style.top = `${rect.bottom + 6}px`;
-  menu.style.left = `${Math.min(rect.left, window.innerWidth - 190)}px`;
+  if (!row || !row.showId) { closeCardMenu(); return; }
 
   const statusButtons = ALL_STATUS_OPTIONS.map(opt => `
     <button class="card-menu-item${opt.value === "plantowatch" ? " active" : ""}" data-status="${opt.value}">
       ${opt.label}${opt.value === "plantowatch" ? " ✓" : ""}
     </button>`).join("");
 
-  menu.innerHTML = `
+  const menu = openCardMenuDropdown(btnEl, `
     ${statusButtons}
     <div class="card-menu-sep"></div>
     <button class="card-menu-item danger" id="cardMenuRemoveBtn">Remove from list</button>
-  `;
-  document.body.appendChild(menu);
-  fitCardMenuOnScreen(menu, rect);
-  cardMenuOpenerBtn = btnEl;
+  `);
+  if (!menu) return;
 
   menu.querySelectorAll("[data-status]").forEach(b => {
     b.onclick = () => changeShowStatus(row, b.dataset.status);
   });
   document.getElementById("cardMenuRemoveBtn").onclick = () => removeShowFromMyList(row);
-
-  setTimeout(() => document.addEventListener("click", cardMenuOutsideClickHandler), 0);
-  document.addEventListener("keydown", cardMenuEscHandler);
-  document.addEventListener("scroll", cardMenuScrollHandler, true);
 }

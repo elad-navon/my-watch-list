@@ -108,6 +108,36 @@ const IMAGE_MODE_CONFIG = {
   banner: { urlKey: "bannerUrl", pathsKey: "backdropPaths", indexKey: "bannerIndex", base: TMDB_BACKDROP_BASE, extraClass: " banner-img" },
 };
 
+// The kind of picture a bottom-panel thumbnail shows: the panels' own kind
+// (panelThumbSrc: banners, or posters with Panels to Posters), falling back
+// to the other one - not getImageMode(), which governs the top carousel.
+function panelImageMode(row) {
+  return panelPosters() ? (row.posterUrl ? "poster" : "banner") : (row.bannerUrl ? "banner" : "poster");
+}
+
+// Which pictures the image picker lists for a show in one spot (its
+// picture button - pickerButtonHtml): the kind on screen there. null when
+// there's nothing to choose from - one TMDB picture at most, and no IMDb id
+// for the other sources to go by.
+function pickerModeFor(source, row) {
+  if (!row) return null;
+  const mode = source === "main" ? getImageMode() : panelImageMode(row);
+  const altCount = (row[IMAGE_MODE_CONFIG[mode].pathsKey] || []).length;
+  return altCount > 1 || row.imdbId ? mode : null;
+}
+
+// The small dark chip that opens the image picker - on a top card's
+// picture under its network logo (cardImageBits), in a bottom-panel row's
+// corner (rowActionsHtml). A click on the picture itself opens the show's
+// page. "" when there's nothing to choose from.
+const IMAGE_PICK_ICON_SVG = `<svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" fill-rule="evenodd" d="M4.5 3.5h15A2.5 2.5 0 0 1 22 6v12a2.5 2.5 0 0 1-2.5 2.5h-15A2.5 2.5 0 0 1 2 18V6a2.5 2.5 0 0 1 2.5-2.5zM5 17.5h14l-4.5-6-3.2 4-2.1-2.4z"></path><circle cx="16.5" cy="8" r="1.9" fill="#ffffff"></circle></svg>`;
+function pickerButtonHtml(source, idx, row, extraClass = "") {
+  const mode = pickerModeFor(source, row);
+  return mode
+    ? `<button class="row-btn${extraClass}" title="Change ${mode}"${onClickStop("imagePicker", source, idx, mode)}>${IMAGE_PICK_ICON_SVG}</button>`
+    : "";
+}
+
 // The four places a show's poster/banner can appear, each backed by its
 // own cached row array - "main" is the top carousel (plus the dead Airing
 // Next tab, kept for parity), the rest are the three bottom panels.
@@ -291,7 +321,7 @@ function imdbButtonHtml(imdbId, rating, ratings) {
     : "";
   // With other ratings to show, hovering opens the popover instead of a
   // plain tooltip (the two would stack) - title="" there stops the
-  // poster-wrap's own "Choose a different image" tooltip from bleeding
+  // poster-wrap's own "Open the show's page" tooltip from bleeding
   // through instead (an absent title falls back to the nearest ancestor's).
   const attr = ratingsAttr(ratings);
   return `<button class="imdb-btn"${attr ? attr + ' title=""' : ' title="Open on IMDb"'}
@@ -539,18 +569,17 @@ function cardImageBits(row, mode, arrIdx, extraOverlayHtml) {
   const posterHtml = imageUrl
     ? `<img class="${posterClass}" loading="lazy" src="${esc(imageUrl)}"${srcsetAttr(imageUrl)} alt="${esc(row.title)}"${onError("thumbError", "main", arrIdx, mode)}>`
     : `<div class="${posterClass} placeholder">${esc((row.title[0] || "?").toUpperCase())}</div>`;
-  const altCount = (row[cfg.pathsKey] || []).length;
-  const cycleable = altCount > 1 || !!row.imdbId;
-  const cycleAttrs = cycleable
-    ? ` data-cycle-key="main-${arrIdx}" title="Choose a different image"${onClick("imagePicker", "main", arrIdx, mode)}`
-    : "";
+  // A click on the picture opens the show's page, like its title - the
+  // image picker is its button under the network logo (pickerButtonHtml).
+  // data-cycle-key finds the picture again (patchImagesForTmdbId).
+  const wrapAttrs = ` data-cycle-key="main-${arrIdx}" title="Open the show's page"${onClick("showPage", "main", arrIdx)}`;
   // Network logo sits in the corner when known - the dark scrim keeps
   // colorful logos from blending into bright poster art underneath. Falls
   // back to "#N" live if the logo image itself 404s (data exists, just
   // failed to load); leaves the corner empty when there's no known network
   // at all, rather than showing a ranking number as a stand-in.
   // title="" on every badge below suppresses the poster-wrap's own
-  // "Choose a different image" tooltip from bleeding through while
+  // "Open the show's page" tooltip from bleeding through while
   // hovering a badge that sits on top of it - without it, an empty title
   // falls back to the nearest ancestor's title instead of showing nothing.
   const badgeHtml = row.networkLogoPath
@@ -564,14 +593,19 @@ function cardImageBits(row, mode, arrIdx, extraOverlayHtml) {
   const yearBadgeHtml = row.yearRangeLabel
     ? `<div class="badge year-corner-badge" title="">${row.yearRangeLabel.replace("-", '<span class="year-badge-dash">-</span>')}</div>`
     : "";
-  const wrapHtml = `<div class="poster-wrap${cycleable ? " cycleable" : ""}"${cycleAttrs}>${badgeHtml}${yearBadgeHtml}${posterHtml}${extraOverlayHtml || ""}</div>`;
+  // The network logo and, right under it, the picture button: one column in
+  // the top-left corner, so the button follows the logo's height.
+  const pickHtml = pickerButtonHtml("main", arrIdx, row, " poster-pick");
+  const cornerHtml = badgeHtml || pickHtml ? `<div class="poster-corner">${badgeHtml}${pickHtml}</div>` : "";
+  const wrapHtml = `<div class="poster-wrap"${wrapAttrs}>${cornerHtml}${yearBadgeHtml}${posterHtml}${extraOverlayHtml || ""}</div>`;
   return { wrapHtml };
 }
 
-// Clicking a poster/banner opens this window with every image available for
-// the show, to pick one from. Which kind is decided by what was clicked: a
-// bottom-panel thumbnail and a top card in banner mode list banners only, a
-// top card in poster mode lists posters only (`mode`).
+// A show's picture button (pickerButtonHtml) opens this window with
+// every image available for the show, to pick one from. Which kind is the
+// one on screen where the menu was opened (pickerModeFor): a bottom-panel
+// thumbnail and a top card in banner mode list banners only, a top card in
+// poster mode lists posters only (`mode`).
 //
 // TMDB's candidates are already in memory (row.posterPaths / row.backdropPaths,
 // from the same response that drew the card), so they cost no API request -
