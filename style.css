@@ -567,7 +567,8 @@
   /* No hover lift on the image itself (removed - see commit history for
      why native :hover here was flicker-prone). .card's background hover
      still keys off the same JS-managed .hover-stable class, kept for that. */
-  .poster-wrap.cycleable, .list-thumb-wrap.cycleable {
+  /* A click on the picture opens the show's page (the picker is in the ⋮ menu). */
+  .poster-wrap[data-onclick], .list-thumb-wrap[data-onclick] {
     cursor: pointer;
   }
   .poster.flip-out, .list-thumb.flip-out {
@@ -1008,13 +1009,38 @@
      flow - that's the only way to sit at the row's true right edge while
      staying up at the title's height, since the star already claims that
      edge lower down and there's no room further right than the edge itself. */
-  .list-panel--plan .list-row { position: relative; }
-  .plan-menu-btn { position: absolute; top: 12px; right: 0; margin: 0; }
-  /* Reserves the "..." button's own width out of the title's wrapping box
-     (not just its visual spot) - the button sits outside the title's own
-     flex flow (absolute, so a long word could otherwise wrap right under
-     it instead of stopping short to clear it). */
-  .list-panel--plan .list-row-title { padding-right: 26px; }
+  /* Small white chips, like the pictures' corner chips (network, years,
+     countdown), so they show on any picture: a show's picture button
+     (pickerButtonHtml) and Plan to Watch's ... menu (rowActionsHtml). */
+  .row-btn {
+    width: 36px; height: 30px; padding: 0; display: grid; place-items: center; cursor: pointer;
+    border: none; border-radius: 7px; background: #ffffff; color: #000000;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.35);
+  }
+  .row-btn svg { width: 20px; height: 20px; }
+  /* (Over .card-menu-btn's own transparent look, defined further down.) */
+  .card-menu-btn.row-btn { background: #ffffff; color: #000000; padding: 0; font-size: 1.2rem; line-height: 1; }
+  .row-btn:hover, .card-menu-btn.row-btn:hover { color: #000000; background: var(--accent); }
+  .list-row:has(> .row-actions) { position: relative; }
+  .row-actions { position: absolute; top: 12px; right: 0; margin: 0; display: flex; gap: 4px; }
+  /* On a top card's picture: flush to the left edge right under the
+     network logo (.poster-corner), in the corner itself when there's no
+     logo - over the now-watching dim (.nw-dim). */
+  .poster-corner {
+    position: absolute; top: -1px; left: -1px; max-width: 70%;
+    display: flex; flex-direction: column; align-items: flex-start; gap: 2px;
+  }
+  .poster-corner > .badge { position: relative; top: auto; left: auto; max-width: 100%; }
+  .row-btn.poster-pick { position: relative; z-index: 12; border-radius: 0 7px 7px 0; }
+  .row-btn.poster-pick:first-child { border-radius: 10px 7px 7px 7px; }
+  /* On a bottom-panel thumbnail: flush into its top-left corner (the
+     countdown chip's mirror image) - over the now-watching dim too. */
+  .row-btn.thumb-pick { position: absolute; top: 0; left: 0; z-index: 12; border-radius: 0 0 7px 0; }
+  /* Reserves the ... button's own width out of the title's wrapping box
+     (not just its visual spot) - it sits outside the title's own flex flow
+     (absolute, so a long word could otherwise wrap right under it instead
+     of stopping short to clear it). */
+  .list-row:has(> .row-actions) .list-row-title { padding-right: 40px; }
   /* Smaller show-name steps for a row whose text wouldn't otherwise fit
      its thumbnail's height (fitPanelRowLines in app.js). */
   .list-rows-paged .list-row-title.title-fs-1 { font-size: 0.97rem; }
@@ -1117,7 +1143,7 @@
   .list-rows-paged .list-row.tone-a { --row-frame: #309ccd; --row-tint: #1b3a4e; }
   .list-rows-paged .list-row.tone-b { --row-frame: #cb9c23; --row-tint: #3b3320; }
   .list-rows-paged .list-row-divider { background: transparent; }
-  .list-rows-paged .plan-menu-btn { top: 8px; right: 4px; }
+  .list-rows-paged .row-actions { top: 8px; right: 4px; }
   /* Panels to Posters (pairedPanelHtml in app.js): the top panel's L-shaped
      pairs (.poster-pair rules above), as tall as the two framed banner rows
      they replace (2 x 135px + the 10px gap = 280px), so the panels keep
@@ -1130,10 +1156,11 @@
      (::before, just outside the box); the text inside clips instead. */
   .panel-pair .list-row-body { padding: 10px 12px 11px; background: var(--pp-tint); }
   .panel-pair .list-row-body .list-row-title-wrap { flex: none; }
-  /* The ... menu (Plan to Watch) in its show's details box, top right. */
-  .panel-pair .plan-menu-btn { z-index: 2; right: auto; }
-  .panel-pair > .list-row:nth-child(1) .plan-menu-btn { top: 8px; left: calc(var(--pp-w) + var(--pp-text) - 30px); }
-  .panel-pair > .list-row:nth-child(2) .plan-menu-btn { top: calc(var(--pp-half) + var(--pp-gap) + 8px); left: calc(var(--pp-w) + var(--pp-gap) + var(--pp-text) - 28px); }
+  /* The row's buttons in its show's details box, top right (their right
+     edge placed - one button or two). */
+  .panel-pair .row-actions { z-index: 2; right: auto; transform: translateX(-100%); }
+  .panel-pair > .list-row:nth-child(1) .row-actions { top: 8px; left: calc(var(--pp-w) + var(--pp-text) - 6px); }
+  .panel-pair > .list-row:nth-child(2) .row-actions { top: calc(var(--pp-half) + var(--pp-gap) + 8px); left: calc(var(--pp-w) + var(--pp-gap) + var(--pp-text) - 4px); }
 
   /* ===== Older scrolling layout (Settings > One-Page Layout off) =====
      body.panels-scroll (applyPanelLayout in app.js) puts back the bottom
@@ -1294,8 +1321,11 @@
       text-shadow: 0 1px 3px rgba(0,0,0,0.7);
     }
     body.equal-panels:not(.panels-scroll) .list-page:not(.list-page--pair) .list-row-title-wrap > * { pointer-events: auto; }
-    body.equal-panels:not(.panels-scroll) .list-panel--plan .list-page:not(.list-page--pair) .list-row-title { padding-right: 0; }
-    body.equal-panels:not(.panels-scroll) .list-page:not(.list-page--pair) .plan-menu-btn { z-index: 13; }
+    body.equal-panels:not(.panels-scroll) .list-panel .list-page:not(.list-page--pair) .list-row-title { padding-right: 0; }
+    body.equal-panels:not(.panels-scroll) .list-page:not(.list-page--pair) .row-actions { z-index: 13; }
+    /* The text over the banner's left third keeps clear of the picture
+       button in its top-left corner (fitPanelRowLines fits it below). */
+    body.equal-panels:not(.panels-scroll) .list-page:not(.list-page--pair) .list-row:has(.thumb-pick) > .list-row-title-wrap { padding-top: 36px; }
   }
   body.panels-scroll .main-content { padding-bottom: 60px; }
   body.panels-scroll .bottom-panels-row { align-items: flex-start; }
@@ -1304,7 +1334,7 @@
   body.panels-scroll .list-panel-header { margin-bottom: 14px; }
   body.panels-scroll .list-panel-count { margin-left: auto; }
   body.panels-scroll .list-row { align-items: center; }
-  body.panels-scroll .list-panel--plan .list-row-title { padding-right: 0; }
+  body.panels-scroll .list-panel .list-row-title { padding-right: 0; }
   body.panels-scroll .panel-shows-flip-back .list-row-airdate { font-size: 0.92rem; }
   /* Vertical carousel - all three panels show ~5 rows before scrolling
      (5 * (76px banner thumb + 24px row padding + 1px border) = 505px). */
@@ -2187,8 +2217,8 @@
     /* Same top-right pin as desktop, just recomputed for the stacked mobile
        card: the thumb (full width, 16:9) plus the row's own gap sits above
        the title line here, instead of the title starting at the very top. */
-    .plan-menu-btn { top: 120px; }
-    .list-rows-paged .plan-menu-btn { top: 128px; right: 4px; }
+    .row-actions { top: 120px; }
+    .list-rows-paged .row-actions { top: 128px; right: 4px; }
     /* Panels to Posters on a phone: the same pairs, a little smaller, in
        the swiped strip. */
     .panel-pair { --pp-h: 240px; --pp-text: 180px; }
@@ -2254,8 +2284,8 @@
      menu button stays pinned just under the (now taller) banner. */
   body.phone-portrait .list-rows-paged, body.phone-portrait .list-rows-scroll { scroll-snap-type: x mandatory; container-type: inline-size; }
   body.phone-portrait .list-row { --row-w: 100cqw; width: var(--row-w); scroll-snap-align: start; scroll-snap-stop: always; }
-  body.phone-portrait .plan-menu-btn { top: calc(var(--row-w) * 9 / 16 + 8px); }
-  body.phone-portrait .list-rows-paged .plan-menu-btn { top: calc(var(--row-w) * 9 / 16 + 16px); }
+  body.phone-portrait .row-actions { top: calc(var(--row-w) * 9 / 16 + 8px); }
+  body.phone-portrait .list-rows-paged .row-actions { top: calc(var(--row-w) * 9 / 16 + 16px); }
   /* The cards' text two sizes up (about two fifths) - at the desktop sizes it
      read too small on the phone. */
   body.phone-portrait .card-body h3, body.phone-portrait .list-row .list-row-title { font-size: 1.45rem; }
