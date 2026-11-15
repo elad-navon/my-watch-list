@@ -113,6 +113,19 @@ test("TVMaze and Metahub: posters and backgrounds resized, TheTVDB id noted, kep
   assert.ok(store.m.has("extraimages2:tt123"));
 });
 
+test("TVMaze without an IMDb id: by TheTVDB's id, else the name when the premiere year agrees; no Metahub", async () => {
+  const pics = json([{ type: "poster", resolutions: { original: { url: "https://tvm/p.jpg" } } }]);
+  const asked = [];
+  const byTvdb = imageSources({ store: persisted(), tvmaze: async url => { asked.push(url); return url.includes("thetvdb=485134") ? json({ id: 9, externals: { thetvdb: 485134 } }) : pics; } });
+  const a = await byTvdb.keyless({ imdb: null, tvdb: 485134, name: "ברקוני", year: "2026" });
+  assert.deepEqual(a.poster.map(p => p.src), ["TVMaze"]);
+  assert.ok(asked[0].includes("lookup/shows?thetvdb=485134"));
+  const search = (premiered) => imageSources({ store: persisted(), tvmaze: async url => (url.includes("lookup") ? json({}, 404)
+    : url.includes("singlesearch") ? json({ id: 9, premiered, externals: {} }) : pics) });
+  assert.equal((await search("2026-11-15").keyless({ tvdb: 1, name: "ברקוני", year: "2026" })).poster.length, 1);
+  assert.equal((await search("2019-01-01").keyless({ tvdb: 1, name: "ברקוני", year: "2026" })).poster.length, 0);
+});
+
 test("TVMaze's picture list not there: shown but not kept; the lookup failing: nothing", async () => {
   const store = persisted();
   const partial = imageSources({ store, tvmaze: async url => (url.includes("lookup") ? json({ id: 7, externals: {} }) : json({}, 500)) });
