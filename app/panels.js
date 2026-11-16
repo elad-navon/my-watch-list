@@ -346,78 +346,78 @@ function tickAirCountdowns() {
 }
 
 // ---------------------------------------------------------------------
-// The greeting at the foot of the box on the left: beside the picture a line
-// with what's on today - how many episodes in Airing Next air today (a
-// button: it opens their list, each with its time) and how many shows are
-// Ready to Watch. The profile picture is a button: it opens a small menu - who is
+// The greeting at the foot of the box on the left: beside the picture the
+// month so far - its name, then how many episodes were watched in it and
+// for how long. The profile picture is a button: it opens a small menu - who is
 // signed in, change the picture (kept in the account, so every device
 // shows it), sign out.
 // ---------------------------------------------------------------------
 const LS_PROFILE_PHOTO = "profile_photo";
 const PROFILE_PHOTO_PX = 160;
 
-function localDayKey(ms) {
-  const d = new Date(ms);
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+// The month is a calendar month in Israel's time, from the 1st at 00:00.
+// Each episode counts its show's length from TMDB - the same as My Stats
+// (statsShowInfo, kept 30 days) - or 45 minutes when TMDB has none.
+const MONTH_TZ = "Asia/Jerusalem";
+const MONTH_DEFAULT_RUNTIME = 45;
+const monthKeyFmt = new Intl.DateTimeFormat("en-CA", { timeZone: MONTH_TZ, year: "numeric", month: "2-digit" });
+const monthNameFmt = new Intl.DateTimeFormat("en-US", { timeZone: MONTH_TZ, month: "long" });
+const monthRuntimes = new Map(); // TMDB id -> minutes (null while asked)
+let monthStartFor = { key: null, at: 0 };
+
+// When this month began: the 1st at 00:00 in Israel (UTC+2 or +3).
+function monthStart(now) {
+  const key = monthKeyFmt.format(now);
+  if (monthStartFor.key !== key) {
+    const [y, m] = key.split("-").map(Number);
+    const at = [2, 3].map(h => Date.UTC(y, m - 1, 1) - h * 3600000)
+      .find(t => monthKeyFmt.format(t) === key && monthKeyFmt.format(t - 1) !== key);
+    monthStartFor = { key, at: at ?? Date.UTC(y, m - 1, 1) };
+  }
+  return monthStartFor.at;
 }
 
-// The Airing Next rows that air today (this device's day), in air order.
-function airingToday(list, now) {
-  const today = localDayKey(now);
-  return (list || [])
-    .filter(r => r.airStart != null
-      ? localDayKey(r.airStart) === today || (r.airEnd != null && r.airStart <= now && now < r.airEnd)
-      : r.airDay === today)
-    .sort((a, b) => (a.airStart ?? Infinity) - (b.airStart ?? Infinity));
+function monthRuntime(tmdbId) {
+  if (tmdbId == null) return MONTH_DEFAULT_RUNTIME;
+  if (monthRuntimes.has(tmdbId)) return monthRuntimes.get(tmdbId) || MONTH_DEFAULT_RUNTIME;
+  monthRuntimes.set(tmdbId, null);
+  if (typeof statsShowInfo === "function") {
+    statsShowInfo(tmdbId).then(info => {
+      if (info && info.r > 0) { monthRuntimes.set(tmdbId, info.r); updateGreetingStatus(); }
+      else if (!info) monthRuntimes.delete(tmdbId); // not answered: asked again next time
+    }, () => monthRuntimes.delete(tmdbId));
+  }
+  return MONTH_DEFAULT_RUNTIME;
+}
+
+function monthSummary(now) {
+  const from = monthStart(now);
+  let eps = 0, min = 0;
+  for (const [, s] of library.store.view()) {
+    let n = 0;
+    for (const rec of Object.values(s.watched || {})) {
+      const t = rec.at ? Date.parse(rec.at) : NaN;
+      if (t >= from && t <= now) n++;
+    }
+    if (!n) continue;
+    eps += n;
+    min += n * monthRuntime(s.ids && s.ids.tmdb != null ? s.ids.tmdb : null);
+  }
+  return { name: monthNameFmt.format(now), eps, min };
 }
 
 function updateGreetingStatus(now = Date.now()) {
   const el = document.getElementById("greetingStatus");
   if (!el) return;
-  if (!lastRows) { el.hidden = true; return; }
-  const today = airingToday(lastAiringPreview, now);
-  const timeOf = r => (r.airStart == null ? "Today"
-    : r.airEnd != null && r.airStart <= now && now < r.airEnd ? "NOW"
-    : new Date(r.airStart).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false }));
-  // Two lines beside the picture: what's on today (opens tonight's list), and
-  // how many shows are ready to watch.
-  const ready = `<span class="gs-sum gs-ready"><b>${lastRows.length}</b> ready to watch</span>`;
-  el.innerHTML = (today.length
-    ? `<button type="button" class="gs-sum gs-open" id="todayBtn" aria-haspopup="dialog" aria-expanded="${!todayPop().hidden}" title="What's on today"><b>${today.length}</b> on today <span class="gs-caret">▴</span></button>`
-    : `<span class="gs-sum">Nothing on today</span>`) + ready;
+  if (!lastRows || !library || !library.store) { el.hidden = true; return; }
+  let m;
+  try { m = monthSummary(now); } catch (e) { el.hidden = true; return; }
+  const h = Math.floor(m.min / 60), mins = m.min % 60;
+  const time = h ? `${h}h ${mins}m` : `${mins}m`;
+  el.innerHTML = `<span class="gs-sum gs-month">${m.name}</span>`
+    + `<span class="gs-sum"><b>${m.eps}</b> ${m.eps === 1 ? "ep" : "eps"} · <b>${time}</b></span>`;
   el.hidden = false;
-  const pop = todayPop();
-  if (!today.length) { pop.hidden = true; return; }
-  pop.innerHTML = `<div class="today-pop-h">Today</div>`
-    + today.map(r => `<div class="today-pop-ep"><em>${timeOf(r)}</em><span>${esc(r.title)}</span></div>`).join("");
 }
-const todayPop = () => document.getElementById("todayPop");
-
-// The summary opens tonight's list above it; a click elsewhere or Esc
-// closes it (and the account menu closes it too).
-(function wireTodayPop() {
-  const status = document.getElementById("greetingStatus");
-  if (!status) return;
-  const close = () => {
-    todayPop().hidden = true;
-    const btn = document.getElementById("todayBtn");
-    if (btn) btn.setAttribute("aria-expanded", "false");
-  };
-  status.addEventListener("click", e => {
-    const btn = e.target.closest("#todayBtn");
-    if (!btn) return;
-    e.stopPropagation();
-    const pop = todayPop();
-    if (!pop.hidden) { close(); return; }
-    document.getElementById("profileMenu").hidden = true;
-    document.getElementById("profileMenuBtn").setAttribute("aria-expanded", "false");
-    pop.hidden = false;
-    btn.setAttribute("aria-expanded", "true");
-  });
-  todayPop().addEventListener("click", e => e.stopPropagation());
-  document.addEventListener("click", () => { if (!todayPop().hidden) close(); });
-  document.addEventListener("keydown", e => { if (e.key === "Escape" && !todayPop().hidden) close(); });
-})();
 
 function applyProfilePhoto(src) {
   const img = document.querySelector("#profileMenuBtn .profile-pic-small");
@@ -468,7 +468,6 @@ function squarePhotoDataUrl(file) {
   const currentUser = () => (library && library.backend ? library.backend.currentUser() : null);
   const close = () => { menu.hidden = true; btn.setAttribute("aria-expanded", "false"); };
   const open = () => {
-    todayPop().hidden = true;
     const user = currentUser();
     document.getElementById("profileMenuWho").textContent = user ? `Signed in as ${user.email}` : "Not signed in";
     document.getElementById("profilePhotoBtn").hidden = !user;

@@ -120,14 +120,6 @@ body:not(.light-theme):not(.look-clean).equal-panels:not(.panels-scroll) .profil
 @media (max-height: 860px) {
   body:not(.light-theme):not(.look-clean).equal-panels:not(.panels-scroll) .profile-greeting-inline { flex-basis: 66px; }
 }
-body:not(.light-theme):not(.look-clean) .gs-open { text-decoration-color: rgba(251, 191, 36, 0.6); }
-body:not(.light-theme):not(.look-clean) .gs-open:hover, body:not(.light-theme):not(.look-clean) .gs-open[aria-expanded="true"] { color: var(--gold); }
-body:not(.light-theme):not(.look-clean) .today-pop { background: #101822; border-color: rgba(251, 191, 36, 0.55); box-shadow: 0 10px 26px rgba(0, 0, 0, 0.7); }
-body:not(.light-theme):not(.look-clean) .today-pop-h { border-bottom-color: rgba(251, 191, 36, 0.22); }
-body:not(.light-theme):not(.look-clean) .today-pop-ep em { color: var(--gold); }
-body:not(.light-theme):not(.look-clean) .topbar .today-pop-ep, body:not(.light-theme):not(.look-clean) .topbar .today-pop-h {
-  font-family: "Barlow Condensed", "Segoe UI", Arial, sans-serif; font-style: italic;
-}
 body:not(.light-theme):not(.look-clean).equal-panels:not(.panels-scroll) .profile-greeting-status { color: #9fb0c2; }
 body:not(.light-theme):not(.look-clean).equal-panels:not(.panels-scroll) .profile-greeting-status b { color: #ffffff; }
 body:not(.light-theme):not(.look-clean).equal-panels:not(.panels-scroll) .profile-pic-small { width: 42px; height: 42px; box-shadow: 0 0 0 2px var(--gold); }

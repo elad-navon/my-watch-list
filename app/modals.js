@@ -62,8 +62,8 @@ window.appBackPressed = () => {
   if (document.getElementById("cardMenuDropdown")) { closeCardMenu(); return true; }
   if (document.querySelector(".ratings-popover")) { hideRatingsPopover(); return true; }
   // The account menu and tonight's list close on a click anywhere else.
-  const smallPop = ["profileMenu", "todayPop"].some(id => { const el = document.getElementById(id); return el && !el.hidden; });
-  if (smallPop) { document.dispatchEvent(new MouseEvent("click")); return true; }
+  const menu = document.getElementById("profileMenu");
+  if (menu && !menu.hidden) { document.dispatchEvent(new MouseEvent("click")); return true; }
   const innerBack = activeModalClose && document.querySelector("[data-ep-back], #detailBackBtn");
   if (innerBack) { innerBack.click(); return true; }
   if (activeModalClose) { history.back(); return true; }
