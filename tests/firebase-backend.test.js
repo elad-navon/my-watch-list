@@ -192,3 +192,31 @@ test("a transaction never hands the stamp to the store, and stamps what it write
   assert.equal("_syncAt" in doc, false);
   assert.ok(sdk.store.get("1")._syncAt.ms > 1, "the new server time");
 });
+
+test("watchMeta: a follow that ends with an error starts again; stopping ends it for good", async t => {
+  t.mock.timers.enable({ apis: ["setTimeout"] });
+  const sdk = fakeSdk();
+  const follows = [];
+  sdk.onSnapshot = (ref, next, error) => { const f = { next, error, stopped: false }; follows.push(f); return () => { f.stopped = true; }; };
+  sdk.getDocFromServer = async ref => ({ exists: () => true, data: () => ({ from: "server", name: ref.id }) });
+  const backend = FirebaseBackend.create(undefined, { sdk, storage: memoryStorage() });
+  const seen = [];
+  const stop = backend.watchMeta("bridgeStatus", d => seen.push(d));
+  t.mock.timers.tick(1); // the signed-in user arrives
+  for (let i = 0; i < 20 && !follows.length; i++) await new Promise(r => setImmediate(r));
+  assert.equal(follows.length, 1);
+  follows[0].next({ exists: () => true, data: () => ({ at: "1" }) });
+  follows[0].error(new Error("unavailable"));
+  t.mock.timers.tick(15000);
+  for (let i = 0; i < 20 && follows.length < 2; i++) await new Promise(r => setImmediate(r));
+  assert.equal(follows.length, 2, "followed again after 15 s");
+  follows[1].next({ exists: () => true, data: () => ({ at: "2" }) });
+  assert.deepEqual(seen.map(d => d.at), ["1", "2"]);
+  stop();
+  assert.equal(follows[1].stopped, true);
+  follows[1].error(new Error("late"));
+  t.mock.timers.tick(60000);
+  await new Promise(r => setImmediate(r));
+  assert.equal(follows.length, 2, "not followed again once stopped");
+  assert.deepEqual(await backend.getMeta("bridgeStatus", { fromServer: true }), { from: "server", name: "bridgeStatus" });
+});

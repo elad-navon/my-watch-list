@@ -268,10 +268,12 @@
 
       // Small shared settings next to the library (users/{uid}/meta/{name}),
       // e.g. how far the SIMKL auto-marking has read.
-      async getMeta(name) {
+      // { fromServer: true }: asked of the server, not the offline copy.
+      async getMeta(name, { fromServer = false } = {}) {
         await ready();
         try {
-          const snap = await sdk.getDoc(sdk.doc(db, "users", requireUser(), "meta", name));
+          const ref = sdk.doc(db, "users", requireUser(), "meta", name);
+          const snap = await (fromServer && sdk.getDocFromServer ? sdk.getDocFromServer(ref) : sdk.getDoc(ref));
           return snap.exists() ? snap.data() : null;
         } catch (e) { throw classify(e); }
       },
@@ -283,15 +285,27 @@
       },
       // Follows one of them live: cb(data or null) now and on every change
       // (e.g. what's playing on Emby, written by tools/emby-bridge).
-      // Returns a function that stops following.
+      // Returns a function that stops following. A follow the database ends
+      // with an error (the phone app, back from the background, kept a
+      // dead one: the bridge read as silent for hours) starts again, after
+      // 15 seconds, then longer, up to 5 minutes.
       watchMeta(name, cb) {
         let stop = () => {};
-        ready().then(() => {
+        let stopped = false;
+        let delay = 15000;
+        const start = () => ready().then(() => {
+          if (stopped) return;
           stop = sdk.onSnapshot(sdk.doc(db, "users", requireUser(), "meta", name),
-            snap => cb(snap.exists() ? snap.data() : null),
-            e => console.warn(`Following ${name} stopped:`, e.message));
+            snap => { delay = 15000; cb(snap.exists() ? snap.data() : null); },
+            e => {
+              console.warn(`Following ${name} stopped:`, e.message);
+              if (stopped) return;
+              setTimeout(start, delay);
+              delay = Math.min(delay * 2, 5 * 60 * 1000);
+            });
         }).catch(() => {});
-        return () => stop();
+        start();
+        return () => { stopped = true; stop(); };
       },
 
       // For the self-check page only: whether another user's data is
