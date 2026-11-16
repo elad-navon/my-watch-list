@@ -619,11 +619,27 @@ function librarySettingsHtml() {
 // hasn't been heard from (none before it ever reported) - its tooltip saying
 // what; Settings has the details. Followed live (watchMeta); repainted on the countdown tick too,
 // since "not heard from" comes with time, not with a new document.
+// Red only once the server agrees: the copy this device holds can be old
+// (a follow that died while the phone app was in the background), so a
+// "not heard from" is first checked with the server - at most every 2
+// minutes - and the dot keeps its colour until the answer comes.
 let bridgeStatusDoc; // undefined until first read
+let bridgeServerCheckAt = 0;
+let bridgeServerCheck = null;
+const BRIDGE_SERVER_CHECK_MS = 2 * 60 * 1000;
 function paintBridgeAlert() {
   const btn = document.getElementById("settingsBtn");
   if (!btn || bridgeStatusDoc === undefined) return;
   const s = BridgeStatus.summarizeBridgeStatus(bridgeStatusDoc, Date.now());
+  if (s.level === "down" && library && library.backend && library.backend.getMeta) {
+    if (bridgeServerCheck) return;
+    if (Date.now() - bridgeServerCheckAt > BRIDGE_SERVER_CHECK_MS) {
+      bridgeServerCheck = library.backend.getMeta(BridgeStatus.META, { fromServer: true })
+        .then(doc => { bridgeStatusDoc = doc; }, () => {})
+        .finally(() => { bridgeServerCheckAt = Date.now(); bridgeServerCheck = null; paintBridgeAlert(); });
+      return;
+    }
+  }
   const level = ["ok", "warn", "down"].includes(s.level) ? s.level : null;
   btn.classList.toggle("bridge-ok", level === "ok");
   btn.classList.toggle("bridge-warn", level === "warn");
@@ -637,7 +653,9 @@ function paintBridgeAlert() {
 async function showBridgeStatus() {
   const el = document.getElementById("bridgeStatus");
   if (!el) return;
-  const doc = await library.backend.getMeta(BridgeStatus.META).catch(() => undefined);
+  const doc = await library.backend.getMeta(BridgeStatus.META, { fromServer: true })
+    .catch(() => library.backend.getMeta(BridgeStatus.META)).catch(() => undefined);
+  if (doc !== undefined) { bridgeStatusDoc = doc; paintBridgeAlert(); }
   if (doc === undefined || !el.isConnected) return; // couldn't read it: say nothing
   const s = BridgeStatus.summarizeBridgeStatus(doc, Date.now());
   el.className = `bridge-status is-${s.level}`;
