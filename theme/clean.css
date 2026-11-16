@@ -182,7 +182,6 @@ body.look-clean:not(.light-theme).equal-panels:not(.panels-scroll) .nav-item .na
 body.look-clean:not(.light-theme).equal-panels:not(.panels-scroll) .nav-item .nav-icon svg { width: 19px; height: 19px; }
 body.look-clean:not(.light-theme).equal-panels:not(.panels-scroll) .profile-greeting-inline { border-top-color: var(--border); }
 body.look-clean:not(.light-theme).equal-panels:not(.panels-scroll) .profile-pic-small { box-shadow: 0 0 0 2px var(--gold); }
-body.look-clean:not(.light-theme) .today-pop,
 body.look-clean:not(.light-theme) .profile-menu { background: var(--clean-tile); border-color: var(--border); }
 
 /* ---- The bottom boxes' pager and count a size up (the titles have room
