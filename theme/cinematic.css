@@ -122,7 +122,6 @@ body:not(.light-theme):not(.look-clean).equal-panels:not(.panels-scroll) .profil
 }
 body:not(.light-theme):not(.look-clean).equal-panels:not(.panels-scroll) .profile-greeting-status { color: #9fb0c2; }
 body:not(.light-theme):not(.look-clean).equal-panels:not(.panels-scroll) .profile-greeting-status b { color: #ffffff; }
-body:not(.light-theme):not(.look-clean).equal-panels:not(.panels-scroll) .profile-greeting-status .gs-month { color: var(--gold); }
 body:not(.light-theme):not(.look-clean).equal-panels:not(.panels-scroll) .profile-pic-small { width: 42px; height: 42px; box-shadow: 0 0 0 2px var(--gold); }
 body:not(.light-theme):not(.look-clean) .profile-menu { background: #101822; border-color: rgba(251, 191, 36, 0.55); box-shadow: 0 10px 26px rgba(0, 0, 0, 0.7); }
 body:not(.light-theme):not(.look-clean) .profile-menu button:hover, body:not(.light-theme):not(.look-clean) .profile-menu button:focus-visible { background: rgba(251, 191, 36, 0.12); }
