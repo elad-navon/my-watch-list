@@ -1248,8 +1248,8 @@
     .gs-sum { overflow: hidden; text-overflow: ellipsis; }
     body.equal-panels:not(.panels-scroll) .profile-greeting-text { order: 0; }
     body.equal-panels:not(.panels-scroll) .profile-greeting-status:not([hidden]) { display: flex; flex-direction: column; gap: 4px; font-size: 1.02rem; }
-    /* The month's name, quieter than its numbers. */
-    .gs-month { opacity: 0.7; }
+    /* The month's name in gold, as a small label above its numbers. */
+    .profile-greeting-status .gs-month { color: var(--accent); text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.85em; }
     body.equal-panels:not(.panels-scroll) .profile-menu { top: auto; bottom: calc(100% + 8px); left: 0; right: 0; min-width: 0; }
     /* A short screen: the box beside the top panel a little more compact,
        so all it holds still fits its height. */
