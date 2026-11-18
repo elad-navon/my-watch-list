@@ -603,7 +603,57 @@ function computeImages(showDetail, tmdbId, area = "top") {
     }
   }
 
+  // No poster or banner on TMDB (a new Israeli show: Barkoni, Nothing
+  // Happened): the first one the picker's other sources have, found once in
+  // the background (queueAutoImages) and kept.
+  if (tmdbId && (!out.posterUrl || !out.bannerUrl)) {
+    const auto = getAutoImages()[tmdbId];
+    if (auto && !out.posterUrl && auto.poster) { out.posterIndex = -1; out.posterUrl = auto.poster; }
+    if (auto && !out.bannerUrl && auto.banner) { out.bannerIndex = -1; out.bannerUrl = auto.banner; }
+    const ttl = auto && auto.poster && auto.banner ? AUTO_IMAGES_TTL_MS : AUTO_IMAGES_RETRY_MS;
+    if (!auto || Date.now() - (auto.at || 0) > ttl) queueAutoImages(tmdbId, showDetail);
+  }
+
   return out;
+}
+
+// The pictures found for shows TMDB has none of: { [tmdbId]: { poster,
+// banner, at } } in localStorage. Kept a week; one with a picture still
+// missing is looked for again after a day.
+const LS_AUTO_IMAGES = "auto_images";
+const AUTO_IMAGES_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+const AUTO_IMAGES_RETRY_MS = 24 * 60 * 60 * 1000;
+function getAutoImages() {
+  try {
+    return JSON.parse(localStorage.getItem(LS_AUTO_IMAGES) || "{}");
+  } catch (e) {
+    return {};
+  }
+}
+
+// Looks once per page load for the missing pictures of a show, then puts
+// them on every card showing it that has none.
+const autoImagesAsked = new Set();
+function queueAutoImages(tmdbId, showDetail) {
+  if (autoImagesAsked.has(tmdbId) || typeof fetchExtraImages !== "function") return;
+  autoImagesAsked.add(tmdbId);
+  const imdbId = (showDetail.external_ids && showDetail.external_ids.imdb_id) || null;
+  fetchExtraImages(imdbId, tmdbId).then(found => {
+    const pick = kind => (found[kind].find(e => e.src !== "Metahub") || {}).url || null;
+    const entry = { poster: pick("poster"), banner: pick("banner"), at: Date.now() };
+    const all = getAutoImages();
+    all[tmdbId] = entry;
+    safeSetItem(LS_AUTO_IMAGES, JSON.stringify(all));
+    if (!entry.poster && !entry.banner) return;
+    for (const rows of [lastRows, airingRows, lastRecentlyWatched, lastPlanToWatch, lastAiringPreview]) {
+      for (const r of rows || []) {
+        if (!r || r.tmdbId !== tmdbId) continue;
+        if (!r.posterUrl && entry.poster) { r.posterUrl = entry.poster; r.posterIndex = -1; }
+        if (!r.bannerUrl && entry.banner) { r.bannerUrl = entry.banner; r.bannerIndex = -1; }
+      }
+    }
+    patchImagesForTmdbId(tmdbId);
+  }).catch(() => { /* none this time; asked again on the next load */ });
 }
 
 async function getRecentlyWatchedEpisodes(items, cache, episodeCache, droppedItems) {

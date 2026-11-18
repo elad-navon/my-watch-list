@@ -265,7 +265,7 @@
       const out = { poster: [], banner: [] };
       const key = tvdbKey();
       if (!key || !tvdbId || rejected.tvdb) return out;
-      const cacheKey = `tvdb:${tvdbId}`;
+      const cacheKey = `tvdb2:${tvdbId}`;
       const cached = await persisted.read(cacheKey, IMAGES_TTL_MS);
       if (cached !== undefined) return cached;
       try {
@@ -282,12 +282,16 @@
           return ((await res.json()).data || {}).artworks || [];
         };
         const [posters, backgrounds] = await Promise.all([artworks(2), artworks(3)]);
+        // English or no-language ones first, then Hebrew ones (a new Israeli
+        // show may have only those).
         const usable = x => x && x.image && (!x.language || x.language === "eng");
+        const hebrew = x => x && x.image && x.language === "heb";
         const byScore = (a, b) => (Number(b.score) || 0) - (Number(a.score) || 0);
-        for (const img of posters.filter(usable).sort(byScore)) {
+        const ordered = list => list.filter(usable).sort(byScore).concat(list.filter(hebrew).sort(byScore));
+        for (const img of ordered(posters)) {
           out.poster.push({ url: resizedImage(img.image, 342), thumb: img.thumbnail || resizedImage(img.image, 200), src: "TheTVDB" });
         }
-        for (const img of backgrounds.filter(usable).sort(byScore)) {
+        for (const img of ordered(backgrounds)) {
           out.banner.push({ url: resizedImage(img.image, 780), thumb: img.thumbnail || resizedImage(img.image, 300), src: "TheTVDB" });
         }
         persisted.write(cacheKey, out);
@@ -297,8 +301,27 @@
       return out;
     }
 
+    // findArt(detail): a picture for a show TMDB has none of, from TMDB's
+    // details of it (external_ids, names, premiere): { banner, poster }, each
+    // the first that Fanart.tv, then TheTVDB, then TVMaze has, or null.
+    // Metahub's links aren't checked, so they're left out.
+    async function findArt(detail) {
+      const empty = { poster: [], banner: [] };
+      const ext = (detail && detail.external_ids) || {};
+      const k = await keyless({
+        imdb: ext.imdb_id || null, tvdb: ext.tvdb_id || null,
+        name: detail ? detail.original_name || detail.name || null : null,
+        year: detail && detail.first_air_date ? detail.first_air_date.slice(0, 4) : null,
+      }).catch(() => ({ ...empty, tvdbId: null }));
+      const tvdbId = ext.tvdb_id || k.tvdbId;
+      const [f, t] = tvdbId ? await Promise.all([fanart(tvdbId).catch(() => empty), tvdb(tvdbId).catch(() => empty)]) : [empty, empty];
+      const fromKeyless = kind => (k[kind] || []).filter(e => e.src !== "Metahub");
+      const first = kind => (f[kind].concat(t[kind], fromKeyless(kind))[0] || {}).url || null;
+      return { banner: first("banner"), poster: first("poster") };
+    }
+
     return {
-      keyless, fanart, tvdb, tvdbToken,
+      keyless, fanart, tvdb, tvdbToken, findArt,
       rejected: name => !!rejected[name],
       // A new key in Settings: try again.
       resetRejected: () => { rejected.fanart = false; rejected.tvdb = false; },

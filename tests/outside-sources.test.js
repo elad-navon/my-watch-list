@@ -164,7 +164,7 @@ test("a refused Fanart.tv key: said once, no more requests until reset", async (
   assert.equal(calls, 2);
 });
 
-test("TheTVDB: the kept token is used; on a 401 one fresh login and a retry; English pictures by score", async () => {
+test("TheTVDB: the kept token is used; on a 401 one fresh login and a retry; English pictures by score, then Hebrew", async () => {
   const seen = [];
   const tokens = { v: { key: "t", token: "old", at: 900 } };
   const src = imageSources({
@@ -182,11 +182,29 @@ test("TheTVDB: the kept token is used; on a 401 one fresh login and a retry; Eng
   const out = await src.tvdb(77);
   assert.equal(seen.filter(s => s === "/login").length, 1, "one login for both lists");
   assert.equal(tokens.v.token, "new");
-  assert.deepEqual(out.poster.map(p => p.url.includes("p2") ? "p2" : "p1"), ["p2", "p1"]);
+  assert.deepEqual(out.poster.map(p => /p\d/.exec(decodeURIComponent(p.url))[0]), ["p2", "p1", "p3"], "Hebrew ones after the rest");
   assert.equal(out.banner[0].thumb, "https://tvdb/b1_t.jpg");
 });
 
 test("Metahub: only for a real IMDb id", () => {
   assert.equal(metahubImages("tt42").poster.length, 1);
   assert.deepEqual(metahubImages("nonsense"), { poster: [], banner: [] });
+});
+
+test("findArt: the first banner and poster from Fanart.tv, then TheTVDB, then TVMaze; Metahub left out", async () => {
+  const fetch = async url => {
+    if (url.includes("fanart.tv")) return json({}, 404);
+    if (url.includes("/login")) return json({ data: { token: "tok" } });
+    if (url.includes("artworks?type=2")) return json({ data: { artworks: [] } });
+    if (url.includes("artworks?type=3")) return json({ data: { artworks: [{ image: "https://tvdb/heb.jpg", language: "heb", score: 9 }] } });
+    return json({}, 500);
+  };
+  const tvmaze = async url => (url.includes("lookup") ? json({ id: 9, externals: { thetvdb: 485136 } })
+    : json([{ type: "poster", resolutions: { original: { url: "https://tvm/p.jpg" } } }]));
+  const src = imageSources({ fetch, tvmaze, store: persisted() });
+  const art = await src.findArt({ external_ids: { imdb_id: "tt9", tvdb_id: 485136 }, original_name: "לא קרה כלום", first_air_date: "2026-11-12" });
+  assert.match(art.banner, /tvdb%2Fheb\.jpg/, "a Hebrew TheTVDB background when there's nothing else");
+  assert.match(art.poster, /tvm%2Fp\.jpg/, "TVMaze's poster, not Metahub's link");
+  const none = imageSources({ store: persisted(), keys: { fanart: "", tvdb: "" }, tvmaze: async () => json({}, 404) });
+  assert.deepEqual(await none.findArt({ external_ids: {}, name: "X", first_air_date: "2026-01-01" }), { banner: null, poster: null });
 });
