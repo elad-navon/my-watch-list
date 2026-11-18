@@ -196,6 +196,8 @@
   // How long a show's TVMaze id (from a lookup) is trusted - it never
   // changes, the long expiry only bounds the cache.
   const LOOKUP_TTL_MS = 30 * DAY_MS;
+  // How long "not on TVMaze" is trusted before asking again.
+  const MISS_TTL_MS = DAY_MS;
   // With useUpdates, an episode list stays valid until TVMaze reports the
   // show as updated - TVMaze's update list covers the past week, so a copy
   // older than that is fetched again regardless.
@@ -251,15 +253,52 @@
       }
     }
 
-    // The TVMaze show for a set of ids (IMDb first, then TheTVDB), or null.
+    // The TVMaze show for a set of ids (IMDb first, then TheTVDB), else by
+    // TMDB's name for it when the premiere year agrees - a new Israeli show
+    // may have neither id on TMDB (Nothing Happened: TVMaze has it, HOT3,
+    // with TheTVDB's id only). Or null. A show found is kept LOOKUP_TTL_MS;
+    // "not found" only MISS_TTL_MS, so an id or a TVMaze page added later
+    // is picked up the next day.
+    function canLookUp(ids) {
+      return !!(ids.imdb || ids.tvdb || ids.tmdb != null);
+    }
     function lookupTvmaze(ids) {
-      const key = `tvmaze-lookup:${ids.imdb || ""}:${ids.tvdb || ""}`;
-      return once(key, () => cached(key, async () => {
+      const key = (ids.imdb || ids.tvdb) ? `tvmaze-lookup:${ids.imdb || ""}:${ids.tvdb || ""}` : `tvmaze-lookup-tmdb:${ids.tmdb}`;
+      const missKey = `tvmaze-miss:${ids.imdb || ""}:${ids.tvdb || ""}:${ids.tmdb != null ? ids.tmdb : ""}`;
+      return once(key, async () => {
+        if (cache) {
+          // (a null kept under `key` is an older "not found" - asked again)
+          const hit = await cache.get(key, LOOKUP_TTL_MS);
+          if (hit) return hit;
+          if (await cache.get(missKey, MISS_TTL_MS) !== undefined) return null;
+        }
         let show = null;
         if (ids.imdb) show = await tvmazeGet(`/lookup/shows?imdb=${encodeURIComponent(ids.imdb)}`);
         if (!show && ids.tvdb) show = await tvmazeGet(`/lookup/shows?thetvdb=${encodeURIComponent(ids.tvdb)}`);
-        return show ? { id: show.id, name: show.name, premiered: show.premiered || null } : null;
-      }, LOOKUP_TTL_MS));
+        if (!show && ids.tmdb != null) show = await searchByTmdbName(ids.tmdb, ids);
+        const found = show ? { id: show.id, name: show.name, premiered: show.premiered || null } : null;
+        if (cache) await cache.set(found ? key : missKey, found);
+        return found;
+      });
+    }
+
+    // TVMaze's show for TMDB's name of it (original, then English), only
+    // when both put the premiere in the same year and TVMaze's show doesn't
+    // carry another IMDb or TheTVDB id than ours (then it's another show).
+    async function searchByTmdbName(tmdbId, ids) {
+      const detail = await tmdbGet(`/tv/${tmdbId}`).catch(() => null);
+      const year = ((detail && detail.first_air_date) || "").slice(0, 4);
+      if (!year) return null;
+      const names = [...new Set([detail.original_name, detail.name].filter(Boolean))];
+      for (const name of names) {
+        const show = await tvmazeGet(`/singlesearch/shows?q=${encodeURIComponent(name)}`);
+        if (!show || (show.premiered || "").slice(0, 4) !== year) continue;
+        const ext = show.externals || {};
+        if (ids.imdb && ext.imdb && ext.imdb !== ids.imdb) continue;
+        if (ids.tvdb && ext.thetvdb && String(ext.thetvdb) !== String(ids.tvdb)) continue;
+        return show;
+      }
+      return null;
     }
 
     // The streaming service TVMaze files the show under (its webChannel,
@@ -268,7 +307,7 @@
     // and TheTVDB list a later cable airing (Dexter: Resurrection: Friday on
     // Paramount+, Sunday on Showtime).
     async function streamingHome(ids) {
-      const id = ids.tvmaze || ((ids.imdb || ids.tvdb) ? ((await lookupTvmaze(ids)) || {}).id : null);
+      const id = ids.tvmaze || (canLookUp(ids) ? ((await lookupTvmaze(ids)) || {}).id : null);
       if (!id) return null;
       const key = `tvmaze-home:${id}`;
       return once(key, () => cached(key, async () => {
@@ -358,7 +397,7 @@
         (async () => {
           try {
             tvmazeShow = ids.tvmaze ? { id: ids.tvmaze }
-              : (ids.imdb || ids.tvdb) ? await lookupTvmaze(ids) : null;
+              : canLookUp(ids) ? await lookupTvmaze(ids) : null;
             if (tvmazeShow) tvm = await tvmazeEpisodes(tvmazeShow.id);
           } catch (e) { errors.push(e.message); }
         })(),

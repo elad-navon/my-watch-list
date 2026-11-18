@@ -438,3 +438,61 @@ test("appendAfter with fillDates: a snapshot episode with no date takes the othe
   assert.equal(r2.episodes[0].date, null);
   assert.equal(r2.episodes[2].date, "2026-10-27T19:30:00+00:00");
 });
+
+// A cache whose clock the test moves.
+function clockCache() {
+  const map = new Map();
+  const c = {
+    t: 0,
+    get(key, ttl) { const h = map.get(key); return h && c.t - h.t < ttl ? h.v : undefined; },
+    set(key, v) { map.set(key, { t: c.t, v }); },
+    map,
+  };
+  return c;
+}
+
+const NOTHING_TMDB = async path => path === "/tv/300" ? { original_name: "לא קרה כלום", name: "Nothing Happened", first_air_date: "2026-11-12", seasons: [] } : null;
+const NOTHING_TVM = { id: 95631, name: "Nothing Happened", premiered: "2026-11-12", externals: { imdb: null, thetvdb: 485136 } };
+const q = s => `/singlesearch/shows?q=${encodeURIComponent(s)}`;
+
+test("lookupTvmaze: without ids on TMDB, TVMaze's show by TMDB's name when the premiere year agrees", async () => {
+  const fetch = fakeFetch({ [q("Nothing Happened")]: NOTHING_TVM, "/shows/95631/episodes": TVM_EPISODES });
+  const src = createEpisodeSource({ fetch, tmdbGet: NOTHING_TMDB, minGapMs: 0 });
+  const r = await src.getEpisodes({ tmdb: 300 });
+  assert.equal(r.source, "tvmaze");
+  assert.equal(r.tvmazeId, 95631);
+  assert.deepEqual(fetch.calls.slice(0, 2), [q("לא קרה כלום"), q("Nothing Happened")], "the original name first");
+});
+
+test("lookupTvmaze: a name match from another year, or with other ids, isn't taken", async () => {
+  const otherYear = createEpisodeSource({ fetch: fakeFetch({ [q("Nothing Happened")]: { ...NOTHING_TVM, premiered: "2019-01-01" } }), tmdbGet: NOTHING_TMDB, minGapMs: 0 });
+  assert.equal(await otherYear.lookupTvmaze({ tmdb: 300 }), null);
+  const otherIds = createEpisodeSource({ fetch: fakeFetch({ [q("Nothing Happened")]: NOTHING_TVM }), tmdbGet: NOTHING_TMDB, minGapMs: 0 });
+  assert.equal(await otherIds.lookupTvmaze({ tmdb: 300, tvdb: 111 }), null);
+  // (TVMaze's lookup by the id 404s in this fake; by name, the same id is fine)
+  assert.equal((await otherIds.lookupTvmaze({ tmdb: 300, tvdb: 485136 })).id, 95631);
+});
+
+test("lookupTvmaze: 'not found' is asked again after a day; a show found is kept", async () => {
+  let listed = false;
+  const fetch = fakeFetch({ [q("Nothing Happened")]: () => listed ? jsonRes(200, NOTHING_TVM) : jsonRes(404, null) });
+  const cache = clockCache();
+  const src = createEpisodeSource({ fetch, tmdbGet: NOTHING_TMDB, cache, minGapMs: 0 });
+  assert.equal(await src.lookupTvmaze({ tmdb: 300 }), null);
+  listed = true;
+  cache.t = 12 * 3600 * 1000;
+  assert.equal(await src.lookupTvmaze({ tmdb: 300 }), null, "within the day: the kept answer");
+  cache.t = 25 * 3600 * 1000;
+  assert.equal((await src.lookupTvmaze({ tmdb: 300 })).id, 95631);
+  const calls = fetch.calls.length;
+  cache.t = 20 * 86400000;
+  assert.equal((await src.lookupTvmaze({ tmdb: 300 })).id, 95631);
+  assert.equal(fetch.calls.length, calls, "found: not asked again");
+});
+
+test("lookupTvmaze: an older 'not found' kept 30 days under the lookup key is asked again", async () => {
+  const cache = clockCache();
+  cache.set("tvmaze-lookup::485136", null);
+  const src = createEpisodeSource({ fetch: fakeFetch({ "/lookup/shows?thetvdb=485136": NOTHING_TVM }), tmdbGet: NOTHING_TMDB, cache, minGapMs: 0 });
+  assert.equal((await src.lookupTvmaze({ tmdb: 300, tvdb: 485136 })).id, 95631);
+});
