@@ -43,7 +43,6 @@ public class AiringWidgetProvider extends AppWidgetProvider {
     private static final int[][] LARGE = {
         { R.id.card0, R.id.card0_title, R.id.card0_ep, R.id.card0_badge, R.id.card0_date, R.id.card0_art, R.id.card0_etitle },
         { R.id.card1, R.id.card1_title, R.id.card1_ep, R.id.card1_badge, R.id.card1_date, R.id.card1_art, R.id.card1_etitle },
-        { R.id.card2, R.id.card2_title, R.id.card2_ep, R.id.card2_badge, R.id.card2_date, R.id.card2_art, R.id.card2_etitle },
     };
 
     /** Redraws every Airing Next widget (after a sync, a new day, ...). */
