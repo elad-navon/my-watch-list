@@ -171,10 +171,17 @@ public class AiringWidgetProvider extends AppWidgetProvider {
             views.setViewVisibility(R.id.dots, View.GONE);
         }
 
-        // A card's picture, sized to about its share of the widget.
+        // A card's picture: the card's width, banner-shaped (16:9, as TMDB's backdrops are), so nothing is cut
+        // off; the room left under it goes to the text. The picture's own size sets its height (adjustViewBounds).
         int cardW = Math.max(40, (widthDp - 16 - 5 * (perPage - 1)) / perPage - 10);
-        int artH = Math.max(30, heightDp - 18 - 74);
+        int artH = Math.max(22, Math.round(cardW * 9 / 16f));
         float density = context.getResources().getDisplayMetrics().density;
+        if (large) {
+            // The arrows sit level with the middle of the pictures (cards' top padding 8 + card's 5).
+            int arrowTop = dp(context, Math.max(0, 8 + 5 + artH / 2 - 16));
+            views.setViewPadding(R.id.prev, 0, arrowTop, 0, 0);
+            views.setViewPadding(R.id.next, 0, arrowTop, 0, 0);
+        }
 
         for (int i = 0; i < perPage; i++) {
             int[] slot = slots[i];
@@ -199,9 +206,10 @@ public class AiringWidgetProvider extends AppWidgetProvider {
             views.setTextViewText(slot[4], row.live ? "● " + when : when);
             views.setTextColor(slot[4], row.live ? LIVE : DATE);
             if (large) {
-                Bitmap art = store.art(row.show.art, Math.round(cardW * density), Math.round(artH * density), 7 * density);
-                if (art != null) views.setImageViewBitmap(slot[5], art);
-                else views.setImageViewResource(slot[5], R.drawable.widget_art_placeholder);
+                int artWpx = Math.round(cardW * density), artHpx = Math.round(artH * density);
+                Bitmap art = store.art(row.show.art, artWpx, artHpx, 7 * density);
+                // (a drawable has no size of its own, so the stand-in is a picture of the same shape)
+                views.setImageViewBitmap(slot[5], art != null ? art : AiringStore.placeholder(artWpx, artHpx, 7 * density));
                 String etitle = row.episode.title;
                 views.setViewVisibility(slot[6], etitle != null ? View.VISIBLE : View.GONE);
                 if (etitle != null) views.setTextViewText(slot[6], etitle);

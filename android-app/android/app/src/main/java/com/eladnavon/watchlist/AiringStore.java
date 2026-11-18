@@ -196,6 +196,15 @@ final class AiringStore {
         return out;
     }
 
+    /** In place of a picture that isn't on the phone (yet): widget_art_placeholder's gradient, `width` x `height` px. */
+    static Bitmap placeholder(int width, int height, float radius) {
+        Bitmap out = Bitmap.createBitmap(Math.max(1, width), Math.max(1, height), Bitmap.Config.ARGB_8888);
+        Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        paint.setShader(new android.graphics.LinearGradient(0, 0, width, height, 0xFF2B2D38, 0xFF15161C, Shader.TileMode.CLAMP));
+        new Canvas(out).drawRoundRect(new RectF(0, 0, width, height), radius, radius, paint);
+        return out;
+    }
+
     private static String sha1(String s) {
         try {
             byte[] d = MessageDigest.getInstance("SHA-1").digest(s.getBytes("UTF-8"));
