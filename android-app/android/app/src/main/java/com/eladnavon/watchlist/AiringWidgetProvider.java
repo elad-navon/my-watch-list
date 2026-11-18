@@ -170,9 +170,10 @@ public class AiringWidgetProvider extends AppWidgetProvider {
             views.setViewVisibility(R.id.dots, View.GONE);
         }
 
-        // A card's picture, sized to about its share of the widget.
-        int cardW = Math.max(40, (widthDp - 16 - 5 * (perPage - 1)) / perPage - 10);
-        int artH = Math.max(30, heightDp - 18 - 74);
+        // A card's picture, sized to about its share of the widget: it reaches the card's top and sides (no
+        // frame of the card's color round it), only the text below has a margin.
+        int cardW = Math.max(40, (widthDp - 16 - 5 * (perPage - 1)) / perPage);
+        int artH = Math.max(30, heightDp - 18 - 69);
         float density = context.getResources().getDisplayMetrics().density;
 
         for (int i = 0; i < perPage; i++) {
@@ -198,7 +199,7 @@ public class AiringWidgetProvider extends AppWidgetProvider {
             views.setTextViewText(slot[4], row.live ? "● " + when : when);
             views.setTextColor(slot[4], row.live ? LIVE : DATE);
             if (large) {
-                Bitmap art = store.art(row.show.art, Math.round(cardW * density), Math.round(artH * density), 7 * density);
+                Bitmap art = store.art(row.show.art, Math.round(cardW * density), Math.round(artH * density), 12 * density);
                 if (art != null) views.setImageViewBitmap(slot[5], art);
                 else views.setImageViewResource(slot[5], R.drawable.widget_art_placeholder);
                 String etitle = row.episode.title;

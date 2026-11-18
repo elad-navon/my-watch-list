@@ -354,7 +354,7 @@ async function main() {
   if (airingOnly) {
     const r = await airingPass({ dryRun: args.includes("--dry") });
     for (const s of (r && r.shows) || []) {
-      log(`  ${s.title}${s.plan ? " (plan)" : ""}: ${s.eps.map(e => `S${String(e.s).padStart(2, "0")}E${String(e.e).padStart(2, "0")} ${e.date}${e.badge ? " " + e.badge : ""}`).join(" | ")}${s.art ? "" : " [no art]"}`);
+      log(`  ${s.title}${s.plan ? " (plan)" : ""}: ${s.eps.map(e => `S${String(e.s).padStart(2, "0")}E${String(e.e).padStart(2, "0")} ${e.date}${e.badge ? " " + e.badge : ""}`).join(" | ")}${s.art ? (args.includes("--art") ? " " + s.art : "") : " [no art]"}`);
     }
     process.exit(r ? 0 : 1);
   }
