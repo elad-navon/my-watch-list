@@ -202,7 +202,9 @@ public class AiringWidgetProvider extends AppWidgetProvider {
                 if (art != null) views.setImageViewBitmap(slot[5], art);
                 else views.setImageViewResource(slot[5], R.drawable.widget_art_placeholder);
                 String etitle = row.episode.title;
-                views.setViewVisibility(slot[6], etitle != null ? View.VISIBLE : View.GONE);
+                // No episode title: its line stays as empty room (INVISIBLE, not GONE), so every card's picture is
+                // the same height.
+                views.setViewVisibility(slot[6], etitle != null ? View.VISIBLE : View.INVISIBLE);
                 if (etitle != null) views.setTextViewText(slot[6], etitle);
             }
         }
