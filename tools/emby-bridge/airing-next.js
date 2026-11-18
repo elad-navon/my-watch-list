@@ -19,26 +19,30 @@ const EPISODES_AHEAD = 4;
 const TMDB_BACKDROP_BASE = "https://image.tmdb.org/t/p/w780";
 const ART_TTL_MS = 7 * 24 * 3600 * 1000;
 
-function createAiringNext({ core, adapter, backend, tmdbGet, now = () => Date.now() }) {
+function createAiringNext({ core, adapter, backend, tmdbGet, extraArt = null, now = () => Date.now() }) {
   const artCache = new Map(); // tmdbId -> { url, at }
   let lastJson = null;
 
   // The show's banner as the site picks it by default (computeImages): TMDB's
   // own backdrop when it's an English / no-language one, else the first of
   // those, else a Hebrew one. A pick made by clicking on the site lives only in
-  // that browser, so it isn't known here.
+  // that browser, so it isn't known here. A show TMDB has no banner for (a
+  // new Israeli show: Barkoni, Nothing Happened) takes the first one Fanart.tv,
+  // TheTVDB or TVMaze has (`extraArt`, as the site does), else a poster - the
+  // widget cuts it to the card - rather than an empty card.
   async function artFor(tmdbId) {
     if (tmdbId == null || !tmdbGet) return null;
     const hit = artCache.get(tmdbId);
     if (hit && now() - hit.at < ART_TTL_MS) return hit.url;
     let url = null;
     try {
-      const d = await tmdbGet(`/tv/${tmdbId}`, { append_to_response: "images", include_image_language: "en,null,he" });
+      const d = await tmdbGet(`/tv/${tmdbId}`, { append_to_response: "images,external_ids", include_image_language: "en,null,he" });
       const all = (d && d.images && d.images.backdrops) || [];
       const en = all.filter(p => p.iso_639_1 === "en" || p.iso_639_1 == null);
       const list = (en.length ? en : all.filter(p => p.iso_639_1 === "he")).map(p => p.file_path).filter(Boolean);
       const path = d && d.backdrop_path && list.includes(d.backdrop_path) ? d.backdrop_path : list[0];
       url = path ? TMDB_BACKDROP_BASE + path : null;
+      if (!url && d && extraArt) url = await extraArt(d).catch(() => null);
     } catch (e) {
       return hit ? hit.url : null; // TMDB away: keep what we had
     }

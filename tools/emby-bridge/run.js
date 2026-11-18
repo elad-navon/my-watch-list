@@ -31,6 +31,7 @@ const { createTvdbClient } = require("./tvdb-check.js");
 const AirTimes = require("../../air-times.js");
 const YesTimes = require("../../yes-times.js");
 const AirTimeChain = require("../../air-time-chain.js");
+const OutsideSources = require("../../outside-sources.js");
 const BridgeStatus = require("../../bridge-status.js");
 const LibrarySync = require("../../library-sync.js");
 const { compareRules, liveRulesGetter } = require("./rules-check.js");
@@ -306,7 +307,25 @@ async function main() {
     tvdb: tvdb && AirTimeChain.createTvdbCheck({ EpisodeSource, source, recentEpisodes: tvdb.recentEpisodes, enabled: () => !tvdb.rejected() }),
   });
   const adapter = createLibraryAdapter({ core, store, source, appendAfter: EpisodeSource.appendAfter, showMeta, airTimes });
-  const airing = createAiringNext({ core, adapter, backend, tmdbGet: tmdbKey ? tmdbGet : null });
+  // A picture for a show TMDB has none of, from Fanart.tv, TheTVDB or TVMaze
+  // (the site's picker sources, with the account's keys), kept in memory.
+  const imageCache = EpisodeSource.memoryCache();
+  let tvdbImageToken = null;
+  const timed = (url, opts = {}, ms = 8000) => fetch(url, { ...opts, signal: AbortSignal.timeout(ms) });
+  const imageSources = OutsideSources.createImageSources({
+    fetchWithTimeout: timed,
+    tvmazeGet: (url, ms) => timed(url, {}, ms || 8000),
+    persisted: { read: async (k, ttl) => imageCache.get(k, ttl), write: async (k, v) => imageCache.set(k, v) },
+    fanartKey: () => accountKeys.fanartKey || "",
+    tvdbKey: () => accountKeys.tvdbKey || "",
+    tokenStore: { read: () => tvdbImageToken, write: v => { tvdbImageToken = v; } },
+    onRejected: name => log(`${name} rejected the key - pictures without it.`),
+  });
+  const extraArt = async detail => {
+    const found = await imageSources.findArt(detail);
+    return found.banner || (detail.poster_path ? `https://image.tmdb.org/t/p/w500${detail.poster_path}` : null) || found.poster;
+  };
+  const airing = createAiringNext({ core, adapter, backend, tmdbGet: tmdbKey ? tmdbGet : null, extraArt });
   let airingRunning = false;
   const airingPass = async ({ dryRun = false } = {}) => {
     if (airingRunning) return;

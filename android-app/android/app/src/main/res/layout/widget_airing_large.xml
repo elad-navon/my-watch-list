@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Airing Next widget, two rows or more: three cards with pictures. Drawn by AiringWidgetProvider. -->
+<!-- Airing Next widget, two rows or more: two wide cards with pictures (card2 stays hidden), so a banner fits nearly whole. Drawn by AiringWidgetProvider. -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/root" android:layout_width="match_parent" android:layout_height="match_parent"
     android:background="@drawable/widget_bg">
@@ -28,7 +28,7 @@
                 android:layout_marginTop="1dp" android:textColor="#94FFFFFF" android:textSize="10dp" android:singleLine="true" android:ellipsize="end" android:includeFontPadding="false" />
         </LinearLayout>
         <LinearLayout android:id="@+id/card1" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1"
-            android:layout_marginRight="5dp" android:background="@drawable/widget_card" android:orientation="vertical" android:padding="5dp">
+            android:layout_marginLeft="2dp" android:background="@drawable/widget_card" android:orientation="vertical" android:padding="5dp">
             <FrameLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1">
                 <ImageView android:id="@+id/card1_art" android:layout_width="match_parent" android:layout_height="match_parent"
                     android:scaleType="centerCrop" android:src="@drawable/widget_art_placeholder" android:contentDescription="@null" />
@@ -47,7 +47,7 @@
             <TextView android:id="@+id/card1_etitle" android:layout_width="match_parent" android:layout_height="wrap_content"
                 android:layout_marginTop="1dp" android:textColor="#94FFFFFF" android:textSize="10dp" android:singleLine="true" android:ellipsize="end" android:includeFontPadding="false" />
         </LinearLayout>
-        <LinearLayout android:id="@+id/card2" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1"
+        <LinearLayout android:id="@+id/card2" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:visibility="gone"
             android:background="@drawable/widget_card" android:orientation="vertical" android:padding="5dp">
             <FrameLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1">
                 <ImageView android:id="@+id/card2_art" android:layout_width="match_parent" android:layout_height="match_parent"
