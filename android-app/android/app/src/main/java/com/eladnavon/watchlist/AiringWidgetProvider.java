@@ -19,7 +19,7 @@ import java.util.List;
 
 /**
  * The Airing Next home-screen widget. One row (5x1): two text cards - show, episode, when. Stretched
- * to two rows (5x2): three cards with the show's picture. The arrows page through the list without
+ * to two rows (5x2): two wide cards with the show's picture. The arrows page through the list without
  * opening the app; a card opens the app as its icon does. Labels ("Today 21:00", "On air now") are
  * worked out from the saved dates whenever it's drawn, and it wakes itself (inexactly) when one of
  * them is due to change. The list comes from AiringSyncWorker.

@@ -1,247 +1,379 @@
-# TV Series — My List
+# My Watch List
 
-A small static site for tracking the TV shows you watch: **for the shows
-you're watching, how many episodes are left and how much time it will
-take to catch up**, what airs next, what you watched recently and what's
-waiting in Plan to Watch, plus a built-in search to add shows, change
-their status or remove them.
+[עברית](README.he.md)
 
-Everything runs as JavaScript **in your browser**: no server of its own
-and no build step. The files sit side by side and load like any static
-page.
+A personal site and Android app for the TV shows you watch: **what's ready to
+watch and how long it will take to catch up**, what airs next and when, what
+you watched lately and what waits in Plan to Watch. It also has search to add
+shows, a page per show, every show by status, and a statistics page.
 
-- **Your library** (which shows, their status, which episodes you
-  watched and when) is yours: it lives in your own private
-  [Firebase](https://firebase.google.com) database (Firestore, free
-  plan), behind a Google sign-in. Only your Google account can read or
-  write it.
-- **Everything about the shows themselves** comes from public sources:
-  episode lists and air times from [TVMaze](https://www.tvmaze.com)
-  (with [TMDB](https://www.themoviedb.org) as the fallback), artwork,
-  runtimes and details from TMDB, ratings from
-  [MDBList](https://mdblist.com) and TMDB.
-- **SIMKL is optional.** If something marks episodes watched on SIMKL
-  for you (e.g. the Emby plugin), the site copies them into your library
-  automatically, and takes SIMKL's air times for streaming episodes
-  TVMaze lists by date only. Nothing else depends on SIMKL, and nothing
-  is ever written to it.
+It's three parts that share one library:
+
+- **The site**: static files on GitHub Pages, with no server of its own and no
+  build step. Everything runs in the browser.
+- **The computer bridge** (`tools/emby-bridge/`): a small Node program on the
+  computer that runs Emby. It marks what you watch there, and does the work
+  the phone shouldn't: the widget's list, SIMKL's air times, and a health
+  report.
+- **The Android app** (`android-app/`): a shell around the live site, with
+  Google sign-in through the phone, a home-screen widget and alerts for
+  premieres and finales. See [The Android app](#the-android-app) below.
+
+**Your library** (which shows, their status, which episodes you watched and
+when) lives in your own Firebase database (Firestore, free plan), behind a
+Google sign-in. Only your account can read or write it.
+
+**Everything about the shows themselves** comes from public sources:
+
+- [TVMaze](https://www.tvmaze.com): episode lists and air times, with
+  [TMDB](https://www.themoviedb.org) as the fallback.
+- TMDB: artwork, runtimes, cast and details.
+- [MDBList](https://mdblist.com) and TMDB: ratings.
+- Exact hours from yes's TV guide (Israeli shows) and SIMKL (streaming
+  episodes listed by date only).
+- TheTVDB: a second opinion on air dates, and more artwork along with
+  Fanart.tv.
 
 ## Setup
 
 1. Open the site and sign in with your Google account.
-2. The first run shows a **Setup** screen. Paste in a **TMDB API key**
-   (free at [themoviedb.org/settings/api](https://www.themoviedb.org/settings/api)).
-   Optional:
+2. The first run shows **Setup**. Paste a **TMDB API key** (free at
+   [themoviedb.org/settings/api](https://www.themoviedb.org/settings/api)).
+   Optional keys:
    - **MDBList API key**: IMDb, Rotten Tomatoes and Trakt ratings.
-   - **Fanart.tv API key**: more posters and banners in the image picker.
-   - **TheTVDB API key**: more posters and backgrounds in the image picker
-     (the artwork SIMKL and Emby show). Free; the picker credits TheTVDB.
-   - **SIMKL Client ID** plus **Connect SIMKL**: the auto-marking below.
-     Only one device needs it, since what it copies goes into the
-     shared library.
+   - **Fanart.tv API key**: more posters and banners, in the image picker and
+     for shows TMDB has no pictures for.
+   - **TheTVDB API key**: the same, plus the second opinion on air dates.
+   - **SIMKL Client ID** (an app of type "TV, devices & command line"): the
+     bridge signs in to SIMKL with it for exact air times. See below.
 
-   Keys are saved only in your browser's `localStorage`, never in the
-   files, so the repo is safe to keep public.
+   The keys are kept in the browser and in your account
+   (`users/{uid}/meta/keys`), so another browser or the Android app gets them
+   once signed in. A device that lacks a key never erases the account's copy;
+   it takes that copy instead. The keys are never in the site's files, so the
+   repo is safe to keep public.
 
-The Firebase project (`tv-library-c29bd`) and its security rules are
-already set up. Its config in `firebase-backend.js` is meant to be
-public: it grants nothing by itself; the rules allow only the owner's
-signed-in account.
+The Firebase project (`tv-library-c29bd`) and its security rules are set up.
+Its config in `firebase-backend.js` is meant to be public: it grants nothing
+by itself.
 
-## Features
+## What it shows
 
-- **Single-page dashboard**: a top bar (logo, live clock and date, Switch
-  to Banners, Panels to Posters, Search Show, Settings, greeting and
-  avatar), the **My List** carousel, and three panels below it:
-  **Recently Watched**, **Airing Next** and **Plan to Watch**.
-- **Panels to Posters**: the three panels show one poster per page (two
-  side by side in Airing Next) with the details beside it, instead of
-  two banners - the panels keep their size. Remembered on this device.
-- **My List cards**: poster or banner, a progress bar, total / available
-  / watched / remaining episodes, time left (*next episode / all
-  remaining*), the next episode with its title, and premiere / finale
-  ribbons. Click the time-left line for a breakdown of every remaining
-  episode.
-- Every card's **⋮** menu: mark the next episode watched, change status
-  (Watching / Plan to Watch / On Hold / Completed / Dropped), or remove
-  the show.
-- **Search Show**: TMDB in English and in Hebrew at once, merged. A
-  result's page shows its status in your library, lets you set or change
-  it, shows ratings, and opens the **episodes manager** (mark or unmark
-  single episodes or whole seasons, then Save).
-- **Images**: click any poster or banner to pick another one (TMDB,
-  TVMaze, Metahub, and Fanart.tv and TheTVDB with a key). The pick is remembered on
-  this device. Only English or no-language artwork is used, with a
-  Hebrew fallback for shows that have nothing else.
-- **Network logos** from TMDB, with a small local set for Israeli
-  networks TMDB has no logo for.
-- **Save status** in the top bar: *Saving…*, *Offline – N waiting*,
-  *Not saved – retry*, *Conflict – choose*. Hidden while everything is
-  saved.
-- **Settings**: keys, dark mode, the one-page layout, and for the
-  library: who's signed in, **Download backup**, **Restore from
-  backup**, **Sign out**.
-- Responsive, installable as an app (PWA), and fast on repeat visits:
-  TMDB answers are cached in `localStorage`, episode lists in IndexedDB.
+**The home page**
 
-## How it works
+- **The top bar**:
+  - the name and icon (a click reloads the page);
+  - the live clock and date;
+  - **My Shows**, **My Stats**, **Search Show** and **Settings**;
+  - the profile picture, with the month so far beside it: episodes watched
+    this calendar month and their time.
+- **Ready to Watch** (top): the Watching shows with an episode out. The most
+  recent event comes first: an episode becoming available, or you watching
+  it. Each card shows:
+  - the poster or banner;
+  - the season's progress and episodes left;
+  - time left (*next episode / all remaining*; click it to see every
+    remaining episode);
+  - the next episode and its title;
+  - premiere and finale ribbons;
+  - what's playing on Emby right now (a dimmed poster and the minutes left).
+- **Airing Next**, **Just Watched** and **Plan to Watch** below it, a page at
+  a time (arrows, a counter and a page bar; swipe on a phone). Airing Next's
+  chip:
+  - counts down in minutes, hours or days, and says NOW while the episode
+    airs;
+  - shows the episode's time of day;
+  - names where the time came from: TVMaze, TMDB, SIMKL, YES or TVDB.
+- **Panels to Posters**: the bottom panels show poster pairs instead of
+  banners. The panels keep their height.
+- **Every card**:
+  - Its title or picture opens the show's page.
+  - A small picture button in its corner opens the **image picker**. The
+    choices come from TMDB, TVMaze and Metahub, plus Fanart.tv and TheTVDB
+    with a key. The pick is kept on this device.
+  - Its **⋮** menu marks the next episode watched, changes the status
+    (Watching / Plan to Watch / On Hold / Completed / Dropped) or removes
+    the show.
+- **A toast** when the bridge marks an episode watched on Emby. It shows the
+  show's poster and the season's bar.
+- **Network logos** come from TMDB. When TMDB lists no network, the network
+  comes from TVMaze. A small local set covers Israeli networks with no logo.
 
-| File | What it does |
-|---|---|
-| `library-core.js` | The library model and every rule computed from it (no network, runs in Node too). |
-| `episode-source.js` | Episode lists from TVMaze / TMDB, cached, rate-limited, linked across sources. |
-| `library-store.js` | All changes: an outbox, retries, conflict checks, backups. |
-| `firebase-backend.js` | Google sign-in and Firestore (`users/{uid}/shows/{id}`, `users/{uid}/meta/{name}`). |
-| `library-adapter.js` | Answers the page's questions from the library, in the item shape the row builders were written against. |
-| `simkl-bridge.js` | The optional SIMKL auto-marking. |
-| `air-times.js` | The optional SIMKL air times for date-only episodes. |
-| `tools/emby-bridge/` | The optional Emby auto-marking, run on the Emby computer. |
-| `app.js` | The page itself. |
+**A show's page** (from a title, a picture, My Shows or search): the backdrop
+(a scene from the show, not the poster's key art again), poster, facts, scores,
+your progress, the cast (drag it, or use the arrows), and the episodes. The
+status and the watched episodes are changed here too, through the episodes
+manager (mark single episodes or whole seasons). On a phone, a tall poster
+with no text serves as the backdrop.
 
-A show's document id is its TMDB id; a show TMDB doesn't know is kept
-under `imdb:<id>` or `tvdb:<id>`. A show stores only what you know:
-status, when it was added, which episodes you watched and when, and a
-few marks (e.g. `autoStarted`). Everything else is fetched.
+**My Shows**: every show in the library, one tab per status, as posters or
+as a list.
+
+**My Stats**: a summary, your watching over time, top shows, taste (genres,
+networks, countries) and what's left in your queue.
+
+**Search Show**: searches TMDB in English and Hebrew at once. A result shows
+its status in your library and its ratings, and opens its page.
+
+**Settings**:
+- the keys;
+- dark mode;
+- **Clean Look**: a second look, plain dark boxes in a show page's style,
+  beside the cinematic one;
+- the one-page layout;
+- the site's version, and whether a newer one is live;
+- the bridge's status;
+- **Clean up Watching**, **Download backup**, **Restore from backup** and
+  **Sign out**.
+
+**A dot on the Settings icon** shows the bridge's health:
+- green while all is well;
+- amber while it reports a problem (for example, SIMKL signed out);
+- red once the server says it hasn't been heard from for 35 minutes.
+
+Its tooltip says what's wrong.
+
+**Pictures for every show**: when TMDB has no poster or banner for a show (new
+Israeli shows, mostly), the site finds one on Fanart.tv, TheTVDB or TVMaze. It
+does this once, in the background, and keeps the result for a week. Sharp
+screens get larger image sizes.
 
 ## The rules
 
 **Episodes and "aired"**
-- An episode with an exact air time has aired once that moment has
-  passed. A date-only episode counts as aired **from the next day** (on
-  the day itself its time is unknown). An episode with no date has not
-  aired, unless you've watched it.
+- An episode with an exact air time has aired once it's over (its runtime
+  after the start).
+- A date-only episode counts as out **from 10:00 that day**.
+- An episode with no date hasn't aired, unless you watched it.
 - Specials (season 0) are kept but never counted.
-- **Episode list per show**: TVMaze by default (it has air times), or
-  TMDB when its numbering fits the show's history better, or a fixed
-  snapshot of SIMKL's list for shows the outside sources don't cover
-  (both decided at import), followed by every episode the outside source
-  lists after the snapshot's end, aired or not. Upcoming episodes the main source doesn't
-  list yet are added from the other one, but never one dated before the
-  main source's last episode. A TMDB-numbered episode takes TVMaze's
-  exact time when both agree it's the same episode. Placeholder titles
-  ("TBA", "Episode 3") count as no title.
+- **The episode list** for each show is one of these:
+  - TVMaze, by default (it has air times);
+  - TMDB, when its numbering fits the show's history better;
+  - a fixed snapshot of SIMKL's list (from the move in October 2026), for
+    shows the outside sources don't cover. Every episode listed after the
+    snapshot's end follows it, and an undated episode there takes TVMaze's
+    date for the same number.
+- Upcoming episodes the main source doesn't list yet come from the other
+  one.
+- Placeholder titles ("TBA", "Episode 3") count as no title.
+- **Finding a show on TVMaze**: by its IMDb id, then TheTVDB's id. A show TMDB
+  gives neither id for is found by TMDB's name (original, then English) when
+  the premiere year agrees and TVMaze's own ids don't contradict ours. Found
+  shows are kept 30 days. "Not on TVMaze" is kept one day, so a show TVMaze
+  adds later is found the next day.
 
 **Counts and the next episode**
 - *Available* = aired episodes (plus any you watched). *Remaining* =
   available − watched.
-- *Next to watch* = the first aired, unwatched episode after the latest
-  one you watched (in season / episode order). Gaps before it still
-  count as remaining.
-- My List shows Watching shows that have a next episode, the most recent
-  event first: the show coming into My List (its next episode to watch
-  became available) or you watching it. Another new episode of a show
-  that's already waiting there doesn't move it.
+- *Next to watch* = the first aired, unwatched episode after the latest one
+  you watched. Gaps before it still count as remaining.
+
+**Air times** (`air-time-chain.js`: the same order on the site and in the
+bridge)
+1. **yes's TV guide** for Israeli shows (`yes-times.js`): the schedules of
+   Kan 11, Keshet 12 and Reshet 13 are read, and the show's first-run
+   broadcast that day is used. Reruns never count. Its hour wins.
+2. **SIMKL**, for episodes that are still date-only (`air-times.js`). Its time
+   is used only when it's a real time and within a day of the known date.
+   The bridge reads these times and keeps them in the account
+   (`meta/airTimes`), so every device has them.
+3. **TheTVDB's check** on dates within the next two weeks:
+   - an episode TheTVDB puts days later waits for that day, unless TMDB
+     agrees with the main source;
+   - an episode it puts days earlier comes forward, if TMDB agrees.
+
+   A streaming show is never held back: its TVMaze day is the day it comes
+   out.
+
+A step that fails leaves the episodes as they were, and the next step still
+runs.
 
 **Status**
-- A Plan to Watch show whose first episode aired in the last 30 days,
-  with nothing watched, moves to Watching once. The mark is kept on the
-  show (`autoStarted`), so a show moved back by hand stays there, on
-  every device.
+- A Plan to Watch show whose first episode aired in the last 30 days, with
+  nothing watched, moves to Watching once. It's marked `autoStarted`, so a
+  show you move back by hand stays there.
 
 **Saving**
-- A change counts as saved only once the database confirmed it. Until
-  then it's shown as pending, never as done.
-- Each change carries an id, so a retry or a second device never applies
-  it twice.
-- Changes that don't collide merge (e.g. different episodes marked on
-  two devices). A real conflict (e.g. a status changed on both) is never
-  overwritten blindly: you choose which version stays.
-- No connection: changes wait on the device (they survive a reload) and
-  go out when it's back.
+- A change counts as saved only once the database has confirmed it. Until
+  then, it shows as pending.
+- Each change carries an id, so a retry or a second device never applies it
+  twice.
+- Changes that don't collide merge. A real conflict (for example, a status
+  changed on two devices) waits for you to choose.
+- Offline, changes wait on the device and survive a reload.
 
-**SIMKL auto-marking** (`simkl-bridge.js`), when connected
-- Runs on load, on every refresh, every 15 minutes while open, and when
-  the page returns to the foreground. Asks SIMKL what changed since the
-  last pass (one small request), then copies newly watched episodes,
-  with their real watch times.
-- Only episodes watched after the last pass are taken, so an episode
-  you unmarked in the library never comes back.
-- Plan to Watch / On Hold move to Watching; a show not in the library is
-  added as Watching; Completed and Dropped keep their status.
-- How far it has read is kept in the library, shared by every device.
+**Loading** (`library-sync.js`)
+- Every save is stamped with the server's time (`_syncAt`), and every removal
+  is noted in `meta/removed`.
+- A load reads only the shows saved since the last load, on top of the copy
+  it already has (the database's offline copy in the browser, memory in the
+  bridge). That's typically 2 reads instead of one per show.
+- Everything is read once a day, and whenever there's no copy.
 
-**SIMKL air times** (`air-times.js`), when connected
-- Many streaming episodes come with a date only. A show with such an
-  episode from yesterday to 3 days ahead gets SIMKL's episode list
-  (kept 6 hours, so a refresh doesn't ask again), and the episode takes
-  SIMKL's time when:
-  - it's a real time: SIMKL's midnight (in its own timezone) means "some
-    time that day", the same as no time;
-  - SIMKL's date is within a day of the known one (a US evening release
-    is the next day here). Further off is a disagreement: the known date
-    stays.
-- The fetched list is kept for 30 days, so an episode keeps its time
-  after it airs. Not connected, or SIMKL slow or failing: date only, as
-  before.
+## How it's built
 
-**Emby auto-marking** (`tools/emby-bridge/`), on the computer that runs Emby
-- A small Node program next to Emby asks it once a minute what's playing
-  and what was played. An episode is marked once 90% of it was played
-  (`threshold` in its config), at that moment; episodes Emby itself marked
-  played (its own 90% rule, or by hand) are taken too, with their real
-  time - a safety net for when the program wasn't running.
-- Same rules as the SIMKL auto-marking (it shares its code): matched by
-  the series' ids, Plan to Watch / On Hold move to Watching, a series
-  not in the library is added as Watching, nothing recorded twice. How
-  far it has read is kept in the library (meta `embyBridge`); it starts
-  from its first run, never from the whole history.
-- Every episode it marks says so (`by: "emby"` on the record; the SIMKL
-  bridge writes `by: "simkl"`, a mark by hand has none).
-- The library is read only when there's something to mark.
-- Setup: `npm install` in `tools/emby-bridge`; copy `config.example.json`
-  to `config.json`; an Emby API key (Emby dashboard > Advanced > API
-  Keys) and a Firebase service-account key file (Firebase console >
-  Project settings > Service accounts) next to it - both stay on that
-  computer (`.gitignore`). `node run.js --check` tests the connections;
-  a shortcut to `start-hidden.vbs` in the Windows Startup folder starts
-  it at every sign-in, logging to `emby-bridge.log`.
+A show's document id is its TMDB id (`imdb:<id>` or `tvdb:<id>` for a show
+TMDB doesn't know). A show stores only what you know: its status, when it was
+added, the episodes you watched and when, and a few marks. Everything else is
+fetched.
 
-## Backups and recovery
+| File | What it does |
+|---|---|
+| `library-core.js` | The library model and every rule computed from it (no network; runs in Node too). |
+| `library-store.js` | All changes: the outbox, retries, conflict checks, backups. |
+| `library-sync.js` | Loads only what changed (site and bridge). |
+| `firebase-backend.js` | Google sign-in (in a browser, or through the phone in the app) and Firestore (`users/{uid}/shows/{id}`, `users/{uid}/meta/{name}`). |
+| `library-adapter.js` | Answers the page's questions from the library, in the item shape the drawing code was written against. |
+| `episode-source.js` | Episode lists from TVMaze and TMDB: cached, rate-limited, linked across sources. |
+| `air-time-chain.js`, `yes-times.js`, `air-times.js` | Air times: the order of the steps, yes's guide, SIMKL's times. |
+| `outside-sources.js` | TMDB's details, MDBList's ratings, extra pictures from Fanart.tv, TheTVDB, TVMaze and Metahub. |
+| `bridge-status.js` | The bridge's health report: written by the bridge, shown by the site. |
+| `show-taker.js` | Takes newly watched episodes into the library (used by the Emby bridge). |
+| `app/*.js` | The page, as ten plain scripts loaded in order from `index.html`: `core` (settings, plumbing, element actions), `library`, `show-data`, `airing`, `search`, `modals`, `images`, `panels`, `render`, `main`. |
+| `my-shows.js` | My Shows and a show's page. |
+| `stats.js` | My Stats. |
+| `style.css`, `theme/` | The cinematic look (`cinematic.css`) and the clean look (`clean.css`). |
+| `service-worker.js` | The offline copy and the fast start (see below). |
+| `version.js` | The site's version: shown in Settings, and the name of the offline cache. |
+| `firestore.rules` | The database's security rules, as they are live. |
+| `native/` | Code that runs only inside the Android app: episode alerts and the phone sign-in plugin. |
 
-- **Settings → Download backup** saves the whole library as a JSON file;
-  **Restore from backup** replaces the library with one (a backup of
-  what was there is downloaded first).
-- The import tool (below) also downloads backups before it writes
-  anything.
+The `app/` files share one global scope: code that runs while a file loads
+may only use what earlier files define. Elements don't carry code in their
+HTML. They name an action (`data-onclick` / `data-onerror` with
+`data-args`), and the actions are listed in one table in `app/main.js`.
+Text from outside (titles, names, URLs) goes into the page through `esc()`.
+
+## The computer bridge (`tools/emby-bridge/`)
+
+A Node program next to Emby. A shortcut to `start-hidden.vbs` in the Windows
+Startup folder starts it at sign-in, and it logs to `emby-bridge.log`. It
+does the following:
+
+- **Marks what you watch on Emby**: an episode is marked at the moment 90% of
+  it has played (`threshold` in its config). Episodes Emby itself marked
+  played are taken too, with their real time. When it marks an episode:
+  - Plan to Watch and On Hold move to Watching;
+  - a series not in the library is added as Watching;
+  - nothing is recorded twice;
+  - the episode's record says so (`by: "emby"`).
+- **Matches Emby's series to the library** by their ids. A series Emby knows
+  only by TheTVDB's id (an Israeli show under a transliterated name) is
+  matched by TVMaze's name and premiere year for that id, so it isn't added
+  a second time.
+- **Reports what's playing now** (`meta/emby`) and **what was just marked**
+  (`meta/embyMarked`, with the library's name and ids), for a site open on a
+  screen.
+- **Writes the widget's Airing Next list** (`meta/airingNext`) every half
+  hour. Each show has its next episodes and a picture: TMDB's backdrop,
+  otherwise a banner from Fanart.tv or TheTVDB, otherwise a poster.
+- **Fetches SIMKL's air times** (`meta/airTimes`), with its own SIMKL sign-in.
+- **Writes its health report** (`meta/bridgeStatus`) every 10 minutes, and at
+  once when a problem appears or goes away. It covers:
+  - its last passes;
+  - SIMKL's sign-in;
+  - TheTVDB's key;
+  - whether the live **security rules** still match `firestore.rules`
+    (checked at start and once a day).
+
+Setup:
+
+1. Run `npm install` in `tools/emby-bridge`.
+2. Copy `config.example.json` to `config.json`.
+3. Put two keys next to it: an Emby API key (Emby dashboard > Advanced > API
+   Keys) and a Firebase service-account key file. Both stay on that computer
+   (`.gitignore`).
+
+Then:
+
+    node run.js --check              # Emby, the library, the read point, the security rules
+    node run.js --simkl-login        # once: a code to enter at simkl.com/pin
+    node run.js --airing --dry       # the widget's list, without writing it
+    node run.js --airing --dry --art # ...with each picture's address
+
+After changing the bridge's code, restart it: end its `node run.js` process
+and run `start-hidden.vbs`.
+
+## The Android app
+
+A Capacitor shell around the live site (`android-app/`), so every change to
+the site reaches the app without a new install. It adds:
+
+- **Google sign-in through the phone** (Google doesn't sign in from a page
+  inside an app). The keys come with the account, so nothing is typed on the
+  phone.
+- **The Airing Next widget**:
+  - In one row, it shows text cards: the show, the episode and when it airs.
+  - Stretched to two rows, it shows two wide cards per page, each with the
+    show's picture. Every picture is the same size and reaches the card's
+    edges.
+  - The arrows page through the list without opening the app. A card opens
+    the app.
+  - Labels such as "Today 21:00" or "On air now" are worked out from the
+    saved dates whenever the widget is drawn.
+  - The list is the bridge's `meta/airingNext`. The phone fetches it in the
+    background about once an hour, and whenever the app opens. A failed fetch
+    keeps the last good list.
+- **Episode alerts**: at 9:00 on the morning of a series premiere, a season
+  premiere or a season finale. They're scheduled on the phone, so they go off
+  even if the app isn't opened.
+- **Phone layouts** for every screen. Back closes menus and windows instead
+  of leaving the app. Text stays at 100% whatever the phone's font size.
+
+How to build it, and the keys that stay on this computer:
+[android-app/README.md](android-app/README.md).
+
+## Offline and updates (`service-worker.js`)
+
+The page's files (`index.html` and every script and stylesheet it lists) are
+kept for each site version, and the page opens from them at once.
+
+A deploy bumps the version in `version.js`. The browser then fetches the new
+files whole: past GitHub's CDN, all or nothing. The page reloads itself when
+it's out of sight, or after 5 idle minutes. Error answers are never kept. On
+localhost the worker stays out of the way.
+
+**Every push to `main` bumps `version.js`** (number and date). The version
+names the cache, so without the bump devices keep the old files.
+
+## Backups
+
+**Settings → Download backup** saves the whole library as JSON. **Restore
+from backup** replaces the library with a saved one; a backup of what was
+there is downloaded first.
 
 ## Tools (local, not linked from the site)
 
-- `tools/migrate.html`: read-only preview of an import from SIMKL, with
-  a report of every gap.
-- `tools/import.html`: copies the SIMKL library into the library: SIMKL
-  backup first, a confirmation (and a backup) before replacing an
-  existing library, and a full read-back check afterwards.
-- `tools/store-check.html`: checks the database, sign-in and security
-  rules with a temporary test show.
-
-They read your SIMKL sign-in and TMDB key from the browser, so open them
-on the same address as the site.
+- `tools/store-check.html`: checks the database, sign-in and security rules,
+  with a temporary test show.
+- `tools/source-compare.html`: shows the episode sources side by side for a
+  show.
+- `tools/emby-bridge/tvdb-check.js`: TheTVDB's dates compared to the
+  library's.
+- `tools/migrate.html`, `tools/import.html`: the one-time move from SIMKL
+  (October 2026). They read a SIMKL sign-in from the browser, which the site
+  no longer creates, so they're kept only for the record.
 
 ## Tests
 
-- `node --test "tests/*.test.js"`: the core rules, the episode source,
-  the store, the adapter, the SIMKL bridge, the air times and the
-  database writes.
-- In a browser, through a local web server at the project root:
-  - `tests/compare-modes.harness.html`: the real page against a fake
-    world, compared with `tests/golden/panels.json` (what the
-    SIMKL-backed site showed for the same world).
-    `?scenario=writes|ui|bridge|onair|airtimes` covers changes, the
-    surrounding screens, the auto-marking, the airing countdowns and
-    SIMKL's air times.
-  - `tests/migrate-tool.harness.html` and
-    `tests/import-tool.harness.html`: the two tools.
+    node --test "tests/*.test.js"   # rules, sources, store, sync, bridge, widget list, alerts, service worker...
+    node tests/run-browser.mjs      # every browser scenario, in a headless Chrome (~5 min)
 
-## Install it on your phone (PWA)
+`run-browser.mjs` serves the project itself and runs
+`tests/compare-modes.harness.html`. That page runs the real site against a
+fake world (`compare-modes.fake.js`) with its clock fixed. It runs once for
+each scenario:
 
-Open the site in Chrome or Brave on Android, then **⋮ → Install app**.
-`manifest.json`, `service-worker.js` (caches the app files for fast or
-offline loads; bump `CACHE_NAME` on every deploy) and `icons/` make
-this work.
+- the panels, checked against `tests/golden/panels.json` (`?golden=library`
+  prints what the page shows, to refresh it);
+- `writes`, `ui`, `airtimes`, `posters`, `nowwatching`, `order` and `stats`;
+- `onair`, which waits for real moments (about two minutes).
+
+Page errors also fail a run.
 
 ## Publishing
 
-The site is served by GitHub Pages from `main` at
+GitHub Pages serves `main` at
 [elad-navon.github.io/my-watch-list](https://elad-navon.github.io/my-watch-list/).
-A snapshot of an older UI stays at
-[/legacy/](https://elad-navon.github.io/my-watch-list/legacy/).
+Work happens on a branch and is checked on a local server first. `main` is
+the live site.
