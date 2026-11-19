@@ -513,6 +513,8 @@ body.look-clean:not(.light-theme) .wt-body b {
 body.look-clean:not(.light-theme) .wt-ep i { font-family: inherit; font-style: normal; color: var(--muted); }
 body.look-clean:not(.light-theme) .wt-segs i { background: var(--clean-tile); }
 body.look-clean:not(.light-theme) .wt-segs i.on { background: #38bdf8; }
+/* The episode just watched stays gold (the rule above would paint it a tile). */
+body.look-clean:not(.light-theme) .wt-segs i.now { background: var(--gold); }
 
 /* ---- Loading: the frames in the posters' white edge. */
 body.look-clean:not(.light-theme) .film-frame { box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.5); }
