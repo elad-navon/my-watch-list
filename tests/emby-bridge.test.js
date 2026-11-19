@@ -245,6 +245,9 @@ test("a series Emby knows by TheTVDB's id alone: found by TVMaze's name and year
   assert.equal(backend.docs.size, 1);
   assert.ok(Object.keys(backend.docs.get("2").watched).length, "the episode is marked on the show");
   assert.deepEqual(asked, ["485136"], "TVMaze asked once");
+  const told = backend.meta.get("embyMarked").episodes[0];
+  assert.equal(told.title, "Nothing Happened", "the site's message: the library's name...");
+  assert.equal(told.tmdb, 2, "...and TMDB id, so it finds the show's row");
 });
 
 test("TheTVDB's id alone, TVMaze's name matching no show: added as before", async () => {

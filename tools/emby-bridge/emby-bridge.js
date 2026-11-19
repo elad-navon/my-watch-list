@@ -199,10 +199,16 @@ function createEmbyBridge({ core, store, adapter, backend, emby, lookupTvdb = nu
         const before = summary.added;
         await takeShow({ title: (series && series.Name) || label, year: series && series.ProductionYear, ids }, newly, summary);
         if (summary.added > before) {
+          // The library's name and ids for the show, not Emby's: the site finds
+          // its row (poster, season so far) by them - Emby's "Lo Kara Klum" has
+          // TheTVDB's id alone.
+          const found = adapter.find(ids);
+          const own = (found && found.show.ids) || {};
+          const name = (found && found.show.title) || label;
           summary.marked = (summary.marked || []).concat(list.map(t =>
-            `${label} ${core.episodeCode(t.item.ParentIndexNumber, t.item.IndexNumber)} (${t.how})`));
-          for (const t of list) justMarked.push({ title: label, s: t.item.ParentIndexNumber, e: t.item.IndexNumber,
-            tmdb: ids.tmdb != null ? ids.tmdb : null, imdb: ids.imdb || null });
+            `${name} ${core.episodeCode(t.item.ParentIndexNumber, t.item.IndexNumber)} (${t.how})`));
+          for (const t of list) justMarked.push({ title: name, s: t.item.ParentIndexNumber, e: t.item.IndexNumber,
+            tmdb: own.tmdb != null ? own.tmdb : ids.tmdb != null ? ids.tmdb : null, imdb: own.imdb || ids.imdb || null });
         }
         list.forEach(t => { handled.add(t.key); handled.add(`done:${t.item.Id}`); });
       } catch (e) {
