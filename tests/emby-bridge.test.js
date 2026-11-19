@@ -28,7 +28,8 @@ function libShow(tmdb, status, watched = {}) {
 // Emby's items: an episode of series `sid` (TMDB id `tmdb`).
 const SERIES = { s1: { Name: "Show 1", ProductionYear: 2024, ProviderIds: { Tmdb: "1", Imdb: "tt1" } },
   s2: { Name: "Show 2", ProductionYear: 2024, ProviderIds: { Tmdb: "2" } },
-  s9: { Name: "Brand New", ProductionYear: 2026, ProviderIds: { Tmdb: "9" } } };
+  s9: { Name: "Brand New", ProductionYear: 2026, ProviderIds: { Tmdb: "9" } },
+  s5: { Name: "Lo Kara Klum", ProductionYear: 2026, ProviderIds: { Tvdb: "485136" } } };
 const embyEp = (id, sid, s, e, extra = {}) => ({ Id: id, Type: "Episode", SeriesId: sid, SeriesName: SERIES[sid].Name,
   ParentIndexNumber: s, IndexNumber: e, RunTimeTicks: 45 * TICKS_PER_MIN, ProviderIds: {}, ...extra });
 
@@ -42,7 +43,7 @@ function fakeEmby() {
   };
 }
 
-async function setup(docs, { clock } = {}) {
+async function setup(docs, { clock, lookupTvdb } = {}) {
   const backend = memoryBackend(docs);
   let loads = 0;
   const loadAll = backend.loadAll.bind(backend);
@@ -54,7 +55,7 @@ async function setup(docs, { clock } = {}) {
   const now = clock || (() => NOW);
   const adapter = createLibraryAdapter({ core, store, source, appendAfter, now });
   const emby = fakeEmby();
-  const bridge = createEmbyBridge({ core, store, adapter, backend, emby, now });
+  const bridge = createEmbyBridge({ core, store, adapter, backend, emby, lookupTvdb, now });
   return { backend, store, emby, bridge, loads: () => loads };
 }
 
@@ -227,4 +228,29 @@ test("what was just marked goes to meta embyMarked, for a site open on a screen"
   backend.meta.delete("embyMarked");
   await bridge.run();
   assert.equal(backend.meta.get("embyMarked"), undefined);
+});
+
+test("a series Emby knows by TheTVDB's id alone: found by TVMaze's name and year, shown playing, marked - not added again", async () => {
+  const lib = core.createShow({ ids: { tmdb: 2 }, title: "Nothing Happened", year: "2026", status: "watching", now: NOW - 10 * DAY });
+  const asked = [];
+  const lookupTvdb = async id => { asked.push(id); return { name: "Nothing Happened", premiered: "2026-11-12" }; };
+  const { bridge, backend, emby } = await setup({ 2: lib }, { lookupTvdb });
+  await bridge.run();
+  emby.state.sessions = [{ item: embyEp("n1", "s5", 1, 1), positionTicks: 10 * TICKS_PER_MIN }];
+  await bridge.run();
+  assert.equal(backend.meta.get("emby").playing[0].docId, "2", "the site's \"now watching\" finds the show");
+  emby.state.sessions = [{ item: embyEp("n1", "s5", 1, 1), positionTicks: 41 * TICKS_PER_MIN }];
+  const r = await bridge.run();
+  assert.deepEqual(r.created, [], "no second show");
+  assert.equal(backend.docs.size, 1);
+  assert.ok(Object.keys(backend.docs.get("2").watched).length, "the episode is marked on the show");
+  assert.deepEqual(asked, ["485136"], "TVMaze asked once");
+});
+
+test("TheTVDB's id alone, TVMaze's name matching no show: added as before", async () => {
+  const { bridge, backend, emby } = await setup({ 1: libShow(1, "watching") }, { lookupTvdb: async () => ({ name: "Something Else", premiered: "2026-01-01" }) });
+  await bridge.run();
+  emby.state.sessions = [{ item: embyEp("n1", "s5", 1, 1), positionTicks: 41 * TICKS_PER_MIN }];
+  const r = await bridge.run();
+  assert.deepEqual(r.created.length, 1);
 });

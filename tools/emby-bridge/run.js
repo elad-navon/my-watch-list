@@ -359,7 +359,15 @@ async function main() {
     process.exit(r ? 0 : 1);
   }
 
-  const bridge = createEmbyBridge({ core, store, adapter, backend, emby, threshold: cfg.threshold });
+  // The show TVMaze has under a TheTVDB id (Emby may know a show by that id
+  // alone), for the bridge to find it in the library by name and year.
+  const lookupTvdb = async tvdbId => {
+    const res = await fetch(`https://api.tvmaze.com/lookup/shows?thetvdb=${encodeURIComponent(tvdbId)}`, { signal: AbortSignal.timeout(10000) });
+    if (!res.ok) return null;
+    const show = await res.json();
+    return show ? { name: show.name, premiered: show.premiered || null } : null;
+  };
+  const bridge = createEmbyBridge({ core, store, adapter, backend, emby, lookupTvdb, threshold: cfg.threshold });
 
   let running = false;
   const pass = async () => {

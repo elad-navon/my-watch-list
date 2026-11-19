@@ -64,7 +64,9 @@ function seriesIds(series) {
 //   UserData.LastPlayedDate
 // - emby.series(id): a series item (Name, ProductionYear, ProviderIds)
 // - backend: getMeta(name) / setMeta(name, data)
-function createEmbyBridge({ core, store, adapter, backend, emby, now = () => Date.now(), threshold = 0.9 }) {
+// - lookupTvdb(tvdbId): optional, { name, premiered } of the show with that
+//   TheTVDB id (TVMaze's), or null - see libraryIds
+function createEmbyBridge({ core, store, adapter, backend, emby, lookupTvdb = null, now = () => Date.now(), threshold = 0.9 }) {
   const takeShow = createShowTaker({ core, store, adapter, prefix: "emby-bridge", by: "emby" });
   const handled = new Set(); // this session: what was already taken in
   const retryAt = new Map();  // key -> when a failed one may be tried again
@@ -76,13 +78,41 @@ function createEmbyBridge({ core, store, adapter, backend, emby, now = () => Dat
     return seriesCache.get(id);
   }
 
+  // The series' ids, plus the library show it is when its ids don't say so
+  // (`library`): Emby may know a new Israeli show by TheTVDB's id alone
+  // ("Lo Kara Klum", 485136) while TMDB - the library's - has no TheTVDB id
+  // for it. Then TVMaze's name and premiere year for that TheTVDB id find it
+  // ("Nothing Happened", 2026). Without that it was neither shown as playing
+  // nor marked, and at 90% it would have been added again as a new show.
+  const idsCache = new Map();
+  const titleKey = s => String(s || "").toLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").trim();
+  async function libraryIds(series) {
+    const ids = seriesIds(series);
+    if (adapter.find(ids) || !ids.tvdb || !lookupTvdb) return ids;
+    const key = String(ids.tvdb);
+    if (!idsCache.has(key)) {
+      idsCache.set(key, (async () => {
+        const tv = await lookupTvdb(ids.tvdb).catch(() => null);
+        if (!tv || !tv.name) return null;
+        const name = titleKey(tv.name), year = String(tv.premiered || "").slice(0, 4);
+        for (const [docId, show] of store.view()) {
+          if (titleKey(show.title) === name && (!show.year || !year || String(show.year) === year)) return docId;
+        }
+        return null;
+      })().catch(() => null));
+    }
+    const docId = await idsCache.get(key);
+    if (docId == null) idsCache.delete(key); // asked again next time (the show may be added meanwhile)
+    return docId != null ? { ...ids, library: docId } : ids;
+  }
+
   const waiting = key => handled.has(key) || (retryAt.get(key) || 0) > now();
 
   // ---- what's on, for the site ----
   let lastNow = null, lastNowAt = 0;
   async function entryFor(item, positionTicks, paused) {
     if (!item || item.Type !== "Episode" || !item.SeriesId || !item.RunTimeTicks) return null;
-    const ids = seriesIds(await seriesFor(item.SeriesId));
+    const ids = await libraryIds(await seriesFor(item.SeriesId));
     const found = adapter.find(ids);
     return {
       docId: found ? found.docId : null, ...ids, title: item.SeriesName || null,
@@ -162,7 +192,7 @@ function createEmbyBridge({ core, store, adapter, backend, emby, now = () => Dat
       const label = list[0].item.SeriesName || "?";
       try {
         const series = await seriesFor(seriesId);
-        const ids = seriesIds(series);
+        const ids = await libraryIds(series);
         if (ids.tmdb == null && !ids.imdb && !ids.tvdb) throw new Error("Emby has no TMDB / IMDb / TheTVDB id for this series");
         const newly = [];
         for (const t of list) for (const ep of episodesOf(t.item)) newly.push({ ...ep, at: t.at });
