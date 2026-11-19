@@ -174,14 +174,15 @@ final class AiringStore {
         }
     }
 
-    /** The show's picture cut to `width` x `height` px with rounded corners, or null if it isn't on the phone. */
+    /** The show's picture cut to `width` x `height` px, its top corners rounded as the card's, or null if it isn't on the phone. */
     Bitmap art(String url, int width, int height, float radius) {
         if (url == null || width <= 0 || height <= 0) return null;
         File file = artFile(url);
         if (!file.exists()) return null;
         Bitmap src = BitmapFactory.decodeFile(file.getPath());
         if (src == null) return null;
-        // Center-crop to the card's shape, then round the corners (a widget can't clip an image itself).
+        // Center-crop to the card's shape, then round the top corners (a widget can't clip an image itself);
+        // the bottom ones stay square, where the text begins.
         float scale = Math.max(width / (float) src.getWidth(), height / (float) src.getHeight());
         float dx = (width - src.getWidth() * scale) / 2f, dy = (height - src.getHeight() * scale) / 2f;
         Bitmap out = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
@@ -192,7 +193,9 @@ final class AiringStore {
         shader.setLocalMatrix(m);
         Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.FILTER_BITMAP_FLAG);
         paint.setShader(shader);
-        new Canvas(out).drawRoundRect(new RectF(0, 0, width, height), radius, radius, paint);
+        Canvas canvas = new Canvas(out);
+        canvas.drawRoundRect(new RectF(0, 0, width, height), radius, radius, paint);
+        canvas.drawRect(new RectF(0, height - radius, width, height), paint);
         return out;
     }
 

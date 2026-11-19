@@ -19,7 +19,7 @@ import java.util.List;
 
 /**
  * The Airing Next home-screen widget. One row (5x1): two text cards - show, episode, when. Stretched
- * to two rows (5x2): three cards with the show's picture. The arrows page through the list without
+ * to two rows (5x2): two wide cards with the show's picture. The arrows page through the list without
  * opening the app; a card opens the app as its icon does. Labels ("Today 21:00", "On air now") are
  * worked out from the saved dates whenever it's drawn, and it wakes itself (inexactly) when one of
  * them is due to change. The list comes from AiringSyncWorker.
@@ -170,9 +170,10 @@ public class AiringWidgetProvider extends AppWidgetProvider {
             views.setViewVisibility(R.id.dots, View.GONE);
         }
 
-        // A card's picture, sized to about its share of the widget.
-        int cardW = Math.max(40, (widthDp - 16 - 5 * (perPage - 1)) / perPage - 10);
-        int artH = Math.max(30, heightDp - 18 - 74);
+        // A card's picture, sized to about its share of the widget: it reaches the card's top and sides (no
+        // frame of the card's color round it), only the text below has a margin.
+        int cardW = Math.max(40, (widthDp - 16 - 5 * (perPage - 1)) / perPage);
+        int artH = Math.max(30, heightDp - 18 - 69);
         float density = context.getResources().getDisplayMetrics().density;
 
         for (int i = 0; i < perPage; i++) {
@@ -198,11 +199,13 @@ public class AiringWidgetProvider extends AppWidgetProvider {
             views.setTextViewText(slot[4], row.live ? "● " + when : when);
             views.setTextColor(slot[4], row.live ? LIVE : DATE);
             if (large) {
-                Bitmap art = store.art(row.show.art, Math.round(cardW * density), Math.round(artH * density), 7 * density);
+                Bitmap art = store.art(row.show.art, Math.round(cardW * density), Math.round(artH * density), 12 * density);
                 if (art != null) views.setImageViewBitmap(slot[5], art);
                 else views.setImageViewResource(slot[5], R.drawable.widget_art_placeholder);
                 String etitle = row.episode.title;
-                views.setViewVisibility(slot[6], etitle != null ? View.VISIBLE : View.GONE);
+                // No episode title: its line stays as empty room (INVISIBLE, not GONE), so every card's picture is
+                // the same height.
+                views.setViewVisibility(slot[6], etitle != null ? View.VISIBLE : View.INVISIBLE);
                 if (etitle != null) views.setTextViewText(slot[6], etitle);
             }
         }
