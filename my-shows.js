@@ -705,8 +705,12 @@ async function msBuildDetail(docId, show, token) {
         <span class="ms-ep-num">E${e.episode}</span>
         <span class="ms-ep-title">${esc(e.title && !/^Episode\s+\d+$/i.test(e.title) ? e.title : "")}</span>
         <span class="ms-ep-date">${isNext ? `<em>Up next</em>` : esc(date)}</span>
+        ${cls !== "f" ? `<span class="ep-rates" data-rate="${e.season}-${e.episode}"></span>` : ""}
       </div>`;
     }).join("") : `<p class="ms-empty">No episode list for this show.</p>`;
+    // Each episode's ratings, once they arrive (kept, so a season seen
+    // before fills at once).
+    fillEpisodeRatings(document.getElementById("msEps"), { imdb, tmdb }, list.filter(aired));
   };
   if (seasons.length) paintSeason(seasons.includes(startSeason) ? startSeason : seasons[0]);
   else document.getElementById("msEps").innerHTML = `<p class="ms-empty">No episode list for this show.</p>`;

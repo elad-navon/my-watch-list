@@ -218,6 +218,87 @@ const mdblistCache = OutsideSources.createMdblist({
   onRejected: () => showToast("MDBList rejected the API key - check it in Settings.", true),
 });
 
+// Each episode's ratings in the two episode lists (the "Xh Ym left" modal
+// and a show's page): IMDb (through OMDb) and Trakt (outside-sources.js,
+// a key each from Settings) and TMDB (from the season the page already
+// has). A rating shows only with enough people behind it - a brand-new or
+// unaired episode with two votes of 10 says nothing.
+const EPISODE_RATING_MIN_VOTES = { imdb: 100, trakt: 100, tmdb: 20 };
+const EPISODE_RATING_SOURCES = [["imdb", "IMDb"], ["trakt", "TRAKT"], ["tmdb", "TMDB"]];
+const episodeRatings = OutsideSources.createEpisodeRatings({
+  fetch: (...args) => fetch(...args),
+  omdbKey: () => getConfig().omdbKey,
+  traktKey: () => getConfig().traktKey,
+  persisted: { read: readPersistedCache, write: writePersistedCache },
+  onRejected: name => showToast(name === "omdb"
+    ? "OMDb refused the request (the key, or today's 1,000-request limit) - IMDb episode ratings are off for now."
+    : "Trakt rejected the Client ID - check it in Settings.", true),
+});
+
+// { [episode]: { imdb, trakt, tmdb } } for one season, each a rating out
+// of 10 that passed its vote minimum (others left out). `episodes`: that
+// season's episodes ({ episode, date }), for how soon to ask again.
+async function loadEpisodeRatings({ imdb, tmdb }, season, episodes) {
+  const now = Date.now();
+  const recent = episodes.some(e => {
+    const t = e.date ? Date.parse(e.date) : NaN;
+    return !isFinite(t) || now - t < 60 * 24 * 3600 * 1000;
+  });
+  const cache = sharedCache || (sharedCache = new TmdbCache());
+  const [outside, tmdbSeason] = await Promise.all([
+    episodeRatings.getSeason({ imdb, tmdb }, season, recent).catch(() => ({})),
+    tmdb != null ? cache.getSeason(tmdb, season).catch(() => null) : null,
+  ]);
+  const all = { ...outside };
+  for (const e of (tmdbSeason && tmdbSeason.episodes) || []) {
+    if (e.episode_number != null && e.vote_count > 0) (all[e.episode_number] = { ...all[e.episode_number] }).tmdb = { r: e.vote_average, v: e.vote_count };
+  }
+  const out = {};
+  for (const [ep, by] of Object.entries(all)) {
+    for (const [src] of EPISODE_RATING_SOURCES) {
+      const x = by[src];
+      if (x && x.r > 0 && x.v >= EPISODE_RATING_MIN_VOTES[src]) (out[ep] = out[ep] || {})[src] = x.r;
+    }
+  }
+  return out;
+}
+
+// The split pills (source name in its colour, then the rating). `slots`:
+// the sources to keep a place for even when this episode has no rating
+// from one, so the modal's rows line up in columns.
+function episodeRatingsHtml(by, slots) {
+  return EPISODE_RATING_SOURCES.filter(([src]) => (slots ? slots.has(src) : by[src] != null)).map(([src, label]) => by[src] != null
+    ? `<span class="ep-rate ${src}" title="${label === "TRAKT" ? "Trakt" : label} rating"><b>${label}</b><span>${by[src].toFixed(1)}</span></span>`
+    : `<span class="ep-rate ${src} is-empty" aria-hidden="true"><b>${label}</b><span>0.0</span></span>`).join("");
+}
+
+// Fills the `.ep-rates[data-rate="season-episode"]` places under `root`
+// once each season's ratings arrive (the list is on screen meanwhile).
+// `align`: keep each source in its own column (the modal's rows).
+function fillEpisodeRatings(root, ids, episodes, { align = false } = {}) {
+  if (!root || (!ids.imdb && ids.tmdb == null)) return;
+  const bySeason = new Map();
+  for (const e of episodes) if (e.season != null && e.episode != null) {
+    if (!bySeason.has(e.season)) bySeason.set(e.season, []);
+    bySeason.get(e.season).push(e);
+  }
+  const found = new Map(); // "s-e" -> { src: rating }
+  const paint = () => {
+    if (!root.isConnected) return;
+    const slots = align ? new Set([...found.values()].flatMap(by => Object.keys(by))) : null;
+    root.querySelectorAll(".ep-rates[data-rate]").forEach(el => {
+      const by = found.get(el.dataset.rate);
+      el.innerHTML = by ? episodeRatingsHtml(by, slots) : "";
+    });
+  };
+  for (const [season, eps] of bySeason) {
+    loadEpisodeRatings(ids, season, eps).then(byEp => {
+      for (const [ep, by] of Object.entries(byEp)) found.set(`${season}-${ep}`, by);
+      paint();
+    }).catch(() => {});
+  }
+}
+
 // Called right after a key is saved in Settings: one small request that says
 // whether MDBList accepts it (any known show works for that).
 async function checkMdblistKey(key) {

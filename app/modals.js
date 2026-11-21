@@ -110,6 +110,7 @@ function openEpisodesModal(arrIdx) {
         <span class="episode-code">${code}</span>
         <span class="episode-name" data-ep-key="${i}">${esc(episodeName(ep))}</span>
         ${isNext ? `<span class="episode-badge up-next">UP NEXT</span>` : badgeHtml(ep)}
+        ${ep.status !== "future" && code ? `<span class="ep-rates" data-rate="${ep.season}-${ep.episode}"></span>` : ""}
         ${right}
       </div>`;
   };
@@ -174,6 +175,9 @@ function openEpisodesModal(arrIdx) {
   if (!window.matchMedia("(max-width: 720px)").matches) {
     enrichEpisodesWithImdbLinks(row, listed);
   }
+  // Each episode's ratings, as each season's arrive.
+  fillEpisodeRatings(overlay.querySelector(".episodes-list"), { imdb: row.imdbId, tmdb: row.tmdbId },
+    listed.filter(ep => ep.status !== "future"), { align: true });
 }
 
 // The status mark at the start of each row in the episodes modal.

@@ -1614,7 +1614,7 @@
     cursor: pointer; line-height: 1; padding: 0 4px;
   }
   .modal-close-btn:hover { color: var(--text); }
-  .episodes-modal { max-width: 620px; display: flex; flex-direction: column; max-height: 82vh; padding: 20px 0 0; }
+  .episodes-modal { max-width: 760px; display: flex; flex-direction: column; max-height: 82vh; padding: 20px 0 0; }
   .episodes-modal-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin: 0 22px; }
   .episodes-modal-head .list-panel-header { margin: 0; flex: 1 1 auto; }
   .episodes-modal-subtitle { margin: 4px 22px 14px; font-size: 1rem; color: #ffffff; font-weight: 600; }
@@ -1673,6 +1673,29 @@
   .episode-row.is-future .episode-code,
   .episode-row.is-future .episode-name,
   .episode-row.is-future .episode-runtime { color: var(--muted); }
+  /* Each episode's ratings (app/show-data.js fillEpisodeRatings): a split
+     pill per source - its name on its colour, the rating on dark. The
+     colour says only where a rating comes from, never how good it is. */
+  .ep-rates { flex: 0 0 auto; display: inline-flex; gap: 5px; align-self: center; }
+  .ep-rates:empty { display: none; }
+  /* Both halves are centred boxes of a set height with line-height 1;
+     the font's capitals sit high in their line, hence 1px more above. */
+  .ep-rate { display: inline-flex; height: 18px; border: 1px solid; border-radius: 5px; overflow: hidden; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .ep-rate b, .ep-rate span { display: flex; align-items: center; line-height: 1; padding-top: 1px; }
+  .ep-rate b { font-size: 0.58rem; font-weight: 800; letter-spacing: 0.03em; padding-left: 4px; padding-right: 4px; }
+  .ep-rate span { font-size: 0.72rem; font-weight: 700; padding-left: 5px; padding-right: 5px; color: var(--text); background: rgba(255,255,255,0.04); }
+  /* Each source's colour, toned down from its brand's so three side by
+     side don't shout on the dark page. */
+  .ep-rate.imdb { border-color: #b8992e; } .ep-rate.imdb b { background: #b8992e; color: #15120a; }
+  .ep-rate.trakt { border-color: #a8403f; } .ep-rate.trakt b { background: #a8403f; color: #f3e6e6; }
+  .ep-rate.tmdb { border-color: #2f7f9a; } .ep-rate.tmdb b { background: #2f7f9a; color: #e6f3f7; }
+  .ep-rate.is-empty { visibility: hidden; }
+  .episode-row.is-watched .ep-rates { opacity: 0.75; }
+  /* A show page's episode tiles: two fit on one line, a third wraps. */
+  .ms-ep .ep-rates { gap: 4px; flex-wrap: wrap; margin-top: 3px; }
+  .ms-ep .ep-rate { height: 17px; }
+  .ms-ep .ep-rate b { font-size: 0.54rem; padding-left: 3px; padding-right: 3px; }
+  .ms-ep .ep-rate span { font-size: 0.68rem; padding-left: 4px; padding-right: 4px; }
   .episode-row.is-future .episode-name { font-style: italic; }
   .episode-row .episode-runtime.episode-airs { width: auto; min-width: 54px; }
   .episode-badge.up-next { background: transparent; color: var(--gold); border: 1px solid var(--gold); padding: 1px 6px; }

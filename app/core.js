@@ -163,6 +163,8 @@ const LS_CLIENT_ID_V2 = "simkl_client_id_v2";
 const LS_MDBLIST_KEY = "mdblist_api_key"; // optional: Rotten Tomatoes + Trakt ratings
 const LS_FANART_KEY = "fanart_api_key";   // optional: extra posters/banners in the image picker
 const LS_TVDB_KEY = "tvdb_api_key";       // optional: TheTVDB posters/backgrounds in the image picker
+const LS_OMDB_KEY = "omdb_api_key";       // optional: IMDb ratings for each episode (through OMDb)
+const LS_TRAKT_KEY = "trakt_client_id";    // optional: Trakt ratings for each episode
 const LS_TVDB_TOKEN = "tvdb_token";       // {key, token, at}: TheTVDB's month-long read token for that key
 const LS_IMAGE_MODE = "simkl_image_mode"; // "poster" | "banner"
 const LS_THEME = "simkl_theme"; // "light" | "dark"
@@ -340,6 +342,8 @@ function getConfig() {
     fanartKey: localStorage.getItem(LS_FANART_KEY) || "",
     tvdbKey: localStorage.getItem(LS_TVDB_KEY) || "",
     tmdbKey: localStorage.getItem(LS_TMDB_KEY) || "",
+    omdbKey: localStorage.getItem(LS_OMDB_KEY) || "",
+    traktKey: localStorage.getItem(LS_TRAKT_KEY) || "",
   };
 }
 
@@ -416,6 +420,12 @@ function showSettings(afterSaveCallback) {
         new episodes' air dates against <a href="https://thetvdb.com" target="_blank">TheTVDB</a>
         (<a href="https://thetvdb.com/api-information" target="_blank">get a free key</a>)</label>
       <input type="text" id="tvdbKeyInput" value="${cfg.tvdbKey}">
+      <label>OMDb API Key &mdash; optional, adds each episode's IMDb rating to the episode lists
+        (<a href="https://www.omdbapi.com/apikey.aspx" target="_blank">get a free key</a>)</label>
+      <input type="text" id="omdbKeyInput" value="${esc(cfg.omdbKey)}">
+      <label>Trakt Client ID &mdash; optional, adds each episode's Trakt rating to the episode lists
+        (<a href="https://trakt.tv/oauth/applications/new" target="_blank">create an app</a>; only the Client ID is needed)</label>
+      <input type="text" id="traktKeyInput" value="${esc(cfg.traktKey)}">
       ${librarySettingsHtml()}
       <div class="theme-toggle-wrap" style="margin-top:18px">
         <span class="nav-icon"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg></span>
@@ -445,6 +455,8 @@ function showSettings(afterSaveCallback) {
     const mdblistKey = document.getElementById("mdblistKeyInput").value.trim();
     const fanartKey = document.getElementById("fanartKeyInput").value.trim();
     const tvdbKey = document.getElementById("tvdbKeyInput").value.trim();
+    const omdbKey = document.getElementById("omdbKeyInput").value.trim();
+    const traktKey = document.getElementById("traktKeyInput").value.trim();
     if (!tmdbKey) {
       document.getElementById("settingsError").textContent = "The TMDB key is required.";
       return;
@@ -454,6 +466,9 @@ function showSettings(afterSaveCallback) {
     safeSetItem(LS_MDBLIST_KEY, mdblistKey);
     safeSetItem(LS_FANART_KEY, fanartKey);
     safeSetItem(LS_TVDB_KEY, tvdbKey);
+    safeSetItem(LS_OMDB_KEY, omdbKey);
+    safeSetItem(LS_TRAKT_KEY, traktKey);
+    episodeRatings.resetRejected(); // new keys: OMDb and Trakt are asked again
     imageSources.resetRejected(); // new keys: Fanart.tv and TheTVDB are asked again
     if (mdblistKey !== cfg.mdblistKey) {
       mdblistCache.disabled = false;

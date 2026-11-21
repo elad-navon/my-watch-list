@@ -1,6 +1,6 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { createTmdbClient, createMdblist, createImageSources, metahubImages } = require("../outside-sources.js");
+const { createTmdbClient, createMdblist, createImageSources, createEpisodeRatings, metahubImages } = require("../outside-sources.js");
 
 // A kept-copy store like the page's (readPersistedCache / writePersistedCache).
 function persisted(initial = {}) {
@@ -207,4 +207,56 @@ test("findArt: the first banner and poster from Fanart.tv, then TheTVDB, then TV
   assert.match(art.poster, /tvm%2Fp\.jpg/, "TVMaze's poster, not Metahub's link");
   const none = imageSources({ store: persisted(), keys: { fanart: "", tvdb: "" }, tvmaze: async () => json({}, 404) });
   assert.deepEqual(await none.findArt({ external_ids: {}, name: "X", first_air_date: "2026-01-01" }), { banner: null, poster: null });
+});
+
+// ---- Episode ratings (OMDb + Trakt) -------------------------------------------
+function ratingsFetch(log, { omdbStatus = 200 } = {}) {
+  return async (url, opts) => {
+    log.push(url);
+    if (url.includes("omdbapi.com")) {
+      if (omdbStatus !== 200) return json({ Response: "False", Error: "Invalid API key!" }, omdbStatus);
+      if (url.includes("Season=2")) return json({ Response: "True", Episodes: [
+        { Episode: "1", imdbID: "tt1", imdbRating: "9.0", Released: "2020-01-01" },
+        { Episode: "2", imdbID: "tt2", imdbRating: "N/A", Released: "2020-01-08" },
+      ] });
+      if (url.includes("i=tt1&")) return json({ Response: "True", imdbRating: "9.0", imdbVotes: "10,827" });
+    }
+    if (url.includes("api.trakt.tv")) {
+      assert.equal(opts.headers["trakt-api-key"], "T");
+      if (url.includes("/search/tmdb/77")) return json([{ show: { ids: { trakt: 555 } } }]);
+      if (url.includes("/shows/555/seasons/2")) return json([{ number: 1, rating: 8.29, votes: 1144 }, { number: 2, rating: 8.31, votes: 965 }, { number: 3, rating: 0, votes: 0 }]);
+    }
+    return json(null, 404);
+  };
+}
+
+test("episode ratings: IMDb with its vote count (unrated episodes not asked), Trakt by TMDB id; kept", async () => {
+  const log = [];
+  const store = persisted();
+  const r = createEpisodeRatings({ fetch: ratingsFetch(log), omdbKey: () => "O", traktKey: () => "T", persisted: store, now: () => Date.parse("2026-11-21") });
+  const got = await r.getSeason({ imdb: "tt9", tmdb: 77 }, 2, false);
+  assert.deepEqual(got, { 1: { imdb: { r: 9, v: 10827 }, trakt: { r: 8.29, v: 1144 } }, 2: { trakt: { r: 8.31, v: 965 } } });
+  assert.equal(log.filter(u => u.includes("i=tt2&")).length, 0);
+  assert.deepEqual(store.m.get("traktid:77"), { id: 555 });
+  const again = createEpisodeRatings({ fetch: ratingsFetch(log), omdbKey: () => "O", traktKey: () => "T", persisted: store });
+  const before = log.length;
+  assert.deepEqual(await again.getSeason({ imdb: "tt9", tmdb: 77 }, 2, false), got);
+  assert.equal(log.length, before);
+});
+
+test("episode ratings: no key, no request; a refused OMDb key is said once and Trakt still answers", async () => {
+  const log = [];
+  const none = createEpisodeRatings({ fetch: ratingsFetch(log), omdbKey: () => "", traktKey: () => "", persisted: persisted() });
+  assert.deepEqual(await none.getSeason({ imdb: "tt9", tmdb: 77 }, 2, false), {});
+  assert.equal(log.length, 0);
+  const said = [];
+  const r = createEpisodeRatings({ fetch: ratingsFetch(log, { omdbStatus: 401 }), omdbKey: () => "O", traktKey: () => "T", persisted: persisted(), onRejected: n => said.push(n) });
+  const got = await r.getSeason({ imdb: "tt9", tmdb: 77 }, 2, true);
+  assert.deepEqual(Object.keys(got), ["1", "2"]);
+  assert.equal(got[1].imdb, undefined);
+  await r.getSeason({ imdb: "tt9", tmdb: 77 }, 3, true);
+  assert.deepEqual(said, ["omdb"]);
+  assert.ok(r.rejected("omdb"));
+  r.resetRejected();
+  assert.ok(!r.rejected("omdb"));
 });

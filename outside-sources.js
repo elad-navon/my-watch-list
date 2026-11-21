@@ -328,5 +328,135 @@
     };
   }
 
-  return { createTmdbClient, createMdblist, createImageSources, metahubImages, resizedImage, isImdbId, TMDB_TTL };
+  // ---- Episode ratings: IMDb (through OMDb) and Trakt ----------------------
+  // getSeason({ imdb, tmdb }, season, recent) -> { [episode]: { imdb: {r, v},
+  // trakt: {r, v} } } - r out of 10, v the number of people who rated. Either
+  // source is left out without its key (or after the key was refused).
+  // - OMDb: one request per season lists the episodes with their IMDb rating
+  //   but not the vote count, so each rated episode is asked once more for
+  //   its votes. OMDb lags IMDb by a few weeks on new episodes (no rating
+  //   yet); Trakt is current, which is why both are shown.
+  // - Trakt: the show's Trakt id from its TMDB id, then one request per
+  //   season (ratings and votes together).
+  // `recent` (an episode of that season aired in the last two months, or is
+  // still to come): read again after a day, else after a week.
+  const RATING_RECENT_MS = 60 * DAY;
+  function createEpisodeRatings({ fetch, omdbKey, traktKey, persisted, onRejected = () => {}, parallel = 4, now = () => Date.now() }) {
+    const maps = { omdbSeason: new Map(), omdbEp: new Map(), traktId: new Map(), traktSeason: new Map() };
+    const rejected = { omdb: false, trakt: false };
+    let active = 0;
+    const waiting = [];
+    async function limited(run) {
+      if (active >= parallel) await new Promise(r => waiting.push(r));
+      active++;
+      try { return await run(); } finally {
+        active--;
+        const next = waiting.shift();
+        if (next) next();
+      }
+    }
+    const refuse = name => {
+      if (!rejected[name]) onRejected(name);
+      rejected[name] = true;
+    };
+    const num = v => {
+      const n = parseFloat(String(v).replace(/,/g, ""));
+      return isFinite(n) ? n : null;
+    };
+
+    async function omdbGet(params) {
+      const k = omdbKey();
+      if (!k || rejected.omdb) return null;
+      return limited(async () => {
+        const res = await fetch(`https://www.omdbapi.com/?${params}&apikey=${encodeURIComponent(k)}`);
+        if (res.status === 401) { refuse("omdb"); return null; }
+        if (!res.ok) return null;
+        const d = await res.json();
+        if (d && d.Response === "False" && /key|limit/i.test(d.Error || "")) { refuse("omdb"); return null; }
+        return d;
+      });
+    }
+    // { [episode]: { id, r, released } } - only episodes IMDb has rated.
+    const omdbSeason = (imdb, season, recent) => memo(maps.omdbSeason, `${imdb}:${season}`, () =>
+      keptOrFetched(persisted, `omdbseason:${imdb}:${season}`, recent ? DAY : 7 * DAY, async () => {
+        const d = await omdbGet(`i=${encodeURIComponent(imdb)}&Season=${encodeURIComponent(season)}`);
+        if (!d) return null;
+        const out = {};
+        for (const e of d.Episodes || []) {
+          const r = num(e.imdbRating);
+          if (r != null && e.imdbID && e.Episode) out[e.Episode] = { id: e.imdbID, r, released: e.Released || null };
+        }
+        return out;
+      }));
+    const omdbEpisode = (id, recent) => memo(maps.omdbEp, id, () =>
+      keptOrFetched(persisted, `omdbep:${id}`, recent ? DAY : 7 * DAY, async () => {
+        const d = await omdbGet(`i=${encodeURIComponent(id)}`);
+        return d && d.Response !== "False" ? { r: num(d.imdbRating), v: num(d.imdbVotes) } : null;
+      }));
+    async function imdbRatings(imdb, season, recent) {
+      if (!isImdbId(imdb) || !omdbKey() || rejected.omdb) return {};
+      const list = await omdbSeason(imdb, season, recent);
+      if (!list) return {};
+      const out = {};
+      await Promise.all(Object.entries(list).map(async ([ep, e]) => {
+        const released = e.released ? Date.parse(e.released) : NaN;
+        const epRecent = !isFinite(released) || now() - released < RATING_RECENT_MS;
+        const got = await omdbEpisode(e.id, epRecent);
+        if (got && got.r != null) out[ep] = { r: got.r, v: got.v || 0 };
+      }));
+      return out;
+    }
+
+    async function traktGet(path) {
+      const k = traktKey();
+      if (!k || rejected.trakt) return null;
+      return limited(async () => {
+        const res = await fetch(`https://api.trakt.tv${path}`, {
+          headers: { "Content-Type": "application/json", "trakt-api-version": "2", "trakt-api-key": k },
+        });
+        if (res.status === 401 || res.status === 403) { refuse("trakt"); return null; }
+        if (res.status === 404) return [];
+        return res.ok ? res.json() : null;
+      });
+    }
+    // { id } - 0 when Trakt doesn't know the show (kept, not asked every time).
+    const traktId = tmdb => memo(maps.traktId, tmdb, () =>
+      keptOrFetched(persisted, `traktid:${tmdb}`, 7 * DAY, async () => {
+        const d = await traktGet(`/search/tmdb/${encodeURIComponent(tmdb)}?type=show`);
+        if (!d) return null;
+        const hit = d.find(x => x && x.show && x.show.ids);
+        return { id: hit ? hit.show.ids.trakt : 0 };
+      }));
+    const traktSeason = (id, season, recent) => memo(maps.traktSeason, `${id}:${season}`, () =>
+      keptOrFetched(persisted, `traktseason:${id}:${season}`, recent ? DAY : 7 * DAY, async () => {
+        const d = await traktGet(`/shows/${encodeURIComponent(id)}/seasons/${encodeURIComponent(season)}?extended=full`);
+        if (!d) return null;
+        const out = {};
+        for (const e of d) if (e && e.number != null && e.votes > 0) out[e.number] = { r: e.rating, v: e.votes };
+        return out;
+      }));
+    async function traktRatings(tmdb, season, recent) {
+      if (tmdb == null || !traktKey() || rejected.trakt) return {};
+      const t = await traktId(tmdb);
+      if (!t || !t.id) return {};
+      return (await traktSeason(t.id, season, recent)) || {};
+    }
+
+    return {
+      async getSeason({ imdb, tmdb }, season, recent) {
+        const [i, t] = await Promise.all([
+          imdbRatings(imdb, season, recent).catch(() => ({})),
+          traktRatings(tmdb, season, recent).catch(() => ({})),
+        ]);
+        const out = {};
+        for (const [ep, v] of Object.entries(i)) (out[ep] = out[ep] || {}).imdb = v;
+        for (const [ep, v] of Object.entries(t)) (out[ep] = out[ep] || {}).trakt = v;
+        return out;
+      },
+      rejected: name => !!rejected[name],
+      resetRejected: () => { rejected.omdb = false; rejected.trakt = false; },
+    };
+  }
+
+  return { createTmdbClient, createMdblist, createImageSources, createEpisodeRatings, metahubImages, resizedImage, isImdbId, TMDB_TTL };
 });
