@@ -29,6 +29,9 @@ Google sign-in. Only your account can read or write it.
   [TMDB](https://www.themoviedb.org) as the fallback.
 - TMDB: artwork, runtimes, cast and details.
 - [MDBList](https://mdblist.com) and TMDB: ratings.
+- Each episode's ratings in the episode lists: IMDb (through
+  [OMDb](https://www.omdbapi.com)), [Trakt](https://trakt.tv) and TMDB, each
+  shown only with enough votes behind it.
 - Exact hours from yes's TV guide (Israeli shows) and SIMKL (streaming
   episodes listed by date only).
 - TheTVDB: a second opinion on air dates, and more artwork along with
@@ -44,6 +47,10 @@ Google sign-in. Only your account can read or write it.
    - **Fanart.tv API key**: more posters and banners, in the image picker and
      for shows TMDB has no pictures for.
    - **TheTVDB API key**: the same, plus the second opinion on air dates.
+   - **OMDb API key**: each episode's IMDb rating in the episode lists
+     (free, 1,000 requests a day).
+   - **Trakt Client ID** (create an app at trakt.tv; only the Client ID is
+     needed): each episode's Trakt rating in the episode lists.
    - **SIMKL Client ID** (an app of type "TV, devices & command line"): the
      bridge signs in to SIMKL with it for exact air times. See below.
 
@@ -226,7 +233,7 @@ fetched.
 | `library-adapter.js` | Answers the page's questions from the library, in the item shape the drawing code was written against. |
 | `episode-source.js` | Episode lists from TVMaze and TMDB: cached, rate-limited, linked across sources. |
 | `air-time-chain.js`, `yes-times.js`, `air-times.js` | Air times: the order of the steps, yes's guide, SIMKL's times. |
-| `outside-sources.js` | TMDB's details, MDBList's ratings, extra pictures from Fanart.tv, TheTVDB, TVMaze and Metahub. |
+| `outside-sources.js` | TMDB's details, MDBList's ratings, each episode's IMDb (OMDb) and Trakt ratings, extra pictures from Fanart.tv, TheTVDB, TVMaze and Metahub. |
 | `bridge-status.js` | The bridge's health report: written by the bridge, shown by the site. |
 | `show-taker.js` | Takes newly watched episodes into the library (used by the Emby bridge). |
 | `app/*.js` | The page, as ten plain scripts loaded in order from `index.html`: `core` (settings, plumbing, element actions), `library`, `show-data`, `airing`, `search`, `modals`, `images`, `panels`, `render`, `main`. |

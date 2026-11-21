@@ -209,7 +209,7 @@ function ensureLibrary() {
 // you like the library): a device that has them saves them there, and a new
 // one - another browser, or the Android app - gets them from there once
 // signed in, instead of having them typed again.
-const ACCOUNT_KEY_FIELDS = { tmdbKey: LS_TMDB_KEY, mdblistKey: LS_MDBLIST_KEY, fanartKey: LS_FANART_KEY, tvdbKey: LS_TVDB_KEY, clientId: LS_CLIENT_ID, clientIdV2: LS_CLIENT_ID_V2 };
+const ACCOUNT_KEY_FIELDS = { tmdbKey: LS_TMDB_KEY, mdblistKey: LS_MDBLIST_KEY, fanartKey: LS_FANART_KEY, tvdbKey: LS_TVDB_KEY, omdbKey: LS_OMDB_KEY, traktKey: LS_TRAKT_KEY, clientId: LS_CLIENT_ID, clientIdV2: LS_CLIENT_ID_V2 };
 function localAccountKeys() {
   const cfg = getConfig();
   return Object.fromEntries(Object.keys(ACCOUNT_KEY_FIELDS).map(k => [k, cfg[k] || ""]));
