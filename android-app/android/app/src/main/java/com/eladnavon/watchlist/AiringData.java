@@ -180,10 +180,12 @@ final class AiringData {
         return next;
     }
 
-    /** "Today 21:00", "Tomorrow 03:00", "Thu 21:00", "Nov 12 21:00"; a date only: "Today", "Thu, Nov 5", "Nov 12". */
+    /** "Today 21:00", "Tomorrow 03:00", "Thu 21:00", "Nov 12 21:00"; a date only: "Today", "Thu, Nov 5", "Nov 12".
+     *  On the air now: "On air until 22:15" - when the broadcast ends (its runtime, else DEFAULT_MINUTES). */
     static String dateLabel(Context context, Row row, long now) {
-        if (row.live) return "On air now";
         Episode ep = row.episode;
+        boolean h24 = android.text.format.DateFormat.is24HourFormat(context);
+        if (row.live) return ep.hasTime ? "On air until " + format(ep.end(), h24 ? "HH:mm" : "h:mm a") : "On air now";
         Calendar target = Calendar.getInstance();
         target.setTimeInMillis(ep.start);
         int days = daysBetween(now, ep.start);
@@ -194,7 +196,6 @@ final class AiringData {
         else if (days > 1 && days < 7) day = format(ep.start, ep.hasTime ? "EEE" : "EEE, MMM d");
         else day = format(ep.start, sameYear ? "MMM d" : "MMM d, yyyy");
         if (!ep.hasTime) return day;
-        boolean h24 = android.text.format.DateFormat.is24HourFormat(context);
         return day + " " + format(ep.start, h24 ? "HH:mm" : "h:mm a");
     }
 
