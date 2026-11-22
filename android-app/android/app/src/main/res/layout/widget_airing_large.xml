@@ -28,11 +28,11 @@
                 android:layout_marginTop="4dp" android:fontFamily="sans-serif-condensed" android:textStyle="bold" android:textColor="#FFFFFFFF"
                 android:textSize="14dp" android:minLines="2" android:maxLines="2" android:ellipsize="end" android:lineSpacingMultiplier="0.92" android:includeFontPadding="false" />
             <TextView android:id="@+id/card0_ep" android:layout_marginLeft="6dp" android:layout_marginRight="6dp" android:layout_width="match_parent" android:layout_height="14dp"
-                android:layout_marginTop="2dp" android:textColor="#FFFBBF24" android:textSize="11dp" android:textStyle="bold" android:singleLine="true" android:includeFontPadding="false" />
+                android:layout_marginTop="2dp" android:textColor="#FFFCD34D" android:textSize="11dp" android:textStyle="bold" android:singleLine="true" android:includeFontPadding="false" />
             <TextView android:id="@+id/card0_date" android:layout_marginLeft="6dp" android:layout_marginRight="6dp" android:layout_width="match_parent" android:layout_height="14dp"
-                android:layout_marginTop="1dp" android:textColor="#BDFFFFFF" android:textSize="10.5dp" android:singleLine="true" android:ellipsize="end" android:includeFontPadding="false" />
+                android:layout_marginTop="1dp" android:textColor="#D0FFFFFF" android:textSize="10.5dp" android:singleLine="true" android:ellipsize="end" android:includeFontPadding="false" />
             <TextView android:id="@+id/card0_etitle" android:layout_marginLeft="6dp" android:layout_marginRight="6dp" android:layout_width="match_parent" android:layout_height="13dp"
-                android:layout_marginTop="1dp" android:textColor="#94FFFFFF" android:textSize="10dp" android:singleLine="true" android:ellipsize="end" android:includeFontPadding="false" />
+                android:layout_marginTop="1dp" android:textColor="#A0FFFFFF" android:textSize="10dp" android:singleLine="true" android:ellipsize="end" android:includeFontPadding="false" />
         </LinearLayout>
         <LinearLayout android:id="@+id/card1" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1"
             android:layout_marginLeft="2dp" android:background="@drawable/widget_card" android:clipToOutline="true" android:orientation="vertical" android:paddingBottom="5dp">
@@ -52,11 +52,11 @@
                 android:layout_marginTop="4dp" android:fontFamily="sans-serif-condensed" android:textStyle="bold" android:textColor="#FFFFFFFF"
                 android:textSize="14dp" android:minLines="2" android:maxLines="2" android:ellipsize="end" android:lineSpacingMultiplier="0.92" android:includeFontPadding="false" />
             <TextView android:id="@+id/card1_ep" android:layout_marginLeft="6dp" android:layout_marginRight="6dp" android:layout_width="match_parent" android:layout_height="14dp"
-                android:layout_marginTop="2dp" android:textColor="#FFFBBF24" android:textSize="11dp" android:textStyle="bold" android:singleLine="true" android:includeFontPadding="false" />
+                android:layout_marginTop="2dp" android:textColor="#FFFCD34D" android:textSize="11dp" android:textStyle="bold" android:singleLine="true" android:includeFontPadding="false" />
             <TextView android:id="@+id/card1_date" android:layout_marginLeft="6dp" android:layout_marginRight="6dp" android:layout_width="match_parent" android:layout_height="14dp"
-                android:layout_marginTop="1dp" android:textColor="#BDFFFFFF" android:textSize="10.5dp" android:singleLine="true" android:ellipsize="end" android:includeFontPadding="false" />
+                android:layout_marginTop="1dp" android:textColor="#D0FFFFFF" android:textSize="10.5dp" android:singleLine="true" android:ellipsize="end" android:includeFontPadding="false" />
             <TextView android:id="@+id/card1_etitle" android:layout_marginLeft="6dp" android:layout_marginRight="6dp" android:layout_width="match_parent" android:layout_height="13dp"
-                android:layout_marginTop="1dp" android:textColor="#94FFFFFF" android:textSize="10dp" android:singleLine="true" android:ellipsize="end" android:includeFontPadding="false" />
+                android:layout_marginTop="1dp" android:textColor="#A0FFFFFF" android:textSize="10dp" android:singleLine="true" android:ellipsize="end" android:includeFontPadding="false" />
         </LinearLayout>
         <LinearLayout android:id="@+id/card2" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:visibility="gone"
             android:background="@drawable/widget_card" android:clipToOutline="true" android:orientation="vertical" android:paddingBottom="5dp">
@@ -76,11 +76,11 @@
                 android:layout_marginTop="4dp" android:fontFamily="sans-serif-condensed" android:textStyle="bold" android:textColor="#FFFFFFFF"
                 android:textSize="14dp" android:minLines="2" android:maxLines="2" android:ellipsize="end" android:lineSpacingMultiplier="0.92" android:includeFontPadding="false" />
             <TextView android:id="@+id/card2_ep" android:layout_marginLeft="6dp" android:layout_marginRight="6dp" android:layout_width="match_parent" android:layout_height="14dp"
-                android:layout_marginTop="2dp" android:textColor="#FFFBBF24" android:textSize="11dp" android:textStyle="bold" android:singleLine="true" android:includeFontPadding="false" />
+                android:layout_marginTop="2dp" android:textColor="#FFFCD34D" android:textSize="11dp" android:textStyle="bold" android:singleLine="true" android:includeFontPadding="false" />
             <TextView android:id="@+id/card2_date" android:layout_marginLeft="6dp" android:layout_marginRight="6dp" android:layout_width="match_parent" android:layout_height="14dp"
-                android:layout_marginTop="1dp" android:textColor="#BDFFFFFF" android:textSize="10.5dp" android:singleLine="true" android:ellipsize="end" android:includeFontPadding="false" />
+                android:layout_marginTop="1dp" android:textColor="#D0FFFFFF" android:textSize="10.5dp" android:singleLine="true" android:ellipsize="end" android:includeFontPadding="false" />
             <TextView android:id="@+id/card2_etitle" android:layout_marginLeft="6dp" android:layout_marginRight="6dp" android:layout_width="match_parent" android:layout_height="13dp"
-                android:layout_marginTop="1dp" android:textColor="#94FFFFFF" android:textSize="10dp" android:singleLine="true" android:ellipsize="end" android:includeFontPadding="false" />
+                android:layout_marginTop="1dp" android:textColor="#A0FFFFFF" android:textSize="10dp" android:singleLine="true" android:ellipsize="end" android:includeFontPadding="false" />
         </LinearLayout>
         </LinearLayout>
     </LinearLayout>
@@ -106,7 +106,7 @@
 
     <TextView android:id="@+id/stale" android:layout_width="14dp" android:layout_height="14dp" android:layout_gravity="top|left"
         android:layout_margin="4dp" android:background="@drawable/widget_stale" android:gravity="center" android:text="!"
-        android:textColor="#FFFBBF24" android:textSize="9dp" android:textStyle="bold" android:includeFontPadding="false" android:visibility="gone" />
+        android:textColor="#FFFCD34D" android:textSize="9dp" android:textStyle="bold" android:includeFontPadding="false" android:visibility="gone" />
 
     <LinearLayout android:id="@+id/msg" android:layout_width="match_parent" android:layout_height="match_parent"
         android:orientation="horizontal" android:gravity="center" android:paddingLeft="16dp" android:paddingRight="16dp" android:visibility="gone">

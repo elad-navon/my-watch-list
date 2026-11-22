@@ -31,9 +31,9 @@ public class AiringWidgetProvider extends AppWidgetProvider {
     private static final String EXTRA_DIR = "dir";
     private static final int LARGE_MIN_HEIGHT_DP = 110;
 
-    private static final int ACCENT = 0xFFFBBF24;
+    private static final int ACCENT = 0xFFFCD34D;
     private static final int LIVE = 0xFFFCA5A5;
-    private static final int DATE = 0xBDFFFFFF;
+    private static final int DATE = 0xD0FFFFFF;
 
     private static final int[][] SMALL = {
         { R.id.card0, R.id.card0_title, R.id.card0_ep, R.id.card0_badge, R.id.card0_date },
@@ -215,7 +215,7 @@ public class AiringWidgetProvider extends AppWidgetProvider {
         for (int i = 0; i < pages && i < 12; i++) {
             int start = sb.length();
             sb.append(i == 0 ? "●" : " ●");
-            sb.setSpan(new ForegroundColorSpan(i == page ? ACCENT : 0x38FFFFFF), start, sb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            sb.setSpan(new ForegroundColorSpan(i == page ? ACCENT : 0x50FFFFFF), start, sb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         }
         return sb;
     }
