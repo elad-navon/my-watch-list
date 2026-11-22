@@ -4,11 +4,6 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.BitmapShader;
-import android.graphics.Canvas;
-import android.graphics.Paint;
-import android.graphics.RectF;
-import android.graphics.Shader;
 import android.util.Log;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -174,29 +169,14 @@ final class AiringStore {
         }
     }
 
-    /** The show's picture cut to `width` x `height` px, its top corners rounded as the card's, or null if it isn't on the phone. */
-    Bitmap art(String url, int width, int height, float radius) {
-        if (url == null || width <= 0 || height <= 0) return null;
+    /** The show's picture as kept on the phone (at most ART_MAX_WIDTH wide), or null if it isn't there. The widget
+     *  crops it to its place (centerCrop) and rounds the top corners with pieces laid over it, so it's never
+     *  stretched and every corner is alike, whatever size the launcher gives the widget. */
+    Bitmap art(String url) {
+        if (url == null) return null;
         File file = artFile(url);
         if (!file.exists()) return null;
-        Bitmap src = BitmapFactory.decodeFile(file.getPath());
-        if (src == null) return null;
-        // Center-crop to the card's shape, then round the top corners (a widget can't clip an image itself);
-        // the bottom ones stay square, where the text begins.
-        float scale = Math.max(width / (float) src.getWidth(), height / (float) src.getHeight());
-        float dx = (width - src.getWidth() * scale) / 2f, dy = (height - src.getHeight() * scale) / 2f;
-        Bitmap out = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
-        BitmapShader shader = new BitmapShader(src, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP);
-        android.graphics.Matrix m = new android.graphics.Matrix();
-        m.setScale(scale, scale);
-        m.postTranslate(dx, dy);
-        shader.setLocalMatrix(m);
-        Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.FILTER_BITMAP_FLAG);
-        paint.setShader(shader);
-        Canvas canvas = new Canvas(out);
-        canvas.drawRoundRect(new RectF(0, 0, width, height), radius, radius, paint);
-        canvas.drawRect(new RectF(0, height - radius, width, height), paint);
-        return out;
+        return BitmapFactory.decodeFile(file.getPath());
     }
 
     private static String sha1(String s) {

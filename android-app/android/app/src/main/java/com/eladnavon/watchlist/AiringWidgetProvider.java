@@ -31,9 +31,9 @@ public class AiringWidgetProvider extends AppWidgetProvider {
     private static final String EXTRA_DIR = "dir";
     private static final int LARGE_MIN_HEIGHT_DP = 110;
 
-    private static final int ACCENT = 0xFFFBBF24;
+    private static final int ACCENT = 0xFFFCD34D;
     private static final int LIVE = 0xFFFCA5A5;
-    private static final int DATE = 0xBDFFFFFF;
+    private static final int DATE = 0xD0FFFFFF;
 
     private static final int[][] SMALL = {
         { R.id.card0, R.id.card0_title, R.id.card0_ep, R.id.card0_badge, R.id.card0_date },
@@ -105,9 +105,8 @@ public class AiringWidgetProvider extends AppWidgetProvider {
 
     private static void draw(Context context, AppWidgetManager manager, int id) {
         Bundle options = manager.getAppWidgetOptions(id);
-        // In portrait a widget gets its min width and max height; that's how it's laid out on most phones.
+        // In portrait a widget gets its max height; that's how it's laid out on most phones.
         int heightDp = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT, 0);
-        int widthDp = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, 0);
         boolean large = heightDp >= LARGE_MIN_HEIGHT_DP;
         RemoteViews views = new RemoteViews(context.getPackageName(), large ? R.layout.widget_airing_large : R.layout.widget_airing_small);
 
@@ -170,12 +169,6 @@ public class AiringWidgetProvider extends AppWidgetProvider {
             views.setViewVisibility(R.id.dots, View.GONE);
         }
 
-        // A card's picture, sized to about its share of the widget: it reaches the card's top and sides (no
-        // frame of the card's color round it), only the text below has a margin.
-        int cardW = Math.max(40, (widthDp - 16 - 5 * (perPage - 1)) / perPage);
-        int artH = Math.max(30, heightDp - 18 - 69);
-        float density = context.getResources().getDisplayMetrics().density;
-
         for (int i = 0; i < perPage; i++) {
             int[] slot = slots[i];
             int index = page * perPage + i;
@@ -199,7 +192,8 @@ public class AiringWidgetProvider extends AppWidgetProvider {
             views.setTextViewText(slot[4], row.live ? "● " + when : when);
             views.setTextColor(slot[4], row.live ? LIVE : DATE);
             if (large) {
-                Bitmap art = store.art(row.show.art, Math.round(cardW * density), Math.round(artH * density), 12 * density);
+                // It reaches the card's top and sides (no frame of the card's color round it); only the text below has a margin.
+                Bitmap art = store.art(row.show.art);
                 if (art != null) views.setImageViewBitmap(slot[5], art);
                 else views.setImageViewResource(slot[5], R.drawable.widget_art_placeholder);
                 String etitle = row.episode.title;
@@ -221,7 +215,7 @@ public class AiringWidgetProvider extends AppWidgetProvider {
         for (int i = 0; i < pages && i < 12; i++) {
             int start = sb.length();
             sb.append(i == 0 ? "●" : " ●");
-            sb.setSpan(new ForegroundColorSpan(i == page ? ACCENT : 0x38FFFFFF), start, sb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            sb.setSpan(new ForegroundColorSpan(i == page ? ACCENT : 0x50FFFFFF), start, sb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         }
         return sb;
     }
