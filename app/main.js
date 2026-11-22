@@ -55,10 +55,13 @@ async function main() {
   subtitle.textContent = "Fetching your My List\u2026";
 
   const gen = ++panelsLoadGen;
+  const timing = { start: performance.now(), firstOfPage: !loadTimingDone };
+  loadTimingDone = true;
   watchingListLoad = null;
   try {
     sharedCache = new TmdbCache();
     if (!(await openLibrary())) { endPanelsSnapshot(); return; } // the sign-in screen is showing
+    timing.library = performance.now();
     saveKeysToAccount(); // in the background; this device's keys for the next one
     sharedEpisodeCache = newEpisodeCache();
     if (!panelsFromSnapshot) showLoaderSoon();
@@ -85,11 +88,34 @@ async function main() {
       renderRows(rows, totalEps, totalMinutes, recentlyWatched, planToWatchRows, airingNextRows);
       fadeInPage();
     }
-    refreshAfterQuickPass(gen);
+    timing.quick = performance.now();
+    refreshAfterQuickPass(gen, timing);
   } catch (err) {
     endPanelsSnapshot();
     showError(err);
   }
+}
+
+// How long a load took, in the console (and the last 30 in localStorage,
+// "load_timings"): from the page opening (or from main() for a later
+// load) to signed in with the library read, to the panels usable (the
+// quick pass), to the full pass done - when the page used to open.
+let loadTimingDone = false;
+const LS_LOAD_TIMINGS = "load_timings";
+function logLoadTiming(t, full) {
+  const from = t.firstOfPage ? 0 : t.start;
+  const sec = ms => Math.round((ms - from) / 100) / 10;
+  const entry = {
+    at: new Date().toISOString(), open: t.firstOfPage,
+    library: sec(t.library), usable: sec(t.quick), full: sec(full),
+    shows: library && library.store ? library.store.view().size : null,
+  };
+  console.info(`[load] ${t.firstOfPage ? "page open" : "reload"}: library ${entry.library}s, usable ${entry.usable}s, full ${entry.full}s (${entry.shows} shows)`);
+  try {
+    const list = JSON.parse(localStorage.getItem(LS_LOAD_TIMINGS) || "[]");
+    list.push(entry);
+    safeSetItem(LS_LOAD_TIMINGS, JSON.stringify(list.slice(-30)));
+  } catch (e) { /* only a log */ }
 }
 
 // Every panel row list in one go: Ready to Watch (with Recently Watched),
@@ -106,7 +132,7 @@ async function loadPanelRows(episodeCache) {
 // The full pass, right after the quick one: everything past its time is
 // asked for again, and the panels are drawn again in place (scroll kept,
 // no loading screen) - unless a newer load or a change came first.
-async function refreshAfterQuickPass(gen) {
+async function refreshAfterQuickPass(gen, timing) {
   try {
     sharedCache = new TmdbCache(); // its answers from the quick pass go
     mdblistCache.forget();
@@ -124,6 +150,7 @@ async function refreshAfterQuickPass(gen) {
     const missing = library.adapter.failures();
     if (missing.length) showToast(`Couldn't load the episode list of ${missing.length} show${missing.length === 1 ? "" : "s"} (${missing.slice(0, 3).join(", ")}${missing.length > 3 ? "…" : ""}) - try Refresh later.`, true);
     autoStartAiredPremieres(fresh.planToWatchRows);
+    if (timing) logLoadTiming(timing, performance.now());
   } catch (err) {
     console.warn("Full refresh after the quick load skipped:", err.message);
   }
