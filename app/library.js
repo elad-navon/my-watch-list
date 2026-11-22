@@ -53,6 +53,7 @@ function libraryEpisodeSource() {
     tmdbGet: libraryTmdbGet,
     cache: libraryListCache(),
     useUpdates: true,
+    quick: () => LibraryAdapter.staleReads(),
   });
 }
 
@@ -277,7 +278,8 @@ async function openLibrary() {
       showMeta: libraryShowMeta,
       airTimes: libraryAirTimeChain(),
       onProgress: (done, total) => {
-        if (total > 5 && done < total) subtitle.textContent = `Loading episode lists… ${done}/${total}`;
+        // Only on the loading screen: a refresh behind the page stays out of sight.
+        if (total > 5 && done < total && app.querySelector(".film-loader")) subtitle.textContent = `Loading episode lists… ${done}/${total}`;
       },
     });
     // What's playing on Emby (tools/emby-bridge), for the top cards.

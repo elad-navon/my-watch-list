@@ -203,7 +203,7 @@
   // older than that is fetched again regardless.
   const UPDATES_WINDOW_MS = 6 * DAY_MS;
 
-  // createEpisodeSource({ fetch, tmdbGet, cache, ttlMs, minGapMs, useUpdates })
+  // createEpisodeSource({ fetch, tmdbGet, cache, ttlMs, minGapMs, useUpdates, quick })
   // - fetch: window.fetch (or a stand-in in tests)
   // - tmdbGet(path, params): resolves to TMDB JSON or null (404)
   // - cache: optional { get(key, ttlMs) -> value|undefined, set(key, value) };
@@ -211,7 +211,10 @@
   // - useUpdates: ask TVMaze once per session which shows changed this week
   //   (one request), and keep every other cached episode list - so a reload
   //   refetches only the shows that actually changed, not all of them.
-  function createEpisodeSource({ fetch: fetchFn, tmdbGet, cache, ttlMs = 6 * 3600 * 1000, minGapMs = 520, useUpdates = false }) {
+  // - quick(): optional; while it says true, a kept list is used as it is,
+  //   without asking TVMaze what changed (the page's first, quick pass -
+  //   the cache then also serves copies of any age).
+  function createEpisodeSource({ fetch: fetchFn, tmdbGet, cache, ttlMs = 6 * 3600 * 1000, minGapMs = 520, useUpdates = false, quick = () => false }) {
     const inFlight = new Map();
     let nextTvmazeAt = 0;
     let updatesPromise = null;
@@ -335,6 +338,7 @@
         if (useUpdates && cache) {
           const hit = await cache.get(key, UPDATES_WINDOW_MS);
           if (hit && hit.episodes) {
+            if (quick()) return hit.episodes;
             const updates = await recentUpdates();
             const changedAt = updates ? updates[tvmazeId] : undefined;
             const fresh = updates

@@ -262,6 +262,20 @@ test("With TVMaze's update list, a cached episode list is kept until TVMaze repo
   assert.equal(fetch.calls.filter(c => c.startsWith("/updates")).length, 2, "asked once per session, only when there is a cached copy to check");
 });
 
+test("The quick pass takes a kept list as it is, without asking TVMaze what changed", async () => {
+  const cache = asyncCache();
+  const fetch = fakeFetch({ "/lookup/shows?imdb=tt1": { id: 5 }, "/shows/5/episodes": TVM_EPISODES, "/updates/shows?since=week": () => jsonRes(200, {}) });
+  let quick = false;
+  const make = () => createEpisodeSource({ fetch, tmdbGet: fakeTmdb({}), cache, minGapMs: 0, useUpdates: true, quick: () => quick });
+  await make().getEpisodes({ imdb: "tt1" });
+  cache.age("tvmaze-episodes2:5", 24 * 3600 * 1000);
+  quick = true;
+  const r = await make().getEpisodes({ imdb: "tt1" });
+  assert.ok(r.episodes.length > 0);
+  assert.equal(fetch.calls.filter(c => c === "/shows/5/episodes").length, 1, "the kept list");
+  assert.equal(fetch.calls.filter(c => c.startsWith("/updates")).length, 0, "TVMaze not asked");
+});
+
 test("If TVMaze's update list can't be had, the plain expiry applies", async () => {
   const cache = asyncCache();
   const fetch = fakeFetch({ "/lookup/shows?imdb=tt1": { id: 5 }, "/shows/5/episodes": TVM_EPISODES, "/updates/shows?since=week": () => jsonRes(500, null) });
