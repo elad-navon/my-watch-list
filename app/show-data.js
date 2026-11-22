@@ -275,7 +275,10 @@ function episodeRatingsHtml(by, slots) {
 // Fills the `.ep-rates[data-rate="season-episode"]` places under `root`
 // once each season's ratings arrive (the list is on screen meanwhile).
 // `align`: keep each source in its own column (the modal's rows).
+// Desktop only: on a phone or tablet (the app too) the lists stay as they
+// were - no pills, and none of the requests behind them.
 function fillEpisodeRatings(root, ids, episodes, { align = false } = {}) {
+  if (window.matchMedia("(pointer: coarse)").matches) return;
   if (!root || (!ids.imdb && ids.tmdb == null)) return;
   const bySeason = new Map();
   for (const e of episodes) if (e.season != null && e.episode != null) {
