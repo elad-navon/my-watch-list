@@ -84,15 +84,17 @@
         </LinearLayout>
         </LinearLayout>
     </LinearLayout>
-    <!-- Over the pictures' outer edges, a wide target each, so a tap meant for them doesn't open the app. -->
+    <!-- Over the pictures' outer edges, a wide target each, so a tap meant for them doesn't open the app. The arrow sits
+         at the pictures' middle: the padding is the cards' top (8dp) and everything below the picture (10dp + the
+         text lines' 83dp + 5dp) - keep it in step with those. -->
     <FrameLayout android:id="@+id/prev" android:layout_width="46dp" android:layout_height="match_parent" android:layout_gravity="left"
-            android:contentDescription="Previous">
+            android:paddingTop="8dp" android:paddingBottom="98dp" android:contentDescription="Previous">
             <ImageView android:id="@+id/prev_icon" android:layout_width="32dp" android:layout_height="32dp" android:layout_gravity="center"
                 android:background="@drawable/widget_arrow_bg" android:scaleType="center" android:src="@drawable/ic_widget_prev"
                 android:contentDescription="@null" />
         </FrameLayout>
     <FrameLayout android:id="@+id/next" android:layout_width="46dp" android:layout_height="match_parent" android:layout_gravity="right"
-            android:contentDescription="Next">
+            android:paddingTop="8dp" android:paddingBottom="98dp" android:contentDescription="Next">
             <ImageView android:id="@+id/next_icon" android:layout_width="32dp" android:layout_height="32dp" android:layout_gravity="center"
                 android:background="@drawable/widget_arrow_bg" android:scaleType="center" android:src="@drawable/ic_widget_next"
                 android:contentDescription="@null" />
