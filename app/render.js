@@ -43,6 +43,7 @@ async function refreshPanelsQuietly() {
   const showingPanels = () => !!document.querySelector(".bottom-panels-row, .series-panel")
     && !app.querySelector(".spinner, .film-loader") && currentView === "list";
   if (!library || !library.adapter || !showingPanels()) return;
+  const gen = ++panelsLoadGen; // a load still on its way gives way to this one
   try {
     library.adapter.reset();
     watchingListLoad = null;
@@ -52,7 +53,7 @@ async function refreshPanelsQuietly() {
       getPlanToWatchRows(sharedCache),
       getAiringNextRows(sharedCache, sharedEpisodeCache),
     ]);
-    if (!showingPanels()) return; // the user moved on meanwhile
+    if (!showingPanels() || gen !== panelsLoadGen) return; // the user moved on meanwhile, or a newer load came
     airingRows = airingNextRows;
     renderRows(rows, totalEps, totalMinutes, recentlyWatched, planToWatchRows, airingNextRows);
   } catch (err) {

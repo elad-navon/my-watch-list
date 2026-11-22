@@ -48,9 +48,13 @@ async function main() {
     }
   }
 
+  // Signing in starts at once, alongside reading the last panels.
+  ensureLibrary();
+  library.backend.ready().catch(() => {});
   if (!(await showPanelsSnapshot())) showLoaderSoon();
   subtitle.textContent = "Fetching your My List\u2026";
 
+  const gen = ++panelsLoadGen;
   watchingListLoad = null;
   try {
     sharedCache = new TmdbCache();
@@ -59,11 +63,19 @@ async function main() {
     sharedEpisodeCache = newEpisodeCache();
     if (!panelsFromSnapshot) showLoaderSoon();
     subtitle.textContent = "Fetching your My List\u2026";
-    const [[rows, totalEps, totalMinutes, recentlyWatched], planToWatchRows, airingNextRows] = await Promise.all([
-      getMyListRows(sharedCache, sharedEpisodeCache),
-      getPlanToWatchRows(sharedCache),
-      getAiringNextRows(sharedCache, sharedEpisodeCache),
-    ]);
+    // The quick pass: the library as it is now, with the outside sources'
+    // kept copies however old (asking only for what was never kept) - the
+    // page is ready in moments instead of waiting on TVMaze's pace, TMDB's
+    // seasons, TheTVDB and the ratings. The full pass follows behind it.
+    LibraryAdapter.setStaleReads(true);
+    let loaded;
+    try {
+      loaded = await loadPanelRows(sharedEpisodeCache);
+    } finally {
+      LibraryAdapter.setStaleReads(false);
+    }
+    if (gen !== panelsLoadGen) return; // a newer load took over
+    const { rows, totalEps, totalMinutes, recentlyWatched, planToWatchRows, airingNextRows } = loaded;
     airingRows = airingNextRows; // also primes the separate Airing Next tab's cache, so opening it doesn't re-fetch
     if (panelsFromSnapshot) {
       endPanelsSnapshot();
@@ -73,12 +85,47 @@ async function main() {
       renderRows(rows, totalEps, totalMinutes, recentlyWatched, planToWatchRows, airingNextRows);
       fadeInPage();
     }
-    const missing = library.adapter.failures();
-    if (missing.length) showToast(`Couldn't load the episode list of ${missing.length} show${missing.length === 1 ? "" : "s"} (${missing.slice(0, 3).join(", ")}${missing.length > 3 ? "…" : ""}) - try Refresh later.`, true);
-    autoStartAiredPremieres(planToWatchRows);
+    refreshAfterQuickPass(gen);
   } catch (err) {
     endPanelsSnapshot();
     showError(err);
+  }
+}
+
+// Every panel row list in one go: Ready to Watch (with Recently Watched),
+// Plan to Watch and Airing Next.
+async function loadPanelRows(episodeCache) {
+  const [[rows, totalEps, totalMinutes, recentlyWatched], planToWatchRows, airingNextRows] = await Promise.all([
+    getMyListRows(sharedCache, episodeCache),
+    getPlanToWatchRows(sharedCache),
+    getAiringNextRows(sharedCache, episodeCache),
+  ]);
+  return { rows, totalEps, totalMinutes, recentlyWatched, planToWatchRows, airingNextRows };
+}
+
+// The full pass, right after the quick one: everything past its time is
+// asked for again, and the panels are drawn again in place (scroll kept,
+// no loading screen) - unless a newer load or a change came first.
+async function refreshAfterQuickPass(gen) {
+  try {
+    sharedCache = new TmdbCache(); // its answers from the quick pass go
+    mdblistCache.forget();
+    library.adapter.reset();
+    watchingListLoad = null;
+    const episodeCache = newEpisodeCache();
+    const fresh = await loadPanelRows(episodeCache);
+    if (gen !== panelsLoadGen) return;
+    sharedEpisodeCache = episodeCache;
+    airingRows = fresh.airingNextRows;
+    const onPanels = currentView === "list" && !!document.querySelector(".bottom-panels-row, .series-panel")
+      && !app.querySelector(".spinner, .film-loader");
+    if (onPanels) renderRows(fresh.rows, fresh.totalEps, fresh.totalMinutes, fresh.recentlyWatched, fresh.planToWatchRows, fresh.airingNextRows);
+    else if (currentView === "airing") renderAiringRows(fresh.airingNextRows);
+    const missing = library.adapter.failures();
+    if (missing.length) showToast(`Couldn't load the episode list of ${missing.length} show${missing.length === 1 ? "" : "s"} (${missing.slice(0, 3).join(", ")}${missing.length > 3 ? "…" : ""}) - try Refresh later.`, true);
+    autoStartAiredPremieres(fresh.planToWatchRows);
+  } catch (err) {
+    console.warn("Full refresh after the quick load skipped:", err.message);
   }
 }
 

@@ -107,6 +107,9 @@
       if (!k || !imdbId || api.disabled) return Promise.resolve(null);
       return memo(map, imdbId, () => keptOrFetched(persisted, `mdblist:${imdbId}`, recent ? recentTtlMs : ttlMs, () => fetchOne(imdbId, k)));
     };
+    // Lets go of the answers held for this session, so the next look reads
+    // the kept copies again (by their age) - after the page's quick pass.
+    api.forget = () => map.clear();
     return api;
   }
 

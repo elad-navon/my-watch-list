@@ -3,7 +3,7 @@ const assert = require("node:assert/strict");
 const core = require("../library-core.js");
 const { createLibraryStore, memoryBackend } = require("../library-store.js");
 const { appendAfter } = require("../episode-source.js");
-const { createLibraryAdapter } = require("../library-adapter.js");
+const { createLibraryAdapter, idbCache, setStaleReads } = require("../library-adapter.js");
 
 const NOW = Date.parse("2026-10-12T12:00:00Z");
 const DAY = 86400000;
@@ -201,4 +201,18 @@ test("a snapshot show keeps a new season's episodes after they air", async () =>
   assert.deepEqual(eps.map(e => `${e.season}x${e.episode}`), ["1x1", "1x2", "2x1", "2x2"], "2x1 aired two days ago and stays");
   const [item] = await adapter.items("watching");
   assert.equal(item.next_to_watch, "S02E01");
+});
+
+test("Stale reads (the page's quick pass) serve a kept copy past its time", async () => {
+  const cache = idbCache({ persist: () => false }); // memory only in Node
+  await cache.set("k", 42);
+  assert.equal(await cache.get("k", 0), undefined, "past its time");
+  setStaleReads(true);
+  try {
+    assert.equal(await cache.get("k", 0), 42);
+    assert.equal(await cache.get("missing", 0), undefined);
+  } finally {
+    setStaleReads(false);
+  }
+  assert.equal(await cache.get("k", 0), undefined, "back to normal");
 });

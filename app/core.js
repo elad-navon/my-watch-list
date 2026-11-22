@@ -258,6 +258,9 @@ function fadeInPage() {
 const PANELS_SNAPSHOT_KEY = "panels-snapshot";
 const PANELS_SNAPSHOT_MAX_MS = 7 * 24 * 60 * 60 * 1000;
 let panelsFromSnapshot = false;
+// Counts the panel loads (main, the quiet refresh): a load that finds a
+// newer one started after it leaves the panels to that one.
+let panelsLoadGen = 0;
 // Only when the page opens: a later main() (after a change, a restore)
 // would otherwise put back panels from before that change for a moment.
 let snapshotTried = false;

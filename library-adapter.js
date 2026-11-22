@@ -257,6 +257,11 @@
   // A browser that never answers (seen with blocked or broken storage) must
   // not hold the page up: every IndexedDB step gives up after a moment.
   const IDB_TIMEOUT_MS = 3000;
+  // While on (the page's first, quick pass - see main.js), every cache
+  // serves what it keeps however old: the page opens from it at once, and
+  // a second pass right after asks the outside sources what's new.
+  let staleReads = false;
+  function setStaleReads(on) { staleReads = !!on; }
   function idbCache({ name = "tv-library-cache", persist = () => true } = {}) {
     const mem = new Map();
     let dbPromise = null;
@@ -293,7 +298,7 @@
           if (d) hit = await idbGet(d, key);
           if (hit) mem.set(key, hit);
         }
-        return hit && Date.now() - hit.t < ttlMs ? hit.v : undefined;
+        return hit && (staleReads || Date.now() - hit.t < ttlMs) ? hit.v : undefined;
       },
       async set(key, v) {
         const entry = { t: Date.now(), v };
@@ -322,5 +327,5 @@
     };
   }
 
-  return { createLibraryAdapter, idbCache, OUTCOME_MESSAGES };
+  return { createLibraryAdapter, idbCache, setStaleReads, staleReads: () => staleReads, OUTCOME_MESSAGES };
 });
