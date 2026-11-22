@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Each text line has a fixed height (Hebrew text sets taller lines), so every picture is the same height.
+     A picture fills its place cropped, never stretched; its top corners are rounded by the card itself
+     (clipToOutline, Android 12 and later), before that by the two corner pieces over it.
      Airing Next widget, two rows or more: two wide cards with pictures (card2 stays hidden), so a banner fits nearly whole. Drawn by AiringWidgetProvider. -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/root" android:layout_width="match_parent" android:layout_height="match_parent"
@@ -9,10 +11,14 @@
         <LinearLayout android:id="@+id/cards" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1"
             android:orientation="horizontal" android:paddingTop="8dp" android:paddingBottom="10dp">
         <LinearLayout android:id="@+id/card0" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1"
-            android:layout_marginRight="5dp" android:background="@drawable/widget_card" android:orientation="vertical" android:paddingBottom="5dp">
+            android:layout_marginRight="5dp" android:background="@drawable/widget_card" android:clipToOutline="true" android:orientation="vertical" android:paddingBottom="5dp">
             <FrameLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1">
                 <ImageView android:id="@+id/card0_art" android:layout_width="match_parent" android:layout_height="match_parent"
-                    android:scaleType="fitXY" android:src="@drawable/widget_art_placeholder" android:contentDescription="@null" />
+                    android:scaleType="centerCrop" android:src="@drawable/widget_art_placeholder" android:contentDescription="@null" />
+                <ImageView android:layout_width="12dp" android:layout_height="12dp" android:layout_gravity="top|left"
+                    android:src="@drawable/widget_corner_tl" android:contentDescription="@null" />
+                <ImageView android:layout_width="12dp" android:layout_height="12dp" android:layout_gravity="top|right"
+                    android:src="@drawable/widget_corner_tr" android:contentDescription="@null" />
                 <TextView android:id="@+id/card0_badge" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="bottom|right" android:layout_margin="4dp"
                 android:background="@drawable/widget_chip" android:paddingLeft="4dp" android:paddingRight="4dp"
                 android:textColor="#FF111111" android:textSize="8.5dp" android:textStyle="bold" android:letterSpacing="0.05"
@@ -29,10 +35,14 @@
                 android:layout_marginTop="1dp" android:textColor="#94FFFFFF" android:textSize="10dp" android:singleLine="true" android:ellipsize="end" android:includeFontPadding="false" />
         </LinearLayout>
         <LinearLayout android:id="@+id/card1" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1"
-            android:layout_marginLeft="2dp" android:background="@drawable/widget_card" android:orientation="vertical" android:paddingBottom="5dp">
+            android:layout_marginLeft="2dp" android:background="@drawable/widget_card" android:clipToOutline="true" android:orientation="vertical" android:paddingBottom="5dp">
             <FrameLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1">
                 <ImageView android:id="@+id/card1_art" android:layout_width="match_parent" android:layout_height="match_parent"
-                    android:scaleType="fitXY" android:src="@drawable/widget_art_placeholder" android:contentDescription="@null" />
+                    android:scaleType="centerCrop" android:src="@drawable/widget_art_placeholder" android:contentDescription="@null" />
+                <ImageView android:layout_width="12dp" android:layout_height="12dp" android:layout_gravity="top|left"
+                    android:src="@drawable/widget_corner_tl" android:contentDescription="@null" />
+                <ImageView android:layout_width="12dp" android:layout_height="12dp" android:layout_gravity="top|right"
+                    android:src="@drawable/widget_corner_tr" android:contentDescription="@null" />
                 <TextView android:id="@+id/card1_badge" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="bottom|right" android:layout_margin="4dp"
                 android:background="@drawable/widget_chip" android:paddingLeft="4dp" android:paddingRight="4dp"
                 android:textColor="#FF111111" android:textSize="8.5dp" android:textStyle="bold" android:letterSpacing="0.05"
@@ -49,10 +59,14 @@
                 android:layout_marginTop="1dp" android:textColor="#94FFFFFF" android:textSize="10dp" android:singleLine="true" android:ellipsize="end" android:includeFontPadding="false" />
         </LinearLayout>
         <LinearLayout android:id="@+id/card2" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:visibility="gone"
-            android:background="@drawable/widget_card" android:orientation="vertical" android:paddingBottom="5dp">
+            android:background="@drawable/widget_card" android:clipToOutline="true" android:orientation="vertical" android:paddingBottom="5dp">
             <FrameLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1">
                 <ImageView android:id="@+id/card2_art" android:layout_width="match_parent" android:layout_height="match_parent"
-                    android:scaleType="fitXY" android:src="@drawable/widget_art_placeholder" android:contentDescription="@null" />
+                    android:scaleType="centerCrop" android:src="@drawable/widget_art_placeholder" android:contentDescription="@null" />
+                <ImageView android:layout_width="12dp" android:layout_height="12dp" android:layout_gravity="top|left"
+                    android:src="@drawable/widget_corner_tl" android:contentDescription="@null" />
+                <ImageView android:layout_width="12dp" android:layout_height="12dp" android:layout_gravity="top|right"
+                    android:src="@drawable/widget_corner_tr" android:contentDescription="@null" />
                 <TextView android:id="@+id/card2_badge" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="bottom|right" android:layout_margin="4dp"
                 android:background="@drawable/widget_chip" android:paddingLeft="4dp" android:paddingRight="4dp"
                 android:textColor="#FF111111" android:textSize="8.5dp" android:textStyle="bold" android:letterSpacing="0.05"

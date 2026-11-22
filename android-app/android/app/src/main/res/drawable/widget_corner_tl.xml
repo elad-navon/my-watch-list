@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Laid over a two-row card's picture, top left: the widget's background colour (widget_bg near its top)
+     outside a 12dp curve, so every picture's corner is rounded alike, whatever size it's drawn at
+     (a widget can't clip a picture itself before Android 12). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="12dp" android:height="12dp" android:viewportWidth="12" android:viewportHeight="12">
+    <path android:fillColor="#FF1B1C23" android:pathData="M0,0 L12,0 A12,12 0 0,0 0,12 Z" />
+</vector>
