@@ -146,8 +146,16 @@ function latestNetwork(showDetail) {
   // three, oldest first. The first entry is the original network, not the
   // current one, so use the last entry instead.
   const list = showDetail && showDetail.networks;
-  return list && list.length ? list[list.length - 1] : null;
+  if (!list || !list.length) return null;
+  // ...but that order isn't always the years', so a few shows are named here
+  // by hand (TMDB id -> the network it's on today, as TMDB names it).
+  const pick = showDetail.id != null && NETWORK_PICKS[showDetail.id];
+  const picked = pick && list.find(n => n && n.name === pick);
+  return picked || list[list.length - 1];
 }
+const NETWORK_PICKS = {
+  1089: "Kan 11", // Zehu Ze!: began on Educational Television; Channel 2, Kan 11, Educational on TMDB
+};
 
 // TMDB's content_ratings.results is one entry per country ("US": "TV-MA",
 // "GB": "15", etc.) - US is what every other age-rating badge in US-style
