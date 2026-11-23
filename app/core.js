@@ -406,30 +406,48 @@ function showSettings(afterSaveCallback) {
         you sign in) - never written into the site's files, so it's safe to
         keep them in a public repo.
       </p>
-      <label>SIMKL Client ID &mdash; optional: exact air times for streaming episodes, taken from SIMKL by the
-        computer's Emby bridge (<a href="https://simkl.com/settings/developer/new/" target="_blank">create an app</a>,
-        type &ldquo;TV, devices &amp; command line&rdquo;; then on that computer: <code>node run.js --simkl-login</code>)</label>
-      <input type="text" id="clientIdV2Input" value="${esc(cfg.clientIdV2)}">
-      <label>TMDB API Key
-        (<a href="https://www.themoviedb.org/settings/api" target="_blank">get a free key</a>)</label>
-      <input type="text" id="tmdbKeyInput" value="${cfg.tmdbKey}">
-      <label>MDBList API Key &mdash; optional, adds Rotten Tomatoes and Trakt ratings
-        (<a href="https://mdblist.com/preferences/" target="_blank">get a free key</a>)</label>
-      <input type="text" id="mdblistKeyInput" value="${cfg.mdblistKey}">
-      <label>Fanart.tv API Key &mdash; optional, adds more posters and banners to the image picker
-        (<a href="https://fanart.tv/get-an-api-key/" target="_blank">get a free key</a>)</label>
-      <input type="text" id="fanartKeyInput" value="${cfg.fanartKey}">
-      <label>TheTVDB API Key &mdash; optional, adds more posters and backgrounds to the image picker, and checks
-        new episodes' air dates against <a href="https://thetvdb.com" target="_blank">TheTVDB</a>
-        (<a href="https://thetvdb.com/api-information" target="_blank">get a free key</a>)</label>
-      <input type="text" id="tvdbKeyInput" value="${cfg.tvdbKey}">
-      <label>OMDb API Key &mdash; optional, adds each episode's IMDb rating to the episode lists
-        (<a href="https://www.omdbapi.com/apikey.aspx" target="_blank">get a free key</a>)</label>
-      <input type="text" id="omdbKeyInput" value="${esc(cfg.omdbKey)}">
-      <label>Trakt Client ID &mdash; optional, adds each episode's Trakt rating to the episode lists
-        (<a href="https://trakt.tv/oauth/applications/new" target="_blank">create an app</a>; only the Client ID is needed)</label>
-      <input type="text" id="traktKeyInput" value="${esc(cfg.traktKey)}">
+      <div class="set-fields">
+      <div class="set-field">
+        <label>SIMKL Client ID &mdash; optional: exact air times for streaming episodes, taken from SIMKL by the
+          computer's Emby bridge (<a href="https://simkl.com/settings/developer/new/" target="_blank">create an app</a>,
+          type &ldquo;TV, devices &amp; command line&rdquo;; then on that computer: <code>node run.js --simkl-login</code>)</label>
+        <input type="text" id="clientIdV2Input" value="${esc(cfg.clientIdV2)}">
+      </div>
+      <div class="set-field">
+        <label>TMDB API Key
+          (<a href="https://www.themoviedb.org/settings/api" target="_blank">get a free key</a>)</label>
+        <input type="text" id="tmdbKeyInput" value="${cfg.tmdbKey}">
+      </div>
+      <div class="set-field">
+        <label>MDBList API Key &mdash; optional, adds Rotten Tomatoes and Trakt ratings
+          (<a href="https://mdblist.com/preferences/" target="_blank">get a free key</a>)</label>
+        <input type="text" id="mdblistKeyInput" value="${cfg.mdblistKey}">
+      </div>
+      <div class="set-field">
+        <label>Fanart.tv API Key &mdash; optional, adds more posters and banners to the image picker
+          (<a href="https://fanart.tv/get-an-api-key/" target="_blank">get a free key</a>)</label>
+        <input type="text" id="fanartKeyInput" value="${cfg.fanartKey}">
+      </div>
+      <div class="set-field">
+        <label>TheTVDB API Key &mdash; optional, adds more posters and backgrounds to the image picker, and checks
+          new episodes' air dates against <a href="https://thetvdb.com" target="_blank">TheTVDB</a>
+          (<a href="https://thetvdb.com/api-information" target="_blank">get a free key</a>)</label>
+        <input type="text" id="tvdbKeyInput" value="${cfg.tvdbKey}">
+      </div>
+      <div class="set-field">
+        <label>OMDb API Key &mdash; optional, adds each episode's IMDb rating to the episode lists
+          (<a href="https://www.omdbapi.com/apikey.aspx" target="_blank">get a free key</a>)</label>
+        <input type="text" id="omdbKeyInput" value="${esc(cfg.omdbKey)}">
+      </div>
+      <div class="set-field">
+        <label>Trakt Client ID &mdash; optional, adds each episode's Trakt rating to the episode lists
+          (<a href="https://trakt.tv/oauth/applications/new" target="_blank">create an app</a>; only the Client ID is needed)</label>
+        <input type="text" id="traktKeyInput" value="${esc(cfg.traktKey)}">
+      </div>
+      </div>
+      <div class="set-bottom">
       ${librarySettingsHtml()}
+      <div class="set-toggles">
       <div class="theme-toggle-wrap" style="margin-top:18px">
         <span class="nav-icon"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg></span>
         <span style="flex:1 1 auto;text-align:left">Dark Mode</span>
@@ -444,6 +462,8 @@ function showSettings(afterSaveCallback) {
         <span class="nav-icon"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"></rect><line x1="3" y1="12" x2="21" y2="12"></line><line x1="12" y1="12" x2="12" y2="21"></line></svg></span>
         <span style="flex:1 1 auto;text-align:left">One-Page Layout</span>
         <button class="theme-toggle" id="layoutToggleBtn" title="Toggle one-page / scrolling bottom panels"></button>
+      </div>
+      </div>
       </div>
       <div style="margin-top:18px">
         <button class="pill" id="saveSettingsBtn">Save</button>
