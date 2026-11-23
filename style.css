@@ -2943,8 +2943,11 @@
     .ms-hero-in, .ms-d-body, .ms-detail > .ms-d-top { padding-left: 28px; padding-right: 28px; }
   }
   @media (max-width: 720px) {
-    .ms-pick { margin-left: auto; }
-    .ms-pick-menu { left: auto; right: 0; }
+    /* No Back button on a phone - the phone's own Back does it; Images
+       takes its place, above the poster. */
+    .ms-d-top > .ms-back[data-ep-back] { display: none; }
+    .ms-pick { width: 110px; }
+    .ms-pick > .ms-back { width: 100%; justify-content: center; padding: 7px 6px; font-size: 0.85rem; }
     .ms-tabs .ms-tab { flex: 0 0 auto; padding-left: 10px; padding-right: 10px; font-size: 1rem; }
     .ms-overlay .sx-title { flex: 1 1 0; min-width: 0; }
     .ms-tools { gap: 8px; margin-bottom: 18px; }
@@ -2969,6 +2972,9 @@
       background: linear-gradient(180deg, rgba(5, 7, 10, 0.3) 0%, rgba(5, 7, 10, 0) 28%, rgba(5, 7, 10, 0) 55%, #0b1118 100%);
     }
     .ms-hero-in > .ms-d-top { margin-bottom: max(0px, calc(56.25vw - 130px)); }
+    /* With Images there it goes down to the poster - just above it, as wide
+       (the gap above the line instead of under it; the poster stays put). */
+    .ms-hero-in > .ms-d-top:has(.ms-pick) { margin-top: max(0px, calc(56.25vw - 120px)); margin-bottom: -10px; }
     /* A tall picture when the show has one (msTallArtFor): it's the poster
        here, so the small poster steps aside and the title runs full width. */
     .ms-backdrop-tall { display: block; position: absolute; top: 0; left: 0; right: 0; aspect-ratio: 2 / 3; background: #0b1118 center top / cover no-repeat; }
@@ -2978,6 +2984,7 @@
     }
     .ms-hero:has(.ms-backdrop-tall) .ms-backdrop { display: none; }
     .ms-hero:has(.ms-backdrop-tall) .ms-hero-in > .ms-d-top { margin-bottom: calc(84vw - 66px); }
+    .ms-hero:has(.ms-backdrop-tall) .ms-hero-in > .ms-d-top:has(.ms-pick) { margin-top: calc(84vw - 56px); margin-bottom: -10px; }
     .ms-hero:has(.ms-backdrop-tall) .ms-d-poster { display: none; }
     .ms-hero:has(.ms-backdrop-tall) :is(.ms-d-title, .ms-facts) { grid-column: 1 / -1; }
     .ms-d-info { display: contents; }
