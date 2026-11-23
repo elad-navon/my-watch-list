@@ -1370,6 +1370,19 @@
   .center-box:has(#settingsError) > p { margin: 0 0 4px; }
   .center-box:has(#settingsError) label { margin-top: 7px; }
   .center-box:has(#settingsError) input { padding: 7px 12px; margin: 5px 0; }
+  /* On a wide screen Settings fits one screen with no scrolling: wider,
+     the keys in two columns (each key's field at the foot of its cell, so
+     a row's fields line up), the account's buttons beside the switches. */
+  @media (min-width: 900px) {
+    .center-box.settings-box:has(#settingsError) { max-width: 1120px; margin: 24px auto; padding: 24px 32px 18px; }
+    .settings-box .set-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 28px; }
+    .settings-box .set-field { display: flex; flex-direction: column; }
+    .settings-box .set-field label { flex: 1 1 auto; }
+    .settings-box .set-bottom { display: grid; grid-template-columns: minmax(0, 1fr) 260px; gap: 32px; align-items: start; margin-top: 18px; }
+    .settings-box .set-bottom .library-settings { margin-top: 0; justify-content: flex-start; }
+    .settings-box .set-bottom .library-settings p, .settings-box .set-bottom .bridge-status { text-align: left; }
+    .settings-box .set-toggles > .theme-toggle-wrap:first-child { margin-top: 0 !important; }
+  }
   /* Settings: the site version in the top-left corner (siteVersionHtml). */
   .settings-version {
     position: absolute; top: 14px; left: 16px; display: flex; flex-direction: column; align-items: flex-start;
