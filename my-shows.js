@@ -401,6 +401,8 @@ function msRenderList() {
 
 function msKeyHandler(e) {
   if (e.key !== "Escape") return;
+  // The image picker or the Images menu closes first, on its own.
+  if (document.getElementById("imagePickerOverlay") || document.querySelector(".ms-pick-menu:not([hidden])")) return;
   if (!document.getElementById("msDetail").hidden) history.back();
   else msClosePage();
 }
@@ -555,10 +557,16 @@ async function msBuildDetail(docId, show, token) {
   const row = msRows.find(r => r.docId === docId) || {};
 
   const images = detail ? computeImages(detail, tmdb, "top") : {};
-  const poster = images.posterUrl || row.poster || null;
-  const savedBackdrop = detail && poster ? msSavedBackdrop(tmdb, poster) : null;
-  const backdrop = (savedBackdrop && savedBackdrop.path ? msImgUrl(savedBackdrop.path, "w1280") : msBackdropFor(detail)) || images.bannerUrl || null;
-  const tallArt = msTallArtFor(detail, poster);
+  // Pictures picked on this page (msPickImage) - its own, apart from the
+  // home page's cards.
+  const pagePick = (detail && tmdb != null && getImageOverrides()[tmdb]) || {};
+  const poster = msImgUrl(pagePick.pagePosterPath, "w342") || images.posterUrl || row.poster || null;
+  const savedBackdrop = detail && poster && !pagePick.pageBannerPath ? msSavedBackdrop(tmdb, poster) : null;
+  const backdrop = msImgUrl(pagePick.pageBannerPath, "w1280")
+    || (savedBackdrop && savedBackdrop.path ? msImgUrl(savedBackdrop.path, "w1280") : msBackdropFor(detail)) || images.bannerUrl || null;
+  // A picture picked here shows as picked on a phone too: no tall art in
+  // its place (it hides the poster and the wide backdrop).
+  const tallArt = pagePick.pagePosterPath || pagePick.pageBannerPath ? null : msTallArtFor(detail, poster);
   const title = (detail && detail.name) || show.title;
 
   // Facts line
@@ -633,10 +641,10 @@ async function msBuildDetail(docId, show, token) {
   pane.style.setProperty("--ms-c", tab.color);
   pane.innerHTML = `
     <section class="ms-hero">
-      ${backdrop ? `<div class="ms-backdrop" style="background-image:url('${esc(backdrop)}')"></div>` : `<div class="ms-backdrop"></div>`}
+      ${backdrop ? `<div class="ms-backdrop" style="background-image:url('${esc(backdrop)}');--ms-bd:url('${esc(backdrop)}')"><div class="ms-backdrop-sharp"></div></div>` : `<div class="ms-backdrop"><div class="ms-backdrop-sharp"></div></div>`}
       ${tallArt ? `<div class="ms-backdrop-tall" style="background-image:url('${esc(tallArt)}')"></div>` : ""}
       <div class="ms-hero-in">
-        <div class="ms-d-top"><button type="button" class="ms-back" data-ep-back>&larr; ${msStandalone ? "Back" : "My Shows"}</button></div>
+        <div class="ms-d-top"><button type="button" class="ms-back" data-ep-back>&larr; ${msStandalone ? "Back" : "My Shows"}</button>${detail && tmdb != null ? `<span class="ms-pick"><button type="button" class="ms-back" data-ms-pick-toggle aria-haspopup="menu" aria-expanded="false" title="Change this page's pictures">${IMAGE_PICK_ICON_SVG}Images <span aria-hidden="true">&#9662;</span></button><span class="ms-pick-menu" role="menu" hidden><button type="button" role="menuitem" data-ms-pick="poster">${IMAGE_PICK_ICON_SVG}Change poster</button><button type="button" role="menuitem" data-ms-pick="banner">${IMAGE_PICK_ICON_SVG}Change background</button></span></span>` : ""}</div>
         ${poster ? `<img class="ms-d-poster" src="${esc(poster)}" alt="">` : `<div class="ms-d-poster ms-pic-empty">${esc((title[0] || "?").toUpperCase())}</div>`}
         <div class="ms-d-info">
           <h1 class="ms-d-title">${esc(title)}</h1>
@@ -722,7 +730,17 @@ async function msBuildDetail(docId, show, token) {
   });
   pane.querySelector(".ms-back").onclick = () => history.back();
   msFitHero();
-  if (detail && poster && !savedBackdrop) msUpgradeBackdrop(pane, token, detail, tmdb, poster, backdrop);
+  msWirePickMenu(pane);
+  pane.querySelectorAll("[data-ms-pick]").forEach(b => {
+    b.onclick = () => msPickImage(pane, b.dataset.msPick, {
+      title, year: firstYear, imdbId: imdb, tmdbId: tmdb,
+      posterUrl: pane.querySelector("img.ms-d-poster") ? pane.querySelector("img.ms-d-poster").src : poster,
+      bannerUrl: msShownBackdrop(pane) || backdrop,
+      posterPaths: images.posterPaths || [],
+      backdropPaths: msAllBackdrops(detail),
+    });
+  });
+  if (detail && poster && !savedBackdrop && !pagePick.pageBannerPath) msUpgradeBackdrop(pane, token, detail, tmdb, poster, backdrop);
   const posterImg = pane.querySelector("img.ms-d-poster");
   if (posterImg && !posterImg.complete) posterImg.addEventListener("load", msFitHero, { once: true });
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(msFitHero);
@@ -963,6 +981,77 @@ function msSaveBackdrop(tmdbId, posterUrl, path) {
   } catch (e) { /* not kept - checked again next time */ }
 }
 // After the page is drawn: the checked pick, faded in if it differs.
+// Every backdrop of the show for the picker: the ones with no text first
+// (msBackdropCandidates' order), then the main one.
+function msAllBackdrops(detail) {
+  const list = msBackdropCandidates(detail);
+  if (detail && detail.backdrop_path && !list.includes(detail.backdrop_path)) list.push(detail.backdrop_path);
+  return list;
+}
+// Puts a picture on the page's backdrop: as its background (the phone) and
+// as --ms-bd (the desktop's sharp middle and blurred sides - style.css).
+function msSetBackdrop(el, url) {
+  el.style.backgroundImage = `url('${url}')`;
+  el.style.setProperty("--ms-bd", `url('${url}')`);
+}
+// The backdrop on screen now (msUpgradeBackdrop may have changed it).
+function msShownBackdrop(pane) {
+  const el = pane.querySelector(".ms-backdrop");
+  const m = el && /url\(["']?([^"')]+)["']?\)/.exec(el.style.backgroundImage || "");
+  return m ? m[1] : null;
+}
+// The Images button's small menu (Change poster / Change background):
+// opens under it, closes on a choice, a click elsewhere or Escape.
+function msWirePickMenu(pane) {
+  const toggle = pane.querySelector("[data-ms-pick-toggle]");
+  const menu = pane.querySelector(".ms-pick-menu");
+  if (!toggle || !menu) return;
+  const close = () => {
+    menu.hidden = true;
+    toggle.setAttribute("aria-expanded", "false");
+    document.removeEventListener("click", outside, true);
+    document.removeEventListener("keydown", esc);
+  };
+  const outside = e => { if (!toggle.parentElement.contains(e.target) || e.target.closest("[data-ms-pick]")) close(); };
+  const esc = e => { if (e.key === "Escape") close(); };
+  toggle.onclick = () => {
+    if (!menu.hidden) return close();
+    menu.hidden = false;
+    toggle.setAttribute("aria-expanded", "true");
+    document.addEventListener("click", outside, true);
+    document.addEventListener("keydown", esc);
+  };
+}
+// The page's own poster or background (mode "poster" / "banner"), chosen in
+// the home page's image picker and kept for this show's page only.
+function msPickImage(pane, mode, pickRow) {
+  const base = mode === "banner" ? "https://image.tmdb.org/t/p/w1280" : "https://image.tmdb.org/t/p/w342";
+  openImagePickerFor(pickRow, mode, entry => {
+    const paths = mode === "banner" ? pickRow.backdropPaths : pickRow.posterPaths;
+    const path = entry.index != null ? paths[entry.index] : entry.url;
+    if (!path) return;
+    saveImageOverride(pickRow.tmdbId, mode, path, "page");
+    const url = entry.index != null ? base + path : entry.url;
+    const tall = pane.querySelector(".ms-backdrop-tall");
+    if (tall) tall.remove();
+    if (mode === "banner") {
+      const el = pane.querySelector(".ms-backdrop");
+      if (el) msSetBackdrop(el, url);
+      return;
+    }
+    let img = pane.querySelector("img.ms-d-poster");
+    if (!img) {
+      const empty = pane.querySelector(".ms-d-poster");
+      if (!empty) return;
+      img = document.createElement("img");
+      img.className = "ms-d-poster";
+      img.alt = "";
+      empty.replaceWith(img);
+    }
+    img.addEventListener("load", msFitHero, { once: true });
+    img.src = url;
+  }, base);
+}
 async function msUpgradeBackdrop(pane, token, detail, tmdbId, posterUrl, shownUrl) {
   let path;
   try { path = await msPickBackdrop(detail, posterUrl); } catch (e) { return; }
@@ -973,7 +1062,7 @@ async function msUpgradeBackdrop(pane, token, detail, tmdbId, posterUrl, shownUr
   const el = pane.querySelector(".ms-backdrop");
   if (!el || token !== msDetailToken) return;
   el.style.opacity = "0";
-  setTimeout(() => { el.style.backgroundImage = `url('${url}')`; el.style.opacity = ""; }, 350);
+  setTimeout(() => { msSetBackdrop(el, url); el.style.opacity = ""; }, 350);
 }
 
 // "Mondays 05:00" - the weekday and local time of the show's latest
