@@ -745,6 +745,18 @@ function applyExternalImage(source, idx, mode, url) {
 function openImagePicker(source, idx, mode) {
   const row = (getCycleRows(source) || [])[idx];
   if (!row) return;
+  openImagePickerFor(row, mode, entry => {
+    if (entry.index != null) cycleImage(source, idx, mode, 1, entry.index);
+    else applyExternalImage(source, idx, mode, entry.url);
+  });
+}
+
+// The picker for any show-like row ({ title, year, imdbId, tmdbId,
+// posterUrl/bannerUrl, posterPaths/backdropPaths }): onDone(entry) gets the
+// chosen picture - entry.index (one of TMDB's paths) or entry.url (another
+// source). `base`: the TMDB size the row's current picture is at, so it's
+// marked Current (the show's page shows bigger ones than the cards).
+function openImagePickerFor(row, mode, onDone, base) {
   const cfg = IMAGE_MODE_CONFIG[mode];
   const paths = row[cfg.pathsKey] || [];
   if (paths.length < 2 && !row.imdbId && !row.tmdbId) return; // nothing to choose between
@@ -763,7 +775,7 @@ function openImagePicker(source, idx, mode) {
   const identityHtml = previewSrc
     ? `<img id="imagePickerPreview" src="${esc(previewSrc)}" alt="${esc(row.title)}">`
     : `<div class="picker-ident-placeholder">${esc((row.title[0] || "?").toUpperCase())}</div>`;
-  const tmdbEntries = paths.map((p, i) => ({ url: cfg.base + p, thumb: thumbBase + p, index: i }));
+  const tmdbEntries = paths.map((p, i) => ({ url: (base || cfg.base) + p, thumb: thumbBase + p, index: i }));
   let extras = [];
   let extrasState = row.imdbId || row.tmdbId ? "loading" : "done";
 
@@ -795,6 +807,9 @@ function openImagePicker(source, idx, mode) {
       </div>
     </div>`;
   document.body.appendChild(overlay);
+  // Over a show's page the page's own close (Back) is the current one:
+  // kept, and given back when the picker closes (closeImagePicker).
+  imagePickerPrevClose = activeModalClose;
   pushModalHistoryState(closeImagePicker);
 
   const grid = document.getElementById("imagePickerGrid");
@@ -861,11 +876,9 @@ function openImagePicker(source, idx, mode) {
 
   document.getElementById("imagePickerCloseBtn").onclick = closeImagePicker;
   document.getElementById("imagePickerDoneBtn").onclick = () => {
-    if (pendingEntry && pendingUrl !== originalUrl) {
-      if (pendingEntry.index != null) cycleImage(source, idx, mode, 1, pendingEntry.index);
-      else applyExternalImage(source, idx, mode, pendingEntry.url);
-    }
+    const chosen = pendingEntry && pendingUrl !== originalUrl ? pendingEntry : null;
     closeImagePicker();
+    if (chosen) onDone(chosen);
   };
   overlay.addEventListener("click", e => { if (e.target === overlay) closeImagePicker(); });
   document.addEventListener("keydown", imagePickerEscHandler);
@@ -875,10 +888,22 @@ function imagePickerEscHandler(e) {
   if (e.key === "Escape") closeImagePicker();
 }
 
+let imagePickerPrevClose = null;
 function closeImagePicker() {
   const overlay = document.getElementById("imagePickerOverlay");
   if (!overlay) return;
   overlay.remove();
   document.removeEventListener("keydown", imagePickerEscHandler);
-  consumeModalHistoryState();
+  const prev = imagePickerPrevClose;
+  imagePickerPrevClose = null;
+  activeModalClose = null;
+  if (poppingModalHistory) {
+    // Closed by Back: its entry is gone. The page's close comes back once
+    // the history handler is done (set now, it would read as a refused close).
+    queueMicrotask(() => { activeModalClose = prev; });
+  } else {
+    // Its entry taken off first; the page's close back after that.
+    window.addEventListener("popstate", () => setTimeout(() => { if (!activeModalClose) activeModalClose = prev; }, 0), { once: true });
+    history.back();
+  }
 }

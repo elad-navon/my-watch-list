@@ -2744,12 +2744,49 @@
     background: linear-gradient(90deg, rgba(5, 7, 10, 0.95) 0%, rgba(5, 7, 10, 0.86) 40%, rgba(5, 7, 10, 0.45) 75%, rgba(5, 7, 10, 0.65) 100%),
                 linear-gradient(0deg, rgba(5, 7, 10, 0.9) 0%, transparent 40%);
   }
+  /* Desktop: the hero is about 3.2 times as wide as it is tall, and a
+     16:9 backdrop stretched across it lost its top and bottom. Instead the
+     whole picture sits in the middle, a blurred, enlarged copy of it
+     filling the sides (--ms-bd: the picture, set beside background-image).
+     The phone layout has its own, below. */
+  @media (min-width: 721px) {
+    .ms-backdrop { background-image: none !important; overflow: hidden; }
+    .ms-backdrop::before {
+      content: ""; position: absolute; inset: -40px;
+      background: var(--ms-bd, none) center / cover no-repeat; filter: blur(24px) brightness(0.6);
+    }
+    /* The sharp picture, 16:9 at full height in the middle, its sides
+       fading into the blurred copy instead of ending in a hard line. */
+    .ms-backdrop .ms-backdrop-sharp {
+      display: block; position: absolute; top: 0; left: 50%; height: 100%; aspect-ratio: 16 / 9; transform: translateX(-50%);
+      background: var(--ms-bd, none) center / cover no-repeat;
+      -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 20%, #000 80%, transparent 100%);
+      mask-image: linear-gradient(90deg, transparent 0%, #000 20%, #000 80%, transparent 100%);
+    }
+  }
+  .ms-backdrop-sharp { display: none; }
   .ms-hero-in {
     position: relative; display: grid; grid-template-columns: var(--ms-poster-w, 240px) minmax(0, 1fr) 330px; gap: 22px 32px; align-items: start;
     padding: 18px max(40px, calc((100% - 1440px) / 2)) 34px; color: #eef3f8;
     --text: #eef3f8; --muted: #a9b8c9; --border: rgba(255, 255, 255, 0.18); --accent: #38bdf8;
   }
-  .ms-d-top { grid-column: 1 / -1; }
+  .ms-d-top { grid-column: 1 / -1; display: flex; align-items: center; gap: 8px; }
+  /* The Images button beside Back (on a phone at the line's other end)
+     and its menu: Change poster / Change background. */
+  .ms-pick { position: relative; }
+  .ms-pick svg { width: 17px; height: 17px; flex: none; }
+  .ms-pick-menu {
+    position: absolute; top: calc(100% + 6px); left: 0; z-index: 5; display: grid; gap: 2px; padding: 5px; min-width: 190px;
+    background: #16202b; border: 1px solid var(--border); border-radius: 10px; box-shadow: 0 14px 30px rgba(0, 0, 0, 0.55);
+  }
+  .ms-pick-menu[hidden] { display: none; }
+  /* The image picker opens over the show's page too (.sx-overlay, 160). */
+  #imagePickerOverlay { z-index: 170; }
+  .ms-pick-menu button {
+    display: flex; align-items: center; gap: 8px; background: none; border: 0; border-radius: 7px; padding: 8px 10px;
+    color: var(--text); font: inherit; font-size: 0.9rem; font-weight: 600; text-align: left; cursor: pointer; white-space: nowrap;
+  }
+  .ms-pick-menu button:hover, .ms-pick-menu button:focus-visible { background: rgba(56, 189, 248, 0.15); color: var(--gold); outline: none; }
   .ms-back {
     display: inline-flex; align-items: center; gap: 6px; background: rgba(0, 0, 0, 0.45); border: 1px solid var(--border);
     color: var(--text); font: inherit; font-weight: 600; font-size: 0.92rem; padding: 8px 14px; border-radius: 9px; cursor: pointer;
@@ -2906,6 +2943,8 @@
     .ms-hero-in, .ms-d-body, .ms-detail > .ms-d-top { padding-left: 28px; padding-right: 28px; }
   }
   @media (max-width: 720px) {
+    .ms-pick { margin-left: auto; }
+    .ms-pick-menu { left: auto; right: 0; }
     .ms-tabs .ms-tab { flex: 0 0 auto; padding-left: 10px; padding-right: 10px; font-size: 1rem; }
     .ms-overlay .sx-title { flex: 1 1 0; min-width: 0; }
     .ms-tools { gap: 8px; margin-bottom: 18px; }

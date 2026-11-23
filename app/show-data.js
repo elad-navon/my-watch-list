@@ -565,6 +565,8 @@ const LS_IMAGE_OVERRIDES = "simkl_image_overrides";
 const IMAGE_AREA_KEYS = {
   top: { poster: "posterPath", banner: "bannerPath" },
   panel: { poster: "panelPosterPath", banner: "panelBannerPath" },
+  // The show's own page (my-shows.js), apart from both.
+  page: { poster: "pagePosterPath", banner: "pageBannerPath" },
 };
 // Where a card's picks belong: the top panel ("main") or the bottom ones.
 function imageAreaOf(source) {
