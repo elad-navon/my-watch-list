@@ -113,8 +113,8 @@ status and the watched episodes are changed here too, through the episodes
 manager (mark single episodes or whole seasons). On a phone, a tall poster
 with no text serves as the backdrop.
 
-**My Shows**: every show in the library, one tab per status, as posters or
-as a list.
+**My Shows**: every show in the library, in an All tab and one tab per
+status, as posters or as a list.
 
 **My Stats**: a summary, your watching over time, top shows, taste (genres,
 networks, countries) and what's left in your queue.

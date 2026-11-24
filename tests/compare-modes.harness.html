@@ -632,6 +632,12 @@ async function runMyShows() {
   check("each tab lists its shows, its count right, no NaN / undefined / null",
     Object.values(counts).every(c => c.shown === c.expected && c.badge === c.expected && c.clean), counts);
   check("the tabs add up to the library", Object.values(counts).reduce((a, c) => a + c.badge, 0) === store.view().size);
+  $("#msTabs .sx-tab[data-tab='all']").click();
+  await sleep(150);
+  check("All lists every show, its count right, each with its status dot",
+    $$("#msList [data-doc]").length === store.view().size
+      && Number($("#msTabs .sx-tab[data-tab='all'] .ms-count").textContent) === store.view().size
+      && $$("#msList .ms-sdot").length === store.view().size && clean($("#msList")));
   $("#msTabs .sx-tab[data-tab='watching']").click();
   await waitFor(() => /\/ \d+ episodes/.test($("#msList").textContent), 4000).catch(() => {});
   check("Watching shows episodes out of the aired ones", /\/ \d+ episodes/.test($("#msList").textContent), $("#msList").textContent.slice(0, 200));

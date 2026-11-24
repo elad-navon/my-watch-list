@@ -21,6 +21,12 @@ const MS_TABS = [
   { id: "dropped", label: "Stopped", color: "var(--danger)" },
   { id: "plantowatch", label: "Plan to Watch", color: "var(--gold)" },
 ];
+// The tab bar: every show in one list first (to find a show without
+// knowing its status), then the statuses. MS_TABS stays the statuses alone - it's
+// also the show page's "Move to" buttons.
+const MS_ALL = { id: "all", label: "All", color: "#94a3b8" };
+const MS_VIEW_TABS = [MS_ALL, ...MS_TABS];
+const MS_ENRICHED_STATUSES = ["watching", "plantowatch", "hold"];
 const MS_STATE_KEY = "my_shows_view";
 const MS_DAY_MS = 24 * 60 * 60 * 1000;
 const MS_MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -76,7 +82,7 @@ function msParseCode(code) {
   const m = /^S(\d+)E(\d+)$/i.exec(code || "");
   return m ? { s: Number(m[1]), e: Number(m[2]) } : null;
 }
-const msTab = id => MS_TABS.find(t => t.id === id) || MS_TABS[0];
+const msTab = id => MS_VIEW_TABS.find(t => t.id === id) || MS_TABS[0];
 function msImgUrl(path, size) {
   if (!path) return null;
   return /^https?:/.test(path) ? path : `https://image.tmdb.org/t/p/${size}${path}`;
@@ -131,7 +137,8 @@ function msPosterFor(show, info) {
 // Watching / Plan to Watch / On Hold: episode counts and the next episode,
 // from the episode lists (already loaded for the home page's panels).
 async function msEnrich(status) {
-  if (msEnriched.has(status) || !["watching", "plantowatch", "hold"].includes(status)) return;
+  if (status === "all") { await Promise.all(MS_ENRICHED_STATUSES.map(msEnrich)); return; }
+  if (msEnriched.has(status) || !MS_ENRICHED_STATUSES.includes(status)) return;
   msEnriched.add(status);
   const items = await library.adapter.items(status).catch(() => []);
   const byDoc = new Map(items.map(it => [String(it.show.ids.library), it]));
@@ -181,7 +188,7 @@ function msSaveState() {
 function msLoadState() {
   try {
     const saved = JSON.parse(localStorage.getItem(MS_STATE_KEY) || "{}");
-    if (MS_TABS.some(t => t.id === saved.tab)) msState.tab = saved.tab;
+    if (MS_VIEW_TABS.some(t => t.id === saved.tab)) msState.tab = saved.tab;
     if (saved.view === "grid" || saved.view === "list") msState.view = saved.view;
     if (["recent", "title", "year", "added", "progress"].includes(saved.sort)) msState.sort = saved.sort;
   } catch (e) { /* defaults */ }
@@ -242,10 +249,10 @@ function msOpenPage(opts = {}) {
   const tabs = overlay.querySelector("#msTabs");
   tabs.addEventListener("click", e => { const b = e.target.closest(".sx-tab"); if (b) msSelectTab(b.dataset.tab); });
   tabs.addEventListener("keydown", e => {
-    const i = MS_TABS.findIndex(t => t.id === msState.tab);
-    const n = MS_TABS.length;
+    const i = MS_VIEW_TABS.findIndex(t => t.id === msState.tab);
+    const n = MS_VIEW_TABS.length;
     const next = e.key === "ArrowRight" ? (i + 1) % n : e.key === "ArrowLeft" ? (i - 1 + n) % n : e.key === "Home" ? 0 : e.key === "End" ? n - 1 : -1;
-    if (next >= 0) { e.preventDefault(); msSelectTab(MS_TABS[next].id, true); }
+    if (next >= 0) { e.preventDefault(); msSelectTab(MS_VIEW_TABS[next].id, true); }
   });
   overlay.querySelector("#msList").addEventListener("click", e => {
     const card = e.target.closest("[data-doc]");
@@ -290,8 +297,8 @@ function msRenderSubtitle() {
 function msRenderTabs(focus) {
   const tabs = document.getElementById("msTabs");
   if (!tabs) return;
-  tabs.innerHTML = MS_TABS.map(t => {
-    const n = msRows.filter(r => r.status === t.id).length;
+  tabs.innerHTML = MS_VIEW_TABS.map(t => {
+    const n = t.id === "all" ? msRows.length : msRows.filter(r => r.status === t.id).length;
     const on = t.id === msState.tab;
     return `<button type="button" role="tab" class="sx-tab ms-tab" data-tab="${t.id}" style="--ms-c:${t.color}" aria-selected="${on}" aria-controls="msList" tabindex="${on ? 0 : -1}">
       <span class="ms-dot"></span>${t.label}<span class="ms-count">${n}</span></button>`;
@@ -306,7 +313,8 @@ async function msSelectTab(tab, focus) {
   const body = document.getElementById("msBody");
   if (body) body.scrollTop = 0;
   msRenderList();
-  if (!msEnriched.has(tab) && ["watching", "plantowatch", "hold"].includes(tab)) {
+  const needs = tab === "all" ? MS_ENRICHED_STATUSES : [tab];
+  if (needs.some(s => MS_ENRICHED_STATUSES.includes(s) && !msEnriched.has(s))) {
     await msEnrich(tab);
     if (document.getElementById("myShowsPage") && msState.tab === tab) msRenderList();
   }
@@ -360,12 +368,16 @@ function msRenderList() {
   document.querySelectorAll("#myShowsPage .ms-views button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.view === msState.view)));
   const tab = msTab(msState.tab);
   const q = msState.q.trim().toLowerCase();
-  const inTab = msRows.filter(r => r.status === tab.id);
+  const all = tab.id === "all";
+  const inTab = all ? msRows : msRows.filter(r => r.status === tab.id);
   const rows = msSorted(inTab.filter(r => !q || r.title.toLowerCase().includes(q)));
   if (!rows.length) {
     list.innerHTML = `<p class="ms-empty">${inTab.length ? `No show in ${esc(tab.label)} matches "${esc(msState.q.trim())}".` : `Nothing in ${esc(tab.label)} yet.`}</p>`;
     return;
   }
+  // All: each show in its own status's color, a dot naming the status.
+  const own = row => all ? ` style="--ms-c:${msTab(row.status).color}"` : "";
+  const dot = row => all ? `<span class="ms-dot ms-sdot" title="${esc(msTab(row.status).label)}" aria-label="${esc(msTab(row.status).label)}"></span>` : "";
   const pic = (row, cls) => row.poster
     ? `<img class="ms-pic ${cls}" src="${esc(row.poster)}" alt="" loading="lazy">`
     : `<div class="ms-pic ${cls} ms-pic-empty">${esc((row.title[0] || "?").toUpperCase())}</div>`;
@@ -376,10 +388,10 @@ function msRenderList() {
   list.style.setProperty("--ms-c", tab.color);
   if (msState.view === "grid") {
     list.innerHTML = `<div class="ms-grid">${rows.map(row => `
-      <div class="ms-card" data-doc="${esc(row.docId)}" role="button" tabindex="0" aria-label="${esc(row.title)}">
+      <div class="ms-card" data-doc="${esc(row.docId)}" role="button" tabindex="0" aria-label="${esc(row.title)}"${own(row)}>
         <div class="ms-poster">${pic(row, "")}${bar(row)}</div>
         <div class="ms-meta">
-          <div class="ms-name" title="${esc(row.title)}">${esc(row.title)} <span class="ms-year">${row.year || ""}</span></div>
+          <div class="ms-name" title="${esc(row.title)}">${dot(row)}${esc(row.title)} <span class="ms-year">${row.year || ""}</span></div>
           <div class="ms-count-line">${msCountLine(row)}</div>
           <div class="ms-line">${esc(msStatusLine(row))}</div>
         </div>
@@ -388,9 +400,9 @@ function msRenderList() {
     list.innerHTML = `<div class="ms-rows">${rows.map(row => {
       const p = msProgress(row);
       return `
-      <div class="ms-row" data-doc="${esc(row.docId)}" role="button" tabindex="0" aria-label="${esc(row.title)}">
+      <div class="ms-row" data-doc="${esc(row.docId)}" role="button" tabindex="0" aria-label="${esc(row.title)}"${own(row)}>
         ${pic(row, "ms-mini")}
-        <div class="ms-row-main"><div class="ms-name">${esc(row.title)} <span class="ms-year">${row.year || ""}</span></div><div class="ms-line">${esc(msStatusLine(row))}</div></div>
+        <div class="ms-row-main"><div class="ms-name">${dot(row)}${esc(row.title)} <span class="ms-year">${row.year || ""}</span></div><div class="ms-line">${esc(msStatusLine(row))}</div></div>
         <div class="ms-row-prog"><span>${msCountLine(row)}${p >= 0 && row.status !== "plantowatch" ? ` · ${Math.round(p * 100)}%` : ""}</span>${p >= 0 && row.status !== "plantowatch" ? `<div class="ms-track"><i style="width:${Math.round(p * 100)}%"></i></div>` : ""}</div>
         <div class="ms-row-when">${row.lastAt ? `Last watched<br>${esc(msAgo(row.lastAt))}` : ""}</div>
       </div>`;
