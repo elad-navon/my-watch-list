@@ -2689,11 +2689,18 @@
   .ms-tab[aria-selected="true"] .ms-count { background: var(--ms-c); border-color: var(--ms-c); color: #14100a; }
   .ms-tabs { overflow-x: auto; scrollbar-width: none; }
   .ms-tabs::-webkit-scrollbar { display: none; }
-  /* Wide screens: title, the five tabs and the close button on one line. */
+  /* Wide screens: the six tabs at their full width, never cut. Title and
+     close button on the first line, the tabs on a line of their own below
+     (the page is at most 1440px wide: one line can't hold them all). */
   @media (min-width: 981px) {
-    .ms-overlay .sx-head { flex-wrap: nowrap; }
-    .ms-overlay .ms-tabs { flex: 0 1 auto; min-width: 0; gap: 2px; }
-    .ms-overlay .ms-tab { padding: 14px 14px 12px; font-size: 1.25rem; }
+    .ms-overlay .sx-close { margin-left: auto; }
+    .ms-overlay .ms-tabs { order: 3; flex: 0 0 100%; margin-left: 0; gap: 2px; }
+    .ms-overlay .ms-tab { padding: 12px 14px 12px; font-size: 1.25rem; }
+    .ms-overlay .ms-tab:first-child { padding-left: 0; }
+  }
+  @media (min-width: 981px) and (max-width: 1200px) {
+    .ms-overlay .ms-tabs { gap: 0; }
+    .ms-overlay .ms-tab { padding: 12px 6px 12px; font-size: 1rem; gap: 5px; letter-spacing: 0.03em; }
   }
   .ms-sec[hidden] { display: none; }
 
@@ -2727,6 +2734,8 @@
   .ms-meta { display: grid; gap: 3px; padding: 10px 2px 0; }
   .ms-name { font-weight: 700; font-size: 0.98rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .ms-year { color: var(--muted); font-weight: 500; font-size: 0.82rem; }
+  /* The All tab: the show's status, as a dot before its name. */
+  .ms-sdot { display: inline-block; width: 8px; height: 8px; margin-right: 6px; vertical-align: 0.1em; }
   .ms-count-line { font-size: 0.85rem; color: var(--muted); font-variant-numeric: tabular-nums; }
   .ms-count-line b, .ms-row-prog b { color: var(--text); font-weight: 600; }
   .ms-line { font-size: 0.82rem; color: var(--accent2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
