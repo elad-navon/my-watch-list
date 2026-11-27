@@ -2294,6 +2294,9 @@
   /* Ready to Watch: exactly one card across the panel, snapping one at a
      time, like the bottom panels below. */
   body.phone-portrait .carousel-track { container-type: inline-size; }
+  /* No watermark here: 0px wide on a phone, but the gap before it left the
+     last card short of the end, and the Next arrow never hid. */
+  body.phone-portrait .carousel-watermark { display: none; }
   /* Thinner side margins round and inside the panels, so the cards get the
      width. */
   body.phone-portrait .main-content { padding-left: 8px; padding-right: 8px; }
@@ -3008,6 +3011,8 @@
     .ms-hero:has(.ms-backdrop-tall) .ms-hero-in > .ms-d-top { margin-bottom: calc(84vw - 66px); }
     .ms-hero:has(.ms-backdrop-tall) .ms-hero-in > .ms-d-top:has(.ms-pick) { margin-top: calc(84vw - 56px); margin-bottom: -10px; }
     .ms-hero:has(.ms-backdrop-tall) .ms-d-poster { display: none; }
+    /* Images opens the picker for that picture straight away: no menu arrow. */
+    .ms-hero:has(.ms-backdrop-tall) [data-ms-pick-toggle] > span[aria-hidden] { display: none; }
     .ms-hero:has(.ms-backdrop-tall) :is(.ms-d-title, .ms-facts) { grid-column: 1 / -1; }
     .ms-d-info { display: contents; }
     .ms-d-title, .ms-facts { grid-column: 2; }

@@ -575,6 +575,8 @@ const IMAGE_AREA_KEYS = {
   panel: { poster: "panelPosterPath", banner: "panelBannerPath" },
   // The show's own page (my-shows.js), apart from both.
   page: { poster: "pagePosterPath", banner: "pageBannerPath" },
+  // The show's page on a phone: its one big picture (my-shows.js).
+  phone: { poster: "pageTallPath", banner: "pageTallPath" },
 };
 // Where a card's picks belong: the top panel ("main") or the bottom ones.
 function imageAreaOf(source) {

@@ -110,8 +110,9 @@ by itself.
 (a scene from the show, not the poster's key art again), poster, facts, scores,
 your progress, the cast (drag it, or use the arrows), and the episodes. The
 status and the watched episodes are changed here too, through the episodes
-manager (mark single episodes or whole seasons). On a phone, a tall poster
-with no text serves as the backdrop.
+manager (mark single episodes or whole seasons). On a phone, one big picture
+stands in for the backdrop and poster (a poster with no text when there is
+one), and Images changes it.
 
 **My Shows**: every show in the library, in an All tab and one tab per
 status, as posters or as a list.
